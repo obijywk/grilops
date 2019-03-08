@@ -1,6 +1,6 @@
 """Sudoku solver example."""
 
-from z3 import Distinct, sat, Solver
+from z3 import Distinct, Solver
 
 from example_context import grilops
 
@@ -40,11 +40,16 @@ def main():
     cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
     solver.add(Distinct(*cells))
 
-  result = solver.check()
-  if result != sat:
-    print(result)
-  else:
+  if sg.solve():
     sg.print()
+    print()
+    if sg.is_unique():
+      print("Unique solution")
+    else:
+      print("Alternate solution")
+      sg.print()
+  else:
+    print("No solution")
 
 
 if __name__ == "__main__":
