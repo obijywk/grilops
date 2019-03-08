@@ -16,23 +16,40 @@ class SymbolGrid:
       width: int,
       height: int,
       symbol_set: SymbolSet,
-      solver: Solver
+      solver: Solver = None
   ):
+    """Constructs a SymbolGrid.
+
+    Args:
+      width (int): The width of the grid.
+      height (int): The height of the grid.
+      symbol_set (SymbolSet): The set of symbols to be filled into the grid.
+      solver (:obj:`Solver`, optional): A z3 Solver object. If None, a Solver
+          will be constructed.
+    """
     SymbolGrid._instance_index += 1
-    self.__solver = solver
+    if solver:
+      self.__solver = solver
+    else:
+      self.__solver = Solver()
     self.__symbol_set = symbol_set
     self.__grid: List[List[ArithRef]] = []
     for y in range(height):
       row = []
       for x in range(width):
         v = Int(f"sg-{SymbolGrid._instance_index}-{y}-{x}")
-        solver.add(v >= symbol_set.symbols[0].index)
-        solver.add(v <= symbol_set.symbols[-1].index)
+        self.__solver.add(v >= symbol_set.symbols[0].index)
+        self.__solver.add(v <= symbol_set.symbols[-1].index)
         row.append(v)
       self.__grid.append(row)
 
   @property
-  def grid(self):
+  def solver(self) -> Solver:
+    """Solver: The z3 Solver object associated with this SymbolGrid."""
+    return self.__solver
+
+  @property
+  def grid(self) -> List[List[ArithRef]]:
     """list(list(ArithRef)): The grid of z3 variables modeling the cells."""
     return self.__grid
 

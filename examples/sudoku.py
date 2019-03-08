@@ -1,6 +1,6 @@
 """Sudoku solver example."""
 
-from z3 import Distinct, Solver
+from z3 import Distinct
 
 from example_context import grilops
 
@@ -19,26 +19,25 @@ def main():
       [0, 0, 0, 0, 8, 0, 0, 7, 9],
   ]
 
-  solver = Solver()
   sym = grilops.make_number_range_symbol_set(1, 9)
-  sg = grilops.SymbolGrid(9, 9, sym, solver)
+  sg = grilops.SymbolGrid(9, 9, sym)
 
   for given_row, grid_row in zip(givens, sg.grid):
     for given, grid_cell in zip(given_row, grid_row):
       if given != 0:
-        solver.add(grid_cell == sym[given])
+        sg.solver.add(grid_cell == sym[given])
 
   for y in range(9):
-    solver.add(Distinct(*sg.grid[y]))
+    sg.solver.add(Distinct(*sg.grid[y]))
 
   for x in range(9):
-    solver.add(Distinct(*[r[x] for r in sg.grid]))
+    sg.solver.add(Distinct(*[r[x] for r in sg.grid]))
 
   for z in range(9):
     top = (z // 3) * 3
     left = (z % 3) * 3
     cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
-    solver.add(Distinct(*cells))
+    sg.solver.add(Distinct(*cells))
 
   if sg.solve():
     sg.print()
