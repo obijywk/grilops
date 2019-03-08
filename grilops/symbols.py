@@ -144,14 +144,3 @@ def make_number_range_symbol_set(
       [f"S{v}" for v in range(min_number, max_number + 1)],
       [str(v) for v in range(min_number, max_number + 1)]
   )
-
-
-def make_loop_symbol_set() -> SymbolSet:
-  """Returns a symbol set consisting of symbols that may form loops."""
-  return SymbolSet(
-      ["NS", "EW", "NE", "SE", "SW", "NW"],
-      [
-          chr(0x2502), chr(0x2500),
-          chr(0x2514), chr(0x250C), chr(0x2510), chr(0x2518)
-      ]
-  )

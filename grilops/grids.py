@@ -2,7 +2,7 @@
 
 import sys
 from typing import List
-from z3 import ArithRef, Int, Or, Solver, sat, unsat  # type: ignore
+from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
 
@@ -49,9 +49,43 @@ class SymbolGrid:
     return self.__solver
 
   @property
+  def symbol_set(self) -> SymbolSet:
+    """SymbolSet: The SymbolSet associated with this SymbolGrid."""
+    return self.__symbol_set
+
+  @property
   def grid(self) -> List[List[ArithRef]]:
     """list(list(ArithRef)): The grid of z3 variables modeling the cells."""
     return self.__grid
+
+  def cell_is(self, y: int, x: int, value: int) -> BoolRef:
+    """Returns an expression for whether this cell contains this value.
+
+    Args:
+      y (int): The y-coordinate in the grid.
+      x (int): The x-coordinate in the grid.
+      value (int): The value to satisfy the expression.
+
+    Returns:
+      BoolRef: an expression that's true if and only if the cell at (y, x)
+          contains this value.
+    """
+    return self.__grid[y][x] == value
+
+  def cell_is_one_of(self, y: int, x: int, values: List[int]) -> BoolRef:
+    """Returns an expression for whether this cell contains one of these values.
+
+    Args:
+      y (int): The y-coordinate in the grid.
+      x (int): The x-coordinate in the grid.
+      values (list(int)): The list of values to satisfy the expression.
+
+    Returns:
+      BoolRef: an expression that's true if and only if the cell at (y, x)
+          contains one of the values.
+    """
+    cell = self.__grid[y][x]
+    return Or(*[cell == value for value in values])
 
   def solve(self) -> bool:
     """Returns true if the puzzle has a solution, false otherwise."""

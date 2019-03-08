@@ -1,3 +1,6 @@
 [TYPECHECK]
 indent-string="  "
+argument-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
 variable-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
+ignored-classes=SymbolSet
+disable=C0200,R0801,R0912
