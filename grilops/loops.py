@@ -1,20 +1,36 @@
 """Support for puzzles where closed loops are filled into a grid."""
 
 from typing import Any, List
-from z3 import And, ArithRef, Distinct, If, Implies, Int, Or  # type: ignore
+from z3 import And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or  # type: ignore
 
 from .grids import SymbolGrid
 from .symbols import SymbolSet
 
 
-SYMBOL_SET = SymbolSet(
-    ["BL", "NS", "EW", "NE", "SE", "SW", "NW"],
-    [
-        " ", chr(0x2502), chr(0x2500),
-        chr(0x2514), chr(0x250C), chr(0x2510), chr(0x2518)
-    ]
-)
-"""SymbolSet: A symbol set consisting of symbols that may form loops."""
+class LoopSymbolSet(SymbolSet):
+  """A symbol set consisting of symbols that may form loops."""
+
+  def __init__(self):
+    """Constructs a LoopSymbolSet."""
+    super().__init__(
+        ["NS", "EW", "NE", "SE", "SW", "NW"],
+        [
+            chr(0x2502), chr(0x2500),
+            chr(0x2514), chr(0x250C), chr(0x2510), chr(0x2518)
+        ]
+    )
+    self.__max_loop_symbol_index = len(self.symbols)
+
+  def is_loop(self, symbol_variable: ArithRef) -> BoolRef:
+    """Returns true if the symbol represents part of the loop.
+
+    Args:
+      symbol_variable (ArithRef): A z3 variable representing a symbol.
+
+    Returns:
+      BoolRef: true if the symbol represents part of the loop.
+    """
+    return symbol_variable < self.__max_loop_symbol_index
 
 
 def add_loop_edge_constraints(symbol_grid: SymbolGrid):
@@ -103,7 +119,7 @@ def add_single_loop_constraints(
       cell = grid[y][x]
       li = loop_index_grid[y][x]
 
-      solver.add(If(cell == sym.BL, li < 0, li >= 0))
+      solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
       if 0 < y < len(grid) - 1:
         solver.add(Implies(

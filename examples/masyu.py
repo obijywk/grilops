@@ -27,7 +27,8 @@ def main():
       sys.stdout.write(cell)
     print()
 
-  sym = grilops.loops.SYMBOL_SET
+  sym = grilops.loops.LoopSymbolSet()
+  sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(10, 10, sym)
 
   grilops.loops.add_loop_edge_constraints(sg)
