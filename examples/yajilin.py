@@ -72,14 +72,17 @@ def main():
             If(sg.cell_is(y, x, sym.BLACK), 1, 0) for (y, x) in cells
         ]))
 
+  def print_grid():
+    sg.print(lambda y, x, _: givens[(y, x)][0] if (y, x) in givens else None)
+
   if sg.solve():
-    sg.print()
+    print_grid()
     print()
     if sg.is_unique():
       print("Unique solution")
     else:
       print("Alternate solution")
-      sg.print()
+      print_grid()
   else:
     print("No solution")
 

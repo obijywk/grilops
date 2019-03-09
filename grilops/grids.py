@@ -123,15 +123,27 @@ class SymbolGrid:
     result = self.__solver.check()
     return result == unsat
 
-  def print(self):
+  def print(self, hook_function=None):
     """Prints the solved grid using symbol labels.
 
     Should be called only after solve() has already completed successfully.
+
+    Args:
+      hook_function (:obj:`function`, optional): A function implementing custom
+          symbol display behavior, or None. If this function is provided, it
+          will be called for each cell in the grid, with the arguments y (int),
+          x (int), and the symbol index for that cell (int). It may return a
+          string to print for that cell, or None to keep the default behavior.
     """
     model = self.__solver.model()
     label_width = max(len(s.label) for s in self.__symbol_set.symbols)
-    for row in self.__grid:
-      for cell in row:
+    for y, row in enumerate(self.__grid):
+      for x, cell in enumerate(row):
         i = model.eval(cell).as_long()
-        sys.stdout.write(f"{self.__symbol_set.symbols[i].label:{label_width}}")
+        label = None
+        if hook_function:
+          label = hook_function(y, x, i)
+        if label is None:
+          label = f"{self.__symbol_set.symbols[i].label:{label_width}}"
+        sys.stdout.write(label)
       sys.stdout.write("\n")
