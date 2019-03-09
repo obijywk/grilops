@@ -8,7 +8,7 @@ from example_context import grilops
 
 def main():
   """Masyu solver example."""
-  e, w, b = [" ", chr(0x25e6), chr(0x2022)]
+  e, w, b = " ", chr(0x25e6), chr(0x2022)
   givens = [
       [e, e, w, e, w, e, e, e, e, e],
       [e, e, e, e, w, e, e, e, b, e],

@@ -58,6 +58,23 @@ class SymbolGrid:
     """list(list(ArithRef)): The grid of z3 variables modeling the cells."""
     return self.__grid
 
+  def neighbors(self, y: int, x: int) -> List[ArithRef]:
+    """Returns a list of cells orthogonally adjacent to the given cell.
+
+    Returns:
+      list(ArithRef): A list of cells orthogonally adjacent to the given cell.
+    """
+    cells = []
+    if y > 0:
+      cells.append(self.__grid[y - 1][x])
+    if x < len(self.__grid[0]) - 1:
+      cells.append(self.__grid[y][x + 1])
+    if y < len(self.__grid) - 1:
+      cells.append(self.__grid[y + 1][x])
+    if x > 0:
+      cells.append(self.__grid[y][x - 1])
+    return cells
+
   def cell_is(self, y: int, x: int, value: int) -> BoolRef:
     """Returns an expression for whether this cell contains this value.
 
