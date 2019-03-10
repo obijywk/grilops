@@ -1,0 +1,15 @@
+site_name: "grilops API documentation"
+
+generate:
+  - api.md:
+    - grilops.grids++
+    - grilops.symbols++
+    - grilops.loops++
+    - grilops.regions++
+
+pages:
+  - Home: index.md << README.md
+  - API: api.md
+
+gens_dir: docs/pydocmd
+site_dir: docs/html
