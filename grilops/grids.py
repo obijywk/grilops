@@ -13,16 +13,16 @@ class SymbolGrid:
 
   def __init__(
       self,
-      width: int,
       height: int,
+      width: int,
       symbol_set: SymbolSet,
       solver: Solver = None
   ):
     """Constructs a SymbolGrid.
 
     Args:
-      width (int): The width of the grid.
       height (int): The height of the grid.
+      width (int): The width of the grid.
       symbol_set (SymbolSet): The set of symbols to be filled into the grid.
       solver (:obj:`Solver`, optional): A z3 Solver object. If None, a Solver
           will be constructed.

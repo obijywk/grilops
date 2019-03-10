@@ -14,16 +14,16 @@ class RegionConstrainer:
 
   def __init__(
       self,
-      width: int,
       height: int,
+      width: int,
       solver: Solver = None,
       complete: bool = True
   ):
     """Construct a RegionConstrainer.
 
     Args:
-      width (int): The width of the grid.
       height (int): The height of the grid.
+      width (int): The width of the grid.
       solver (:obj:`Solver`, optional): A z3 Solver object. If None, a Solver
           will be constructed.
       complete (:obj:`bool`, optional): If true, every cell must be part of a
@@ -159,6 +159,11 @@ class RegionConstrainer:
   def region_size_grid(self) -> List[List[ArithRef]]:
     """list(list(ArithRef)): The grid of z3 variables of region sizes."""
     return self.__region_size_grid
+
+  @property
+  def parent_grid(self) -> List[List[ArithRef]]:
+    """list(list(ArithRef)): The grid of z3 variables of parent pointers."""
+    return self.__parent_grid
 
   def print_trees(self):
     """Prints the region parent assigned to each cell.
