@@ -34,3 +34,8 @@ Loops
 ^^^^^
 .. automodule:: grilops.loops
    :members:
+
+Regions
+^^^^^^^
+.. automodule:: grilops.regions
+   :members:
