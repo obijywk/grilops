@@ -58,7 +58,7 @@ class SymbolGrid:
     """list(list(ArithRef)): The grid of z3 variables modeling the cells."""
     return self.__grid
 
-  def neighbors(self, y: int, x: int) -> List[ArithRef]:
+  def adjacent_cells(self, y: int, x: int) -> List[ArithRef]:
     """Returns a list of cells orthogonally adjacent to the given cell.
 
     Returns:
@@ -73,6 +73,23 @@ class SymbolGrid:
       cells.append(self.__grid[y + 1][x])
     if x > 0:
       cells.append(self.__grid[y][x - 1])
+    return cells
+
+  def touching_cells(self, y: int, x: int) -> List[ArithRef]:
+    """Returns the cells touching the given cell (orthogonally and diagonally).
+
+    Returns:
+      list(ArithRef): A list of cells touching the given cell.
+    """
+    cells = self.adjacent_cells(y, x)
+    if y > 0 and x > 0:
+      cells.append(self.__grid[y - 1][x - 1])
+    if y > 0 and x < len(self.__grid[0]) - 1:
+      cells.append(self.__grid[y - 1][x + 1])
+    if x > 0 and y < len(self.__grid) - 1:
+      cells.append(self.__grid[y + 1][x - 1])
+    if y < len(self.__grid) - 1 and x < len(self.__grid[0]) - 1:
+      cells.append(self.__grid[y + 1][x + 1])
     return cells
 
   def cell_is(self, y: int, x: int, value: int) -> BoolRef:

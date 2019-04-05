@@ -55,7 +55,7 @@ def main():
         sg.solver.add(Not(sg.cell_is(y, x, sym.INDICATIVE)))
       sg.solver.add(Implies(
           sg.cell_is(y, x, sym.BLACK),
-          And(*[n != sym.BLACK for n in sg.neighbors(y, x)])
+          And(*[n != sym.BLACK for n in sg.adjacent_cells(y, x)])
       ))
 
   for (sy, sx), (direction, count) in givens.items():
