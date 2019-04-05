@@ -165,6 +165,11 @@ class RegionConstrainer:
     """list(list(ArithRef)): The grid of z3 variables of parent pointers."""
     return self.__parent_grid
 
+  @property
+  def subtree_size_grid(self) -> List[List[ArithRef]]:
+    """list(list(ArithRef)): The grid of z3 variables of subtree sizes."""
+    return self.__subtree_size_grid
+
   def print_trees(self):
     """Prints the region parent assigned to each cell.
 
