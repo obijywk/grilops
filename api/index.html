@@ -107,13 +107,21 @@
 <p>Solver: The z3 Solver object associated with this SymbolGrid.
 <h3 id="grilops.grids.SymbolGrid.symbol_set">symbol_set</h3></p>
 <p>SymbolSet: The SymbolSet associated with this SymbolGrid.
-<h3 id="grilops.grids.SymbolGrid.neighbors">neighbors</h3></p>
-<pre><code class="python">SymbolGrid.neighbors(self, y:int, x:int) -&gt; List[z3.z3.ArithRef]
+<h3 id="grilops.grids.SymbolGrid.adjacent_cells">adjacent_cells</h3></p>
+<pre><code class="python">SymbolGrid.adjacent_cells(self, y:int, x:int) -&gt; List[z3.z3.ArithRef]
 </code></pre>
 
 <p>Returns a list of cells orthogonally adjacent to the given cell.</p>
 <p>Returns:
   list(ArithRef): A list of cells orthogonally adjacent to the given cell.</p>
+<h3 id="grilops.grids.SymbolGrid.touching_cells">touching_cells</h3>
+
+<pre><code class="python">SymbolGrid.touching_cells(self, y:int, x:int) -&gt; List[z3.z3.ArithRef]
+</code></pre>
+
+<p>Returns the cells touching the given cell (orthogonally and diagonally).</p>
+<p>Returns:
+  list(ArithRef): A list of cells touching the given cell.</p>
 <h3 id="grilops.grids.SymbolGrid.cell_is">cell_is</h3>
 
 <pre><code class="python">SymbolGrid.cell_is(self, y:int, x:int, value:int) -&gt; z3.z3.BoolRef
@@ -260,6 +268,8 @@ referred to directly in Python code.</p>
 <p>list(list(ArithRef)): The grid of z3 variables of region sizes.
 <h3 id="grilops.regions.RegionConstrainer.solver">solver</h3></p>
 <p>Solver: The z3 Solver object associated with this RegionConstrainer.
+<h3 id="grilops.regions.RegionConstrainer.subtree_size_grid">subtree_size_grid</h3></p>
+<p>list(list(ArithRef)): The grid of z3 variables of subtree sizes.
 <h3 id="grilops.regions.RegionConstrainer.print_trees">print_trees</h3></p>
 <pre><code class="python">RegionConstrainer.print_trees(self)
 </code></pre>
