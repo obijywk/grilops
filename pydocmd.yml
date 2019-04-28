@@ -6,6 +6,7 @@ generate:
     - grilops.symbols++
     - grilops.loops++
     - grilops.regions++
+    - grilops.shapes++
 
 pages:
   - Home: index.md << README.md

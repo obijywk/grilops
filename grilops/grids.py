@@ -1,10 +1,48 @@
-"""Code to construct grids that may have symbols filled in."""
+"""Code to construct and work with grids that may have symbols filled in."""
 
 import sys
 from typing import List
 from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
+
+
+def adjacent_cells(
+    grid: List[List[ArithRef]], y: int, x: int) -> List[ArithRef]:
+  """Returns a list of cells orthogonally adjacent to the given cell.
+
+  Returns:
+    list(ArithRef): A list of cells orthogonally adjacent to the given cell.
+  """
+  cells = []
+  if y > 0:
+    cells.append(grid[y - 1][x])
+  if x < len(grid[0]) - 1:
+    cells.append(grid[y][x + 1])
+  if y < len(grid) - 1:
+    cells.append(grid[y + 1][x])
+  if x > 0:
+    cells.append(grid[y][x - 1])
+  return cells
+
+
+def touching_cells(
+    grid: List[List[ArithRef]], y: int, x: int) -> List[ArithRef]:
+  """Returns the cells touching the given cell (orthogonally and diagonally).
+
+  Returns:
+    list(ArithRef): A list of cells touching the given cell.
+  """
+  cells = adjacent_cells(grid, y, x)
+  if y > 0 and x > 0:
+    cells.append(grid[y - 1][x - 1])
+  if y > 0 and x < len(grid[0]) - 1:
+    cells.append(grid[y - 1][x + 1])
+  if x > 0 and y < len(grid) - 1:
+    cells.append(grid[y + 1][x - 1])
+  if y < len(grid) - 1 and x < len(grid[0]) - 1:
+    cells.append(grid[y + 1][x + 1])
+  return cells
 
 
 class SymbolGrid:
@@ -64,16 +102,7 @@ class SymbolGrid:
     Returns:
       list(ArithRef): A list of cells orthogonally adjacent to the given cell.
     """
-    cells = []
-    if y > 0:
-      cells.append(self.__grid[y - 1][x])
-    if x < len(self.__grid[0]) - 1:
-      cells.append(self.__grid[y][x + 1])
-    if y < len(self.__grid) - 1:
-      cells.append(self.__grid[y + 1][x])
-    if x > 0:
-      cells.append(self.__grid[y][x - 1])
-    return cells
+    return adjacent_cells(self.__grid, y, x)
 
   def touching_cells(self, y: int, x: int) -> List[ArithRef]:
     """Returns the cells touching the given cell (orthogonally and diagonally).
@@ -81,16 +110,7 @@ class SymbolGrid:
     Returns:
       list(ArithRef): A list of cells touching the given cell.
     """
-    cells = self.adjacent_cells(y, x)
-    if y > 0 and x > 0:
-      cells.append(self.__grid[y - 1][x - 1])
-    if y > 0 and x < len(self.__grid[0]) - 1:
-      cells.append(self.__grid[y - 1][x + 1])
-    if x > 0 and y < len(self.__grid) - 1:
-      cells.append(self.__grid[y + 1][x - 1])
-    if y < len(self.__grid) - 1 and x < len(self.__grid[0]) - 1:
-      cells.append(self.__grid[y + 1][x + 1])
-    return cells
+    return touching_cells(self.__grid, y, x)
 
   def cell_is(self, y: int, x: int, value: int) -> BoolRef:
     """Returns an expression for whether this cell contains this value.
