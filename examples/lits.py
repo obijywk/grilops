@@ -20,12 +20,11 @@ AREAS = [
 ]
 
 
-def link_symbols_to_shapes(sym, sg, sc):
+def link_symbols_to_shapes(sg, sc):
   """Add constraints to ensure the symbols match the shapes."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(
-          sg.cell_is(y, x, If(sc.shape_type_grid[y][x] == -1, sym.W, sym.B)))
+      sg.solver.add(sg.cell_is(y, x, sc.shape_type_grid[y][x] + 1))
 
 
 def add_area_constraints(sc):
@@ -58,7 +57,7 @@ def add_nurikabe_constraints(sym, sg, rc):
   for y in range(HEIGHT):
     for x in range(WIDTH):
       sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.B),
+          Not(sg.cell_is(y, x, sym.W)),
           rc.region_id_grid[y][x] == sea_id
       ))
       sg.solver.add(Implies(
@@ -72,7 +71,7 @@ def add_nurikabe_constraints(sym, sg, rc):
       pool_cells = [
           sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
-      sg.solver.add(Not(And(*[cell == sym.B for cell in pool_cells])))
+      sg.solver.add(Not(And(*[Not(cell == sym.W) for cell in pool_cells])))
 
 
 def add_adjacent_tetronimo_constraints(sc):
@@ -98,7 +97,7 @@ def add_adjacent_tetronimo_constraints(sc):
 
 def main():
   """LITS solver example."""
-  sym = grilops.SymbolSet(["B", "W"], [chr(0x2588), " "])
+  sym = grilops.SymbolSet(["W", "L", "I", "T", "S"], [" ", "L", "I", "T", "S"])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
   sc = grilops.shapes.ShapeConstrainer(
@@ -116,16 +115,11 @@ def main():
       allow_copies=True
   )
 
-  print("Link symbols to shapes")
-  link_symbols_to_shapes(sym, sg, sc)
-  print("Add area constraints")
+  link_symbols_to_shapes(sg, sc)
   add_area_constraints(sc)
-  print("Add nurikabe constraints")
   add_nurikabe_constraints(sym, sg, rc)
-  print("Add adjacent tetronimo constraints")
   add_adjacent_tetronimo_constraints(sc)
 
-  print("Solve")
   if sg.solve():
     sg.print()
     print()
