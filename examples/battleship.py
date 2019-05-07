@@ -40,7 +40,6 @@ def main():
           [(0, i) for i in range(1)],
       ],
       solver=sg.solver,
-      complete=False,
       allow_rotations=True
   )
 
@@ -60,35 +59,38 @@ def main():
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      shape_type = sc.shape_type_grid[y][x]
+      shape_id = sc.shape_instance_grid[y][x]
+      touching_types = grilops.touching_cells(sc.shape_type_grid, y, x)
+      touching_ids = grilops.touching_cells(sc.shape_instance_grid, y, x)
+
       # Link the X symbol to the absence of a ship segment.
       sg.solver.add(
-          (sc.shape_index_grid[y][x] == -1) == sg.cell_is(y, x, SYM.X))
+          (sc.shape_type_grid[y][x] == -1) == sg.cell_is(y, x, SYM.X))
 
       # Ship segments of different ships may not touch.
-      shape_index = sc.shape_index_grid[y][x]
-      touching_cells = grilops.touching_cells(sc.shape_index_grid, y, x)
       and_terms = []
-      for touching_cell in touching_cells:
+      for touching_id in touching_ids:
         and_terms.append(
             Implies(
-                shape_index >= 0,
-                Or(touching_cell == shape_index, touching_cell == -1)
+                shape_id >= 0,
+                Or(touching_id == shape_id, touching_id == -1)
             )
         )
       sg.solver.add(And(*and_terms))
 
       # Choose the correct symbol for each ship segment.
       touching_count = Sum(
-          *[If(c == shape_index, 1, 0) for c in touching_cells])
+          *[If(c == shape_type, 1, 0) for c in touching_types])
       sg.solver.add(
           Implies(
-              And(shape_index >= 0, touching_count == 2),
+              And(shape_type >= 0, touching_count == 2),
               sg.cell_is(y, x, SYM.B)
           )
       )
       sg.solver.add(
           Implies(
-              And(shape_index >= 0, touching_count == 0),
+              And(shape_type >= 0, touching_count == 0),
               sg.cell_is(y, x, SYM.O)
           )
       )
@@ -96,9 +98,9 @@ def main():
         sg.solver.add(
             Implies(
                 And(
-                    shape_index >= 0,
+                    shape_type >= 0,
                     touching_count == 1,
-                    sc.shape_index_grid[y - 1][x] == shape_index
+                    sc.shape_type_grid[y - 1][x] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.S)
             )
@@ -107,9 +109,9 @@ def main():
         sg.solver.add(
             Implies(
                 And(
-                    shape_index >= 0,
+                    shape_type >= 0,
                     touching_count == 1,
-                    sc.shape_index_grid[y + 1][x] == shape_index
+                    sc.shape_type_grid[y + 1][x] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.N)
             )
@@ -118,9 +120,9 @@ def main():
         sg.solver.add(
             Implies(
                 And(
-                    shape_index >= 0,
+                    shape_type >= 0,
                     touching_count == 1,
-                    sc.shape_index_grid[y][x - 1] == shape_index
+                    sc.shape_type_grid[y][x - 1] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.E)
             )
@@ -129,9 +131,9 @@ def main():
         sg.solver.add(
             Implies(
                 And(
-                    shape_index >= 0,
+                    shape_type >= 0,
                     touching_count == 1,
-                    sc.shape_index_grid[y][x + 1] == shape_index
+                    sc.shape_type_grid[y][x + 1] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.W)
             )
@@ -139,11 +141,21 @@ def main():
 
   if sg.solve():
     sg.print()
+    print()
+    sc.print_shape_types()
+    print()
+    sc.print_shape_instances()
+    print()
     if sg.is_unique():
       print("Unique solution")
     else:
       print("Alternate solution")
       sg.print()
+      print()
+      sc.print_shape_types()
+      print()
+      sc.print_shape_instances()
+      print()
   else:
     print("No solution")
 
