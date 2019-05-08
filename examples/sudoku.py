@@ -2,7 +2,7 @@
 
 from z3 import Distinct
 
-from example_context import grilops
+import grilops
 
 
 def main():

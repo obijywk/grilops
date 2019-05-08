@@ -44,8 +44,6 @@ def main():
   for filename in os.listdir(examples_path):
     if not filename.endswith(".py"):
       continue
-    if filename == "example_context.py":
-      continue
     if args.filename_regexp:
       if not re.match(args.filename_regexp, filename):
         continue

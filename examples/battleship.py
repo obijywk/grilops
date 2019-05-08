@@ -2,7 +2,8 @@
 
 from z3 import And, If, Implies, Or, Sum  # type: ignore
 
-from example_context import grilops
+import grilops
+import grilops.shapes
 
 
 SYM = grilops.SymbolSet(

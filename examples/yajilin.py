@@ -3,7 +3,8 @@
 import sys
 from z3 import And, If, Implies, Not, Sum
 
-from example_context import grilops
+import grilops
+import grilops.loops
 
 
 def main():

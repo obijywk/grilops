@@ -2,7 +2,9 @@
 
 from z3 import And, If, Implies, Int, Not, Or, Sum  # type: ignore
 
-from example_context import grilops
+import grilops
+import grilops.regions
+import grilops.shapes
 
 
 HEIGHT, WIDTH = 10, 10

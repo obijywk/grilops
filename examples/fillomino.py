@@ -2,7 +2,8 @@
 
 from z3 import Implies  # type: ignore
 
-from example_context import grilops
+import grilops
+import grilops.regions
 
 
 def main():

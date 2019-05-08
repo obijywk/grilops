@@ -2,7 +2,8 @@
 
 from z3 import And, Implies, Int, Not  # type: ignore
 
-from example_context import grilops
+import grilops
+import grilops.regions
 
 
 HEIGHT, WIDTH = 9, 10
