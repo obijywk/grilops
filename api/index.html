@@ -95,8 +95,24 @@
               
                 <h1 id="grilops.grids">grilops.grids</h1>
 
-<p>Code to construct grids that may have symbols filled in.
-<h2 id="grilops.grids.SymbolGrid">SymbolGrid</h2></p>
+<p>Code to construct and work with grids that may have symbols filled in.
+<h2 id="grilops.grids.adjacent_cells">adjacent_cells</h2></p>
+<pre><code class="python">adjacent_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[z3.z3.ArithRef]
+</code></pre>
+
+<p>Returns a list of cells orthogonally adjacent to the given cell.</p>
+<p>Returns:
+  list(ArithRef): A list of cells orthogonally adjacent to the given cell.</p>
+<h2 id="grilops.grids.touching_cells">touching_cells</h2>
+
+<pre><code class="python">touching_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[z3.z3.ArithRef]
+</code></pre>
+
+<p>Returns the cells touching the given cell (orthogonally and diagonally).</p>
+<p>Returns:
+  list(ArithRef): A list of cells touching the given cell.</p>
+<h2 id="grilops.grids.SymbolGrid">SymbolGrid</h2>
+
 <pre><code class="python">SymbolGrid(self, height:int, width:int, symbol_set:grilops.symbols.SymbolSet, solver:z3.z3.Solver=None)
 </code></pre>
 
@@ -296,6 +312,55 @@ referred to directly in Python code.</p>
 </code></pre>
 
 <p>Prints the size of the region that contains each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+<h1 id="grilops.shapes">grilops.shapes</h1>
+
+<p>Support for puzzles where fixed shape regions are placed into the grid.
+<h2 id="grilops.shapes.rotate_shape_clockwise">rotate_shape_clockwise</h2></p>
+<pre><code class="python">rotate_shape_clockwise(shape)
+</code></pre>
+
+<p>Returns a new shape point list rotated 90 degrees clockwise.
+<h2 id="grilops.shapes.reflect_shape_y">reflect_shape_y</h2></p>
+<pre><code class="python">reflect_shape_y(shape)
+</code></pre>
+
+<p>Returns a new shape point list reflected vertically.
+<h2 id="grilops.shapes.reflect_shape_x">reflect_shape_x</h2></p>
+<pre><code class="python">reflect_shape_x(shape)
+</code></pre>
+
+<p>Returns a new shape point list reflected horizontally.
+<h2 id="grilops.shapes.ShapeConstrainer">ShapeConstrainer</h2></p>
+<pre><code class="python">ShapeConstrainer(self, height:int, width:int, shapes:List[List[Tuple[int, int]]], solver:z3.z3.Solver=None, complete:bool=False, allow_rotations:bool=False, allow_reflections:bool=False, allow_copies:bool=False)
+</code></pre>
+
+<p>Models constraints for placing fixed shape regions into the grid.
+<h3 id="grilops.shapes.ShapeConstrainer.shape_instance_grid">shape_instance_grid</h3></p>
+<p>list(list(ArithRef)): The grid of z3 variables of shape instance IDs.</p>
+<p>Each cell contains a number shared among all cells containing the same
+instance of the shape, or -1 if no shape is placed within that cell.</p>
+<h3 id="grilops.shapes.ShapeConstrainer.shape_type_grid">shape_type_grid</h3>
+
+<p>list(list(ArithRef)): The grid of z3 variables of shape types.</p>
+<p>Each cell contains the index of the shape placed in that cell (as indexed
+by the shapes list passed in to the ShapeConstrainer constructor), or -1
+if no shape is placed within that cell.</p>
+<h3 id="grilops.shapes.ShapeConstrainer.solver">solver</h3>
+
+<p>Solver: The z3 Solver object associated with this ShapeConstrainer.
+<h3 id="grilops.shapes.ShapeConstrainer.print_shape_types">print_shape_types</h3></p>
+<pre><code class="python">ShapeConstrainer.print_shape_types(self)
+</code></pre>
+
+<p>Prints the shape type assigned to each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+<h3 id="grilops.shapes.ShapeConstrainer.print_shape_instances">print_shape_instances</h3>
+
+<pre><code class="python">ShapeConstrainer.print_shape_instances(self)
+</code></pre>
+
+<p>Prints the shape instance ID assigned to each cell.</p>
 <p>Should be called only after the solver has been checked.</p>
               
             </div>
