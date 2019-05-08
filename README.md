@@ -5,7 +5,7 @@ a GRId LOgic Puzzle Solver library, using Python 3 and
 
 This package contains a collection of libraries and helper functions that are
 useful for solving and checking
-[Nikoli](https://en.wikipedia.org/wiki/Nikoli_(publisher)-style logic puzzles
+[Nikoli](https://en.wikipedia.org/wiki/Nikoli_(publisher))-style logic puzzles
 using z3.
 
 Refer to the
