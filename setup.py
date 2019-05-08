@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="grilops",
-    version="0.1.4",
+    version="0.1.5",
     description="GRId LOgic Puzzle Solver",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -16,5 +16,8 @@ setup(
     author_email="matthew.gruskin@gmail.com",
     license="MIT",
     packages=["grilops"],
-    zip_safe=False
+    zip_safe=False,
+    install_requires=[
+      "z3-solver"
+    ]
 )
