@@ -3,14 +3,20 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 
 def execute(example_path):
-  completed_process = subprocess.run(
-      ["python3", example_path],
-      stdout=subprocess.PIPE,
-      check=True
-  )
+  start_time = time.time()
+  try:
+    completed_process = subprocess.run(
+        ["python3", example_path],
+        stdout=subprocess.PIPE,
+        check=True
+    )
+  finally:
+    end_time = time.time()
+    sys.stdout.write(f"{end_time - start_time:6.3}s  ")
   return completed_process.stdout
 
 
