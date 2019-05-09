@@ -1,4 +1,4 @@
-"""Support for puzzles where closed loops are filled into a grid."""
+"""This module supports puzzles where closed loops are filled into a grid."""
 
 from typing import Any, List
 from z3 import And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or  # type: ignore
@@ -8,10 +8,21 @@ from .symbols import SymbolSet
 
 
 class LoopSymbolSet(SymbolSet):
-  """A symbol set consisting of symbols that may form loops."""
+  """A #SymbolSet consisting of symbols that may form loops.
+
+  Additional symbols (e.g. a #Symbol representing an empty space) may be added
+  to this #SymbolSet by calling #SymbolSet.append() after it's constructed.
+
+  # Attributes
+  NS: The #Symbol connecting the cells above and below.
+  EW: The #Symbol connecting the cells to the left and to the right.
+  NE: The #Symbol connecting the cells above and to the right.
+  SE: The #Symbol connecting the cells below and to the right.
+  SW: The #Symbol connecting the cells below and to the left.
+  NW: The #Symbol connecting the cells above and to the left.
+  """
 
   def __init__(self):
-    """Constructs a LoopSymbolSet."""
     super().__init__(
         ["NS", "EW", "NE", "SE", "SW", "NW"],
         [
@@ -21,20 +32,20 @@ class LoopSymbolSet(SymbolSet):
     )
     self.__max_loop_symbol_index = len(self.symbols)
 
-  def is_loop(self, symbol_variable: ArithRef) -> BoolRef:
-    """Returns true if the symbol represents part of the loop.
+  def is_loop(self, symbol: ArithRef) -> BoolRef:
+    """Returns true if #symbol represents part of the loop.
 
-    Args:
-      symbol_variable (ArithRef): A z3 variable representing a symbol.
+    # Arguments
+    symbol (z3.ArithRef): A z3 expression representing a symbol.
 
-    Returns:
-      BoolRef: true if the symbol represents part of the loop.
+    # Returns
+    (z3.BoolRef): true if the symbol represents part of the loop.
     """
-    return symbol_variable < self.__max_loop_symbol_index
+    return symbol < self.__max_loop_symbol_index
 
 
 def add_loop_edge_constraints(symbol_grid: SymbolGrid):
-  """Constrain the grid to ensure loops are closed."""
+  """Constrain #symbol_grid to ensure loops are closed."""
   grid = symbol_grid.grid
   solver = symbol_grid.solver
   sym: Any = symbol_grid.symbol_set
@@ -91,10 +102,11 @@ def add_loop_edge_constraints(symbol_grid: SymbolGrid):
 def add_single_loop_constraints(
     symbol_grid: SymbolGrid
 ) -> List[List[ArithRef]]:
-  """Constrain the grid to ensure a single continuous loop.
+  """Constrain #symbol_grid to ensure a single continuous loop.
 
-  Returns:
-    list(list(ArithRef)): A grid of loop index variables.
+  # Returns
+  List[List[ArithRef]]: A grid of variables representing a loop traversal order.
+      May be useful for debugging.
   """
   grid = symbol_grid.grid
   solver = symbol_grid.solver

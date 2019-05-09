@@ -1,4 +1,4 @@
-"""Support for puzzles where fixed shape regions are placed into the grid."""
+"""This module supports puzzles that place fixed shape regions into the grid."""
 
 import sys
 from typing import List, Tuple
@@ -6,7 +6,15 @@ from z3 import And, ArithRef, If, Int, Or, Solver, Sum  # type: ignore
 
 
 def rotate_shape_clockwise(shape):
-  """Returns a new shape point list rotated 90 degrees clockwise."""
+  """Returns a new shape coordinate list rotated 90 degrees clockwise.
+
+  # Arguments:
+  shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.
+
+  # Returns:
+  (List[Tuple[int, int]]): A list of (y, x) coordinates defining the 90-degree
+      clockwise rotation of the input shape.
+  """
   min_y = min(p[0] for p in shape)
   max_y = max(p[0] for p in shape)
   rotated_shape = []
@@ -16,7 +24,15 @@ def rotate_shape_clockwise(shape):
 
 
 def reflect_shape_y(shape):
-  """Returns a new shape point list reflected vertically."""
+  """Returns a new shape coordinate list reflected vertically.
+
+  # Arguments:
+  shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.
+
+  # Returns:
+  (List[Tuple[int, int]]): A list of (y, x) coordinates defining the vertical
+      reflection of the input shape.
+  """
   min_y = min(p[0] for p in shape)
   max_y = max(p[0] for p in shape)
   reflected_shape = []
@@ -26,7 +42,15 @@ def reflect_shape_y(shape):
 
 
 def reflect_shape_x(shape):
-  """Returns a new shape point list reflected horizontally."""
+  """Returns a new shape coordinate list reflected horizontally.
+
+  # Arguments:
+  shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.
+
+  # Returns:
+  (List[Tuple[int, int]]): A list of (y, x) coordinates defining the horizontal
+      reflection of the input shape.
+  """
   min_x = min(p[1] for p in shape)
   max_x = max(p[1] for p in shape)
   reflected_shape = []
@@ -36,7 +60,27 @@ def reflect_shape_x(shape):
 
 
 class ShapeConstrainer:
-  """Models constraints for placing fixed shape regions into the grid."""
+  """Creates constraints for placing fixed shape regions into the grid.
+
+  # Arguments
+  height (int): The height of the grid.
+  width (int): The width of the grid.
+  shapes (List[List[Tuple[int, int]]]): A list of region shape definitions.
+      Each region shape definition should be a list of (y, x) tuples.
+      The same region shape definition may be included multiple times to
+      indicate the number of times that shape may appear (if allow_copies
+      is false).
+  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+      constructed.
+  complete (bool): If true, every cell must be part of a shape region. Defaults
+      to false.
+  allow_rotations (bool): If true, allow rotations of the shapes to be placed
+      in the grid. Defaults to false.
+  allow_reflections (bool): If true, allow reflections of the shapes to be
+      placed in the grid. Defaults to false.
+  allow_copies (bool): If true, allow any number of copies of the shapes to be
+      placed in the grid. Defaults to false.
+  """
   _instance_index = 0
 
   def __init__(  # pylint: disable=R0913
@@ -50,27 +94,6 @@ class ShapeConstrainer:
       allow_reflections: bool = False,
       allow_copies: bool = False
   ):
-    """Construct a ShapeConstrainer.
-
-    Args:
-      height (int): The height of the grid.
-      width (int): The width of the grid.
-      shapes (list(list(tuple(int, int)))): A list of region shape definitions.
-          Each region shape definition should be a list of (y, x) tuples.
-          The same region shape definition may be included multiple times to
-          indicate the number of times that shape may appear (if allow_copies
-          is false).
-      solver (:obj:`Solver`, optional): A z3 Solver object. If None, a Solver
-          will be constructed.
-      complete (:obj:`bool`, optional): If true, every cell must be part of a
-          shape region. Defaults to false.
-      allow_rotations (:obj:`bool`, optional): If true, allow rotations of the
-          shapes to be placed in the grid. Defaults to false.
-      allow_reflections (:obj:`bool`, optional): If true, allow reflections of
-          the shapes to be placed in the grid. Defaults to false.
-      allow_copies (:obj:`bool`, optional): If true, allow any number of copies
-          of the shapes to be placed in the grid. Defaults to false.
-    """
     ShapeConstrainer._instance_index += 1
     if solver:
       self.__solver = solver
@@ -217,22 +240,22 @@ class ShapeConstrainer:
 
   @property
   def solver(self) -> Solver:
-    """Solver: The z3 Solver object associated with this ShapeConstrainer."""
+    """(z3.Solver): The #Solver associated with this #ShapeConstrainer."""
     return self.__solver
 
   @property
   def shape_type_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables of shape types.
+    """(List[List[ArithRef]]): A grid of z3 constants of shape types.
 
-    Each cell contains the index of the shape placed in that cell (as indexed
-    by the shapes list passed in to the ShapeConstrainer constructor), or -1
-    if no shape is placed within that cell.
+    Each cell contains the index of the shape type placed in that cell (as
+    indexed by the shapes list passed in to the #ShapeConstrainer constructor),
+    or -1 if no shape is placed within that cell.
     """
     return self.__shape_type_grid
 
   @property
   def shape_instance_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables of shape instance IDs.
+    """(List[List[ArithRef]]): A grid of z3 constants of shape instance IDs.
 
     Each cell contains a number shared among all cells containing the same
     instance of the shape, or -1 if no shape is placed within that cell.

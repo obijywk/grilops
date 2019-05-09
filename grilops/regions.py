@@ -1,4 +1,23 @@
-"""Support for puzzles where cells must be grouped into contiguous regions."""
+"""This module supports puzzles that group cells into contiguous regions.
+
+Internally, the #RegionConstrainer constructs subtrees, each spanning the cells
+contained within a region. Aspects of a cell's relationship to the other cells
+in its subtree are exposed by properties of the #RegionConstrainer.
+
+# Attributes
+X (int): The #RegionConstrainer.parent_grid value indicating that a cell is not
+    part of a region.
+R (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    root of its region's subtree.
+N (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    child of the cell above it in its region's subtree.
+E (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    child of the cell to the right of it in its region's subtree.
+S (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    child of the cell below it in its region's subtree.
+W (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    child of the cell to the left of it in its region's subtree.
+"""
 
 import sys
 from typing import List
@@ -9,7 +28,16 @@ X, R, N, E, S, W = range(6)
 
 
 class RegionConstrainer:
-  """Models constraints for grouping cells into contiguous regions."""
+  """Creates constraints for grouping cells into contiguous regions.
+
+  # Arguments
+  height (int): The height of the grid.
+  width (int): The width of the grid.
+  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+      constructed.
+  complete (bool): If true, every cell must be part of a region. Defaults to
+      true.
+  """
   _instance_index = 0
 
   def __init__(
@@ -19,16 +47,6 @@ class RegionConstrainer:
       solver: Solver = None,
       complete: bool = True
   ):
-    """Construct a RegionConstrainer.
-
-    Args:
-      height (int): The height of the grid.
-      width (int): The width of the grid.
-      solver (:obj:`Solver`, optional): A z3 Solver object. If None, a Solver
-          will be constructed.
-      complete (:obj:`bool`, optional): If true, every cell must be part of a
-          region. Defaults to true.
-    """
     RegionConstrainer._instance_index += 1
     if solver:
       self.__solver = solver
@@ -147,27 +165,39 @@ class RegionConstrainer:
 
   @property
   def solver(self) -> Solver:
-    """Solver: The z3 Solver object associated with this RegionConstrainer."""
+    """(z3.Solver): The #Solver associated with this #RegionConstrainer."""
     return self.__solver
 
   @property
   def region_id_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables identifying regions."""
+    """(List[List[ArithRef]]): A grid of numbers identifying regions.
+
+    A region's identifier is the position in the grid (going in order from left
+    to right, top to bottom) of the root of that region's subtree.
+    """
     return self.__region_id_grid
 
   @property
   def region_size_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables of region sizes."""
+    """(List[List[ArithRef]]): A grid of region sizes."""
     return self.__region_size_grid
 
   @property
   def parent_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables of parent pointers."""
+    """(List[List[ArithRef]]): A grid of region subtree parent pointers.
+
+    The values that may be present in this grid are the module
+    attributes #X, #R, #N, #E, #S, and #W.
+    """
     return self.__parent_grid
 
   @property
   def subtree_size_grid(self) -> List[List[ArithRef]]:
-    """list(list(ArithRef)): The grid of z3 variables of subtree sizes."""
+    """(List[List[ArithRef]]): A grid of cell subtree sizes.
+
+    A cell's subtree size is one plus the number of cells that are descendents
+    of the cell in its region's subtree.
+    """
     return self.__subtree_size_grid
 
   def print_trees(self):
