@@ -55,13 +55,41 @@
             
     <li class="toctree-l2"><a href="#grilops">grilops</a></li>
     
+        <ul>
+        
+            <li><a class="toctree-l3" href="#basic-concepts-and-usage">Basic Concepts and Usage</a></li>
+        
+        </ul>
+    
 
     </ul>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="api/">API</a>
+    <span class="caption-text">API</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="symbols/">Symbols</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="grids/">Grids</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="loops/">Loops</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="regions/">Regions</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="shapes/">Shapes</a>
+                </li>
+    </ul>
 	    </li>
           
         </ul>
@@ -103,9 +131,48 @@
 useful for solving and checking
 <a href="https://en.wikipedia.org/wiki/Nikoli_(publisher)">Nikoli</a>-style logic puzzles
 using z3.</p>
-<p>Refer to the
+<p>To get a feel for how to use this package to model and solve puzzles, refer
+to the
 <a href="https://github.com/obijywk/grilops/tree/master/examples">examples</a> and the
-<a href="https://obijywk.github.io/grilops/">API Documentation</a> to learn more.</p>
+<a href="https://obijywk.github.io/grilops/">API Documentation</a>.</p>
+<h2 id="basic-concepts-and-usage">Basic Concepts and Usage</h2>
+<p>The <code>symbols</code> and <code>grids</code> modules contain the core functionality needed for
+modeling most puzzles. For convenience, their attributes can be accessed
+directly from the top-level <code>grilops</code> module.</p>
+<p>Symbols represent the marks that are determined and written into a grid by a
+solver while solving a puzzle. For example, the symbol set of a
+<a href="https://en.wikipedia.org/wiki/Sudoku">Sudoku</a> puzzle would be the digits 1
+through 9. The symbol set of a binary determination puzzle such as
+<a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> could contain two
+symbols, one representing a black cell and the other representing a white cell.</p>
+<p>A symbol grid is used to keep track of the assignment of symbols to grid
+cells. Generally, setting up a program to solve a puzzle using grilops involves:</p>
+<ul>
+<li>Constructing a symbol set</li>
+<li>Constructing a symbol grid limited to contain symbols from that symbol set</li>
+<li>Adding puzzle-specific constraints to cells in the symbol grid</li>
+<li>Checking for satisfying assignments of symbols to symbol grid cells</li>
+</ul>
+<p>Grid cells are exposed as z3 constants, so built-in z3 operators can and should
+be used when adding puzzle-specific constraints. In addition, grilops provides
+several modules to help automate and abstract away the introduction of common
+kinds of constraints.</p>
+<h3 id="loops">Loops</h3>
+<p>The <code>grilops.loops</code> module is helpful for adding constraints that ensure symbols
+connect to form closed loops. An example of a puzzle type for which this is
+useful is <a href="https://en.wikipedia.org/wiki/Masyu">Masyu</a>.</p>
+<h3 id="regions">Regions</h3>
+<p>The <code>grilops.regions</code> module is helpful for adding constraints that ensure
+cells are grouped into orthogonally contiguous regions (polyominos) of variable
+shapes and sizes. Some examples of puzzle types for which this is useful are
+<a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> and
+<a href="https://en.wikipedia.org/wiki/Fillomino">Fillomino</a>.</p>
+<h3 id="shapes">Shapes</h3>
+<p>The <code>grilops.shapes</code> module is helpful for adding constraints that ensure
+cells are grouped into orthogonally contiguous regions (polyominos) of fixed
+shapes and sizes. Some examples of puzzle types for which this is useful are
+<a href="https://en.wikipedia.org/wiki/Battleship_(puzzle)">Battleship</a> and
+<a href="https://en.wikipedia.org/wiki/LITS">LITS</a>.</p>
               
             </div>
           </div>
@@ -113,7 +180,7 @@ using z3.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="symbols/" class="btn btn-neutral float-right" title="Symbols">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
     </div>
@@ -141,7 +208,7 @@ using z3.</p>
       
       
       
-        <span style="margin-left: 15px"><a href="api/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="symbols/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
@@ -154,5 +221,5 @@ using z3.</p>
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-05-08 00:44:55
+Build Date UTC : 2019-05-09 01:46:17
 -->

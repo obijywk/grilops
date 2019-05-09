@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Regions - grilops API documentation</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Regions";
+    var mkdocs_page_input_path = "regions.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> grilops API documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">API</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../symbols/">Symbols</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../grids/">Grids</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../loops/">Loops</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Regions</a>
+    <ul class="subnav">
+            
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../shapes/">Shapes</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">grilops API documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>API &raquo;</li>
+        
+      
+    
+    <li>Regions</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="grilops.regions">grilops.regions</h1>
+
+<p>This module supports puzzles that group cells into contiguous regions.</p>
+<p>Internally, the <code>RegionConstrainer</code> constructs subtrees, each spanning the cells
+contained within a region. Aspects of a cell's relationship to the other cells
+in its subtree are exposed by properties of the <code>RegionConstrainer</code>.</p>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><code>X (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is not
+    part of a region.</li>
+<li><code>R (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
+    root of its region's subtree.</li>
+<li><code>N (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
+    child of the cell above it in its region's subtree.</li>
+<li><code>E (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
+    child of the cell to the right of it in its region's subtree.</li>
+<li><code>S (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
+    child of the cell below it in its region's subtree.</li>
+<li><code>W (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
+    child of the cell to the left of it in its region's subtree.</li>
+</ul>
+<h2 id="grilops.regions.RegionConstrainer">RegionConstrainer</h2>
+
+<pre><code class="python">RegionConstrainer(self, height:int, width:int, solver:z3.z3.Solver=None, complete:bool=True)
+</code></pre>
+
+<p>Creates constraints for grouping cells into contiguous regions.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>height (int)</strong>: The height of the grid.</li>
+<li><strong>width (int)</strong>: The width of the grid.</li>
+<li><strong>solver (z3.Solver, None)</strong>: A <code>Solver</code> object. If None, a <code>Solver</code> will be
+    constructed.</li>
+<li><strong>complete (bool)</strong>: If true, every cell must be part of a region. Defaults to
+    true.</li>
+</ul>
+<h3 id="grilops.regions.RegionConstrainer.parent_grid">parent_grid</h3>
+
+<p>(List[List[ArithRef]]): A grid of region subtree parent pointers.</p>
+<p>The values that may be present in this grid are the module
+attributes <code>X</code>, <code>R</code>, <code>N</code>, <code>E</code>, <code>S</code>, and <code>W</code>.</p>
+<h3 id="grilops.regions.RegionConstrainer.region_id_grid">region_id_grid</h3>
+
+<p>(List[List[ArithRef]]): A grid of numbers identifying regions.</p>
+<p>A region's identifier is the position in the grid (going in order from left
+to right, top to bottom) of the root of that region's subtree.</p>
+<h3 id="grilops.regions.RegionConstrainer.region_size_grid">region_size_grid</h3>
+
+<p>(List[List[ArithRef]]): A grid of region sizes.
+<h3 id="grilops.regions.RegionConstrainer.solver">solver</h3></p>
+<p>(z3.Solver): The <code>Solver</code> associated with this <code>RegionConstrainer</code>.
+<h3 id="grilops.regions.RegionConstrainer.subtree_size_grid">subtree_size_grid</h3></p>
+<p>(List[List[ArithRef]]): A grid of cell subtree sizes.</p>
+<p>A cell's subtree size is one plus the number of cells that are descendents
+of the cell in its region's subtree.</p>
+<h3 id="grilops.regions.RegionConstrainer.print_trees">print_trees</h3>
+
+<pre><code class="python">RegionConstrainer.print_trees(self)
+</code></pre>
+
+<p>Prints the region parent assigned to each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+<h3 id="grilops.regions.RegionConstrainer.print_subtree_sizes">print_subtree_sizes</h3>
+
+<pre><code class="python">RegionConstrainer.print_subtree_sizes(self)
+</code></pre>
+
+<p>Prints the region subtree size of each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+<h3 id="grilops.regions.RegionConstrainer.print_region_ids">print_region_ids</h3>
+
+<pre><code class="python">RegionConstrainer.print_region_ids(self)
+</code></pre>
+
+<p>Prints a number identifying the region that owns each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+<h3 id="grilops.regions.RegionConstrainer.print_region_sizes">print_region_sizes</h3>
+
+<pre><code class="python">RegionConstrainer.print_region_sizes(self)
+</code></pre>
+
+<p>Prints the size of the region that contains each cell.</p>
+<p>Should be called only after the solver has been checked.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../shapes/" class="btn btn-neutral float-right" title="Shapes">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../loops/" class="btn btn-neutral" title="Loops"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../loops/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../shapes/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
