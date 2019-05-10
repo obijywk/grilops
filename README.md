@@ -8,8 +8,10 @@ useful for solving and checking
 [Nikoli](https://en.wikipedia.org/wiki/Nikoli_(publisher))-style logic puzzles
 using z3.
 
-To get a feel for how to use this package to model and solve puzzles, refer
-to the
+To get a feel for how to use this package to model and solve puzzles, try
+working through the [tutorial IPython
+notebook](https://github.com/obijywk/grilops/blob/master/examples/tutorial.ipynb),
+and refer to the
 [examples](https://github.com/obijywk/grilops/tree/master/examples) and the
 [API Documentation](https://obijywk.github.io/grilops/).
 
