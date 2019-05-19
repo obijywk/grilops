@@ -20,8 +20,8 @@ W (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
 """
 
 import sys
-from typing import List
-from z3 import And, ArithRef, If, Implies, Int, Solver, Sum  # type: ignore
+from typing import List, Optional
+from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum  # type: ignore
 
 
 X, R, N, E, S, W = range(6)
@@ -37,15 +37,17 @@ class RegionConstrainer:
       constructed.
   complete (bool): If true, every cell must be part of a region. Defaults to
       true.
+  max_region_size(int, None): The maximum possible size of a region.
   """
   _instance_index = 0
 
-  def __init__(
+  def __init__(  # pylint: disable=R0913
       self,
       height: int,
       width: int,
       solver: Solver = None,
-      complete: bool = True
+      complete: bool = True,
+      max_region_size: Optional[int] = None
   ):
     RegionConstrainer._instance_index += 1
     if solver:
@@ -53,10 +55,14 @@ class RegionConstrainer:
     else:
       self.__solver = Solver()
     self.__complete = complete
-    self.__create_grids(width, height)
+    if max_region_size is not None:
+      self.__max_region_size = max_region_size
+    else:
+      self.__max_region_size = height * width
+    self.__create_grids(height, width)
     self.__add_constraints()
 
-  def __create_grids(self, width: int, height: int):
+  def __create_grids(self, height: int, width: int):
     """Create the grids used to model region constraints."""
     self.__parent_grid: List[List[ArithRef]] = []
     for y in range(height):
@@ -76,7 +82,11 @@ class RegionConstrainer:
       row = []
       for x in range(width):
         v = Int(f"rcss-{RegionConstrainer._instance_index}-{y}-{x}")
-        self.__solver.add(v >= 0)
+        if self.__complete:
+          self.__solver.add(v >= 1)
+        else:
+          self.__solver.add(v >= 0)
+        self.__solver.add(v <= self.__max_region_size)
         row.append(v)
       self.__subtree_size_grid.append(row)
 
@@ -85,6 +95,11 @@ class RegionConstrainer:
       row = []
       for x in range(width):
         v = Int(f"rcid-{RegionConstrainer._instance_index}-{y}-{x}")
+        if self.__complete:
+          self.__solver.add(v >= 0)
+        else:
+          self.__solver.add(v >= -1)
+        self.__solver.add(v < height * width)
         parent = self.__parent_grid[y][x]
         self.__solver.add(Implies(parent == X, v == -1))
         self.__solver.add(Implies(parent == R, v == y * width + x))
@@ -96,6 +111,11 @@ class RegionConstrainer:
       row = []
       for x in range(width):
         v = Int(f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}")
+        if self.__complete:
+          self.__solver.add(v >= 1)
+        else:
+          self.__solver.add(Or(v >= 1, v == -1))
+        self.__solver.add(v <= self.__max_region_size)
         parent = self.__parent_grid[y][x]
         subtree_size = self.__subtree_size_grid[y][x]
         self.__solver.add(Implies(parent == X, v == -1))
