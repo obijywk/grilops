@@ -178,6 +178,21 @@ class SymbolGrid:
     result = self.__solver.check()
     return result == unsat
 
+  def solved_grid(self) -> List[List[int]]:
+    """Returns the solved symbol grid.
+
+    Should be called only after #SymbolGrid.solve() has already completed
+    successfully.
+    """
+    model = self.__solver.model()
+    solved = []
+    for row in self.__grid:
+      solved_row = []
+      for cell in row:
+        solved_row.append(model.eval(cell).as_long())
+      solved.append(solved_row)
+    return solved
+
   def print(self, hook_function=None):
     """Prints the solved grid using symbol labels.
 
