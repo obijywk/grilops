@@ -31,10 +31,7 @@ def main():
   for y in range(len(givens)):
     for x in range(len(givens[0])):
       # The filled number must match the size of the region.
-      #
-      # Note that the symbol for 1 actually has index 0, so we must subtract
-      # 1 from the size of the region when adding this constraint.
-      sg.solver.add(sg.grid[y][x] == rc.region_size_grid[y][x] - 1)
+      sg.solver.add(sg.grid[y][x] == rc.region_size_grid[y][x])
 
       # The size of the region must match the clue.
       given = givens[y][x]

@@ -23,7 +23,7 @@ AREAS = [
 
 def main():
   """Star Battle solver example."""
-  sym = grilops.SymbolSet(["EMPTY", "STAR"], [" ", "*"])
+  sym = grilops.SymbolSet([("EMPTY", " "), ("STAR", "*")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
 
   # There must be exactly two stars per column.

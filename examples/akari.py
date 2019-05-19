@@ -49,7 +49,11 @@ def main():
     print()
   print()
 
-  sym = grilops.SymbolSet(["BLACK", "EMPTY", "LIGHT"], [chr(0x2588), " ", "*"])
+  sym = grilops.SymbolSet([
+      ("BLACK", chr(0x2588)),
+      ("EMPTY", " "),
+      ("LIGHT", "*"),
+  ])
   sg = grilops.SymbolGrid(size, size, sym)
 
   for y in range(size):

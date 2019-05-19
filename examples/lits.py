@@ -22,11 +22,17 @@ AREAS = [
 ]
 
 
-def link_symbols_to_shapes(sg, sc):
+def link_symbols_to_shapes(sym, sg, sc):
   """Add constraints to ensure the symbols match the shapes."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(sg.cell_is(y, x, sc.shape_type_grid[y][x] + 1))
+      sg.solver.add(
+          If(
+              sc.shape_type_grid[y][x] != -1,
+              sg.cell_is(y, x, sc.shape_type_grid[y][x]),
+              sg.cell_is(y, x, sym.W)
+          )
+      )
 
 
 def add_area_constraints(sc):
@@ -99,7 +105,7 @@ def add_adjacent_tetronimo_constraints(sc):
 
 def main():
   """LITS solver example."""
-  sym = grilops.SymbolSet(["W", "L", "I", "T", "S"], [" ", "L", "I", "T", "S"])
+  sym = grilops.SymbolSet(["L", "I", "T", "S", ("W", " ")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
   sc = grilops.shapes.ShapeConstrainer(
@@ -117,7 +123,7 @@ def main():
       allow_copies=True
   )
 
-  link_symbols_to_shapes(sg, sc)
+  link_symbols_to_shapes(sym, sg, sc)
   add_area_constraints(sc)
   add_nurikabe_constraints(sym, sg, rc)
   add_adjacent_tetronimo_constraints(sc)

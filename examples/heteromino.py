@@ -16,13 +16,15 @@ def main():
       (3, 2),
   ])
 
-  sym = grilops.SymbolSet(
-      ["BL", "NS", "EW", "NE", "SE", "SW", "NW"],
-      [
-          chr(0x2588), chr(0x25AF), chr(0x25AD),
-          chr(0x25F9), chr(0x25FF), chr(0x25FA), chr(0x25F8)
-      ]
-  )
+  sym = grilops.SymbolSet([
+      ("BL", chr(0x2588)),
+      ("NS", chr(0x25AF)),
+      ("EW", chr(0x25AD)),
+      ("NE", chr(0x25F9)),
+      ("SE", chr(0x25FF)),
+      ("SW", chr(0x25FA)),
+      ("NW", chr(0x25F8)),
+  ])
   sg = grilops.SymbolGrid(size, size, sym)
   rc = grilops.regions.RegionConstrainer(
       size, size, solver=sg.solver, complete=False)

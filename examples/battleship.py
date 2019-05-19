@@ -6,14 +6,15 @@ import grilops
 import grilops.shapes
 
 
-SYM = grilops.SymbolSet(
-    ["X", "N", "E", "S", "W", "B", "O"],
-    [
-        " ",
-        chr(0x25B4), chr(0x25B8), chr(0x25BE), chr(0x25C2),
-        chr(0x25AA), chr(0x2022),
-    ]
-)
+SYM = grilops.SymbolSet([
+    ("X", " "),
+    ("N", chr(0x25B4)),
+    ("E", chr(0x25B8)),
+    ("S", chr(0x25BE)),
+    ("W", chr(0x25C2)),
+    ("B", chr(0x25AA)),
+    ("O", chr(0x2022)),
+])
 HEIGHT, WIDTH = 8, 8
 GIVENS_Y = [1, 5, 1, 5, 0, 3, 2, 2]
 GIVENS_X = [2, 4, 2, 3, 0, 4, 1, 3]

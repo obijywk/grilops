@@ -110,7 +110,7 @@ def constrain_adjacent_cells(sg, rc):
 
 def main():
   """Nurikabe solver example."""
-  sym = grilops.SymbolSet(["B", "W"], [chr(0x2588), " "])
+  sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
 

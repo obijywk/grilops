@@ -85,8 +85,8 @@ class SymbolGrid:
       row = []
       for x in range(width):
         v = Int(f"sg-{SymbolGrid._instance_index}-{y}-{x}")
-        self.__solver.add(v >= symbol_set.symbols[0].index)
-        self.__solver.add(v <= symbol_set.symbols[-1].index)
+        self.__solver.add(v >= symbol_set.min_index())
+        self.__solver.add(v <= symbol_set.max_index())
         row.append(v)
       self.__grid.append(row)
 
@@ -207,7 +207,7 @@ class SymbolGrid:
         string to print for that cell, or None to keep the default behavior.
     """
     model = self.__solver.model()
-    label_width = max(len(s.label) for s in self.__symbol_set.symbols)
+    label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
     for y, row in enumerate(self.__grid):
       for x, cell in enumerate(row):
         i = model.eval(cell).as_long()

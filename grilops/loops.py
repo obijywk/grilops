@@ -23,14 +23,15 @@ class LoopSymbolSet(SymbolSet):
   """
 
   def __init__(self):
-    super().__init__(
-        ["NS", "EW", "NE", "SE", "SW", "NW"],
-        [
-            chr(0x2502), chr(0x2500),
-            chr(0x2514), chr(0x250C), chr(0x2510), chr(0x2518)
-        ]
-    )
-    self.__max_loop_symbol_index = len(self.symbols)
+    super().__init__([
+        ("NS", chr(0x2502)),
+        ("EW", chr(0x2500)),
+        ("NE", chr(0x2514)),
+        ("SE", chr(0x250C)),
+        ("SW", chr(0x2510)),
+        ("NW", chr(0x2518)),
+    ])
+    self.__max_loop_symbol_index = self.max_index()
 
   def is_loop(self, symbol: ArithRef) -> BoolRef:
     """Returns true if #symbol represents part of the loop.
@@ -41,7 +42,7 @@ class LoopSymbolSet(SymbolSet):
     # Returns
     (z3.BoolRef): true if the symbol represents part of the loop.
     """
-    return symbol < self.__max_loop_symbol_index
+    return symbol < self.__max_loop_symbol_index + 1
 
 
 def add_loop_edge_constraints(symbol_grid: SymbolGrid):

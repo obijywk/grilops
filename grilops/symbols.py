@@ -1,6 +1,6 @@
 """This module supports defining symbols that may be filled into grid cells."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class Symbol:
@@ -52,32 +52,45 @@ class SymbolSet:
   """The complete set of markings allowed to be filled into a #SymbolGrid.
 
   # Arguments
-  names (List[str], None): A list of Python-safe names for the symbols.
-  labels (List[str], None): A list of printable labels for the symbols.
+  symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]]): A list of
+      specifications for the symbols. Each specification may be a
+      Python-safe name, a (Python-safe name, printabel label) tuple, or a
+      (Python-safe name, printabel label, index value) tuple.
   """
   def __init__(
       self,
-      names: List[str] = None,
-      labels: List[str] = None
+      symbols: List[Union[str, Tuple[str, str], Tuple[str, str, int]]]
   ):
-    self.__symbols: List[Symbol] = []
+    self.__index_to_symbol: Dict[int, Symbol] = {}
     self.__label_to_symbol_index: Dict[str, int] = {}
 
-    if names and labels:
-      if len(names) != len(labels):
-        raise Exception("names and labels must have the same length")
-      for i, (name, label) in enumerate(zip(names, labels)):
-        self.__symbols.append(Symbol(i, name, label))
-    elif names:
-      for i, name in enumerate(names):
-        self.__symbols.append(Symbol(i, name))
-    elif labels:
-      for i, label in enumerate(labels):
-        self.__symbols.append(Symbol(i, label=label))
+    for spec in symbols:
+      if isinstance(spec, str):
+        i = self.__next_unused_index()
+        symbol = Symbol(i, name=spec)
+        self.__index_to_symbol[i] = symbol
+      elif isinstance(spec, tuple) and len(spec) == 2:
+        i = self.__next_unused_index()
+        symbol = Symbol(i, name=spec[0], label=spec[1])
+        self.__index_to_symbol[i] = symbol
+      elif isinstance(spec, tuple) and len(spec) == 3:
+        i = spec[2]
+        if i in self.__index_to_symbol:
+          raise Exception(
+              f"Index of {spec} already used by {self.__index_to_symbol[i]}")
+        symbol = Symbol(i, name=spec[0], label=spec[1])
+        self.__index_to_symbol[i] = symbol
+      else:
+        raise Exception(f"Invalid symbol spec: {spec}")
 
-    for symbol in self.__symbols:
+    for symbol in self.__index_to_symbol.values():
       self.__dict__[symbol.name] = symbol.index
       self.__label_to_symbol_index[symbol.label] = symbol.index
+
+  def __next_unused_index(self):
+    if not self.__index_to_symbol:
+      return 0
+    return max(self.__index_to_symbol.keys()) + 1
 
   def append(self, name: str = None, label: str = None):
     """Appends an additional symbol to this symbol set.
@@ -86,19 +99,24 @@ class SymbolSet:
     name (str, None): The Python-safe name of the symbol.
     label (str, None): The printable label of the symbol.
     """
-    if self.__symbols:
-      index = self.__symbols[-1].index + 1
-    else:
-      index = 0
+    index = self.__next_unused_index()
     symbol = Symbol(index, name, label)
-    self.__symbols.append(symbol)
+    self.__index_to_symbol[index] = symbol
     self.__dict__[symbol.name] = symbol.index
     self.__label_to_symbol_index[symbol.label] = symbol.index
 
+  def min_index(self):
+    """Returns the minimum index value of all of the symbols."""
+    return min(self.__index_to_symbol.keys())
+
+  def max_index(self):
+    """Returns the maximum index value of all of the symbols."""
+    return max(self.__index_to_symbol.keys())
+
   @property
-  def symbols(self) -> List[Symbol]:
-    """(List[Symbol]): The list of all symbols."""
-    return self.__symbols
+  def symbols(self) -> Dict[int, Symbol]:
+    """(Dict[int, Symbol]): The map of all symbols."""
+    return self.__index_to_symbol
 
   def __getitem__(self, index):
     return self.__label_to_symbol_index[str(index)]
@@ -142,6 +160,5 @@ def make_number_range_symbol_set(
   (SymbolSet): A #SymbolSet consisting of consecutive numbers.
   """
   return SymbolSet(
-      [f"S{v}" for v in range(min_number, max_number + 1)],
-      [str(v) for v in range(min_number, max_number + 1)]
+      [(f"S{v}", str(v), v) for v in range(min_number, max_number + 1)]
   )
