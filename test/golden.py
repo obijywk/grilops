@@ -10,7 +10,7 @@ def execute(example_path):
   start_time = time.time()
   try:
     completed_process = subprocess.run(
-        ["python3", example_path],
+        [sys.executable, example_path],
         stdout=subprocess.PIPE,
         check=True
     )
