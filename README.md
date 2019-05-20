@@ -44,8 +44,9 @@ kinds of constraints.
 ### Loops
 
 The `grilops.loops` module is helpful for adding constraints that ensure symbols
-connect to form closed loops. An example of a puzzle type for which this is
-useful is [Masyu](https://en.wikipedia.org/wiki/Masyu).
+connect to form closed loops. Some examples of puzzle types for which this is
+useful are [Masyu](https://en.wikipedia.org/wiki/Masyu) and
+[Slitherlink](https://en.wikipedia.org/wiki/Slitherlink).
 
 ### Regions
 
