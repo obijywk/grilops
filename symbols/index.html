@@ -141,18 +141,20 @@
 <h3 id="grilops.symbols.Symbol.name">name</h3></p>
 <p>(str): The Python-safe name of the symbol.
 <h2 id="grilops.symbols.SymbolSet">SymbolSet</h2></p>
-<pre><code class="python">SymbolSet(self, names:List[str]=None, labels:List[str]=None)
+<pre><code class="python">SymbolSet(self, symbols:List[Union[str, Tuple[str, str], Tuple[str, str, int]]])
 </code></pre>
 
 <p>The complete set of markings allowed to be filled into a <code>SymbolGrid</code>.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>names (List[str], None)</strong>: A list of Python-safe names for the symbols.</li>
-<li><strong>labels (List[str], None)</strong>: A list of printable labels for the symbols.</li>
+<li><strong>symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]])</strong>: A list of
+    specifications for the symbols. Each specification may be a
+    Python-safe name, a (Python-safe name, printabel label) tuple, or a
+    (Python-safe name, printabel label, index value) tuple.</li>
 </ul>
 <h3 id="grilops.symbols.SymbolSet.symbols">symbols</h3>
 
-<p>(List[Symbol]): The list of all symbols.
+<p>(Dict[int, Symbol]): The map of all symbols.
 <h3 id="grilops.symbols.SymbolSet.append">append</h3></p>
 <pre><code class="python">SymbolSet.append(self, name:str=None, label:str=None)
 </code></pre>
@@ -163,8 +165,18 @@
 <li><strong>name (str, None)</strong>: The Python-safe name of the symbol.</li>
 <li><strong>label (str, None)</strong>: The printable label of the symbol.</li>
 </ul>
-<h2 id="grilops.symbols.make_letter_range_symbol_set">make_letter_range_symbol_set</h2>
+<h3 id="grilops.symbols.SymbolSet.min_index">min_index</h3>
 
+<pre><code class="python">SymbolSet.min_index(self)
+</code></pre>
+
+<p>Returns the minimum index value of all of the symbols.
+<h3 id="grilops.symbols.SymbolSet.max_index">max_index</h3></p>
+<pre><code class="python">SymbolSet.max_index(self)
+</code></pre>
+
+<p>Returns the maximum index value of all of the symbols.
+<h2 id="grilops.symbols.make_letter_range_symbol_set">make_letter_range_symbol_set</h2></p>
 <pre><code class="python">make_letter_range_symbol_set(min_letter:str, max_letter:str) -&gt; grilops.symbols.SymbolSet
 </code></pre>
 

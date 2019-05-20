@@ -142,7 +142,7 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
 </ul>
 <h2 id="grilops.regions.RegionConstrainer">RegionConstrainer</h2>
 
-<pre><code class="python">RegionConstrainer(self, height:int, width:int, solver:z3.z3.Solver=None, complete:bool=True)
+<pre><code class="python">RegionConstrainer(self, height:int, width:int, solver:z3.z3.Solver=None, complete:bool=True, max_region_size:Union[int, NoneType]=None)
 </code></pre>
 
 <p>Creates constraints for grouping cells into contiguous regions.</p>
@@ -154,6 +154,7 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
     constructed.</li>
 <li><strong>complete (bool)</strong>: If true, every cell must be part of a region. Defaults to
     true.</li>
+<li><strong>max_region_size(int, None)</strong>: The maximum possible size of a region.</li>
 </ul>
 <h3 id="grilops.regions.RegionConstrainer.parent_grid">parent_grid</h3>
 
