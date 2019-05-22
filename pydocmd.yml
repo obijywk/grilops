@@ -11,6 +11,8 @@ generate:
     - grilops.regions++
   - shapes.md:
     - grilops.shapes++
+  - sightlines.md:
+    - grilops.sightlines++
 
 pages:
   - Home: index.md << README.md
@@ -20,6 +22,7 @@ pages:
     - Loops: loops.md
     - Regions: regions.md
     - Shapes: shapes.md
+    - Sightlines: sightlines.md
 
 gens_dir: docs/pydocmd
 site_dir: docs/html

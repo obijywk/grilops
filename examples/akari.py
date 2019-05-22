@@ -1,9 +1,10 @@
 """Akari solver example."""
 
 import sys
-from z3 import If, Implies, Not, Sum
+from z3 import If, Sum
 
 import grilops
+import grilops.sightlines
 
 
 def main():
@@ -69,37 +70,38 @@ def main():
         # All black cells are given; don't allow this cell to be black.
         sg.solver.add(sg.cell_is_one_of(y, x, [sym.EMPTY, sym.LIGHT]))
 
-  def make_is_light_terms(yxs):
-    terms = []
-    for (y, x) in yxs:
-      if (y, x) in black_cells:
-        break
-      terms.append(If(sg.cell_is(y, x, sym.LIGHT), 1, 0))
-    return terms
+  def is_black(c):
+    return c == sym.BLACK
+  def count_light(c):
+    return If(c == sym.LIGHT, 1, 0)
 
   for y in range(size):
     for x in range(size):
       if (y, x) in black_cells:
         continue
-
-      visible_light_count_terms = (
-          make_is_light_terms([(ny, x) for ny in range(y - 1, -1, -1)]) +
-          make_is_light_terms([(sy, x) for sy in range(y + 1, size)]) +
-          make_is_light_terms([(y, wx) for wx in range(x - 1, -1, -1)]) +
-          make_is_light_terms([(y, ex) for ex in range(x + 1, size)])
+      visible_light_count = (
+          grilops.sightlines.count_cells(
+              sg, (y - 1, x), (-1, 0), stop=is_black, count=count_light
+          ) +
+          grilops.sightlines.count_cells(
+              sg, (y + 1, x), (1, 0), stop=is_black, count=count_light
+          ) +
+          grilops.sightlines.count_cells(
+              sg, (y, x - 1), (0, -1), stop=is_black, count=count_light
+          ) +
+          grilops.sightlines.count_cells(
+              sg, (y, x + 1), (0, 1), stop=is_black, count=count_light
+          )
       )
-
-      # Ensure all cells are lit by at least one light.
-      sg.solver.add(Implies(
-          Not(sg.cell_is(y, x, sym.LIGHT)),
-          Sum(*visible_light_count_terms) > 0
-      ))
-
-      # Ensure each light cannot see any other lights.
-      sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.LIGHT),
-          Sum(*visible_light_count_terms) == 0
-      ))
+      # Ensure that each light cannot see any other lights, and that each cell
+      # is lit by at least one light.
+      sg.solver.add(
+          If(
+              sg.cell_is(y, x, sym.LIGHT),
+              visible_light_count == 0,
+              visible_light_count > 0
+          )
+      )
 
   if sg.solve():
     sg.print()

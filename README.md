@@ -63,3 +63,13 @@ cells are grouped into orthogonally contiguous regions (polyominos) of fixed
 shapes and sizes. Some examples of puzzle types for which this is useful are
 [Battleship](https://en.wikipedia.org/wiki/Battleship_(puzzle)) and
 [LITS](https://en.wikipedia.org/wiki/LITS).
+
+### Sightlines
+
+The `grilops.sightlines` module is helpful for adding constraints that ensure
+properties hold along straight lines through the grid. These "sightlines" may
+terminate before reaching the edge of the grid if certain conditions are met
+(e.g. if a certain symbol, such as one representing a wall, is
+encountered). Some examples of puzzle types for which this is useful are
+[Akari](https://en.wikipedia.org/wiki/Light_Up_(puzzle)) and
+[Skyscraper](https://www.puzzlemix.com/Skyscraper).
