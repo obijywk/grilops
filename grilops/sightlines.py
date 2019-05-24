@@ -99,5 +99,5 @@ def accumulate_and_count_cells(  # pylint: disable=R0913
     x += direction[1]
   expr = 0
   for stop_term, count_term in zip(reversed(stop_terms), reversed(count_terms)):
-    expr = If(stop_term, count_term, count_term + expr)
+    expr = If(stop_term, 0, count_term + expr)
   return expr
