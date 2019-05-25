@@ -51,20 +51,16 @@ def main():
             )
         )
 
-  def stop(c):
-    return c == SYM.B
-
   for y in range(HEIGHT):
     for x in range(WIDTH):
       if GIVENS[y][x] == 0:
         continue
       sg.solver.add(sg.cell_is(y, x, SYM.W))
       # Count the cells visible along sightlines from the given cell.
-      visible_cell_count = 1 + (
-          grilops.sightlines.count_cells(sg, (y - 1, x), (-1, 0), stop=stop) +
-          grilops.sightlines.count_cells(sg, (y + 1, x), (1, 0), stop=stop) +
-          grilops.sightlines.count_cells(sg, (y, x - 1), (0, -1), stop=stop) +
-          grilops.sightlines.count_cells(sg, (y, x + 1), (0, 1), stop=stop)
+      visible_cell_count = 1 + sum(
+          grilops.sightlines.count_cells(
+              sg, n.location, n.direction, stop=lambda c: c == SYM.B
+          ) for n in sg.adjacent_cells(y, x)
       )
       sg.solver.add(visible_cell_count == GIVENS[y][x])
 
