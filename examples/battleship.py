@@ -63,8 +63,12 @@ def main():
     for x in range(WIDTH):
       shape_type = sc.shape_type_grid[y][x]
       shape_id = sc.shape_instance_grid[y][x]
-      touching_types = grilops.touching_cells(sc.shape_type_grid, y, x)
-      touching_ids = grilops.touching_cells(sc.shape_instance_grid, y, x)
+      touching_types = [
+          n.symbol for n in grilops.touching_cells(sc.shape_type_grid, y, x)
+      ]
+      touching_ids = [
+          n.symbol for n in grilops.touching_cells(sc.shape_instance_grid, y, x)
+      ]
 
       # Link the X symbol to the absence of a ship segment.
       sg.solver.add(

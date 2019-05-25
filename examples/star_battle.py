@@ -51,7 +51,7 @@ def main():
     for x in range(WIDTH):
       sg.solver.add(Implies(
           sg.cell_is(y, x, sym.STAR),
-          And(*[c == sym.EMPTY for c in sg.touching_cells(y, x)])
+          And(*[n.symbol == sym.EMPTY for n in sg.touching_cells(y, x)])
       ))
 
   if sg.solve():

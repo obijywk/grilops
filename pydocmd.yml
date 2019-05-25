@@ -4,7 +4,10 @@ generate:
   - symbols.md:
     - grilops.symbols++
   - grids.md:
-    - grilops.grids++
+    - grilops.grids.Neighbor
+    - grilops.grids.adjacent_cells+
+    - grilops.grids.touching_cells+
+    - grilops.grids.SymbolGrid++
   - loops.md:
     - grilops.loops++
   - regions.md:

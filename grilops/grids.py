@@ -1,14 +1,27 @@
 """This module supports constructing and working with grids of cells."""
 
 import sys
-from typing import List
+from typing import List, NamedTuple, Tuple
 from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
 
 
+class Neighbor(NamedTuple):
+  """Properties of a cell that is a neighbor of another.
+
+  # Attributes
+  location (Tuple[int, int]): The (y, x) coordinate of the location of the cell.
+  direction (Tuple[int, int]): The (+y, +x) distance from the original cell.
+  symbol (z3.ArithRef): The symbol constant of the cell.
+  """
+  location: Tuple[int, int]
+  direction: Tuple[int, int]
+  symbol: ArithRef
+
+
 def adjacent_cells(
-    grid: List[List[ArithRef]], y: int, x: int) -> List[ArithRef]:
+    grid: List[List[ArithRef]], y: int, x: int) -> List[Neighbor]:
   """Returns a list of cells orthogonally adjacent to the given cell.
 
   # Arguments
@@ -17,22 +30,22 @@ def adjacent_cells(
   x (int): x-coordinate of the given cell.
 
   # Returns
-  (List[z3.ArithRef]): The cells orthogonally adjacent to the given cell.
+  (List[Neighbor]): The cells orthogonally adjacent to the given cell.
   """
   cells = []
   if y > 0:
-    cells.append(grid[y - 1][x])
+    cells.append(Neighbor((y - 1, x), (-1, 0), grid[y - 1][x]))
   if x < len(grid[0]) - 1:
-    cells.append(grid[y][x + 1])
+    cells.append(Neighbor((y, x + 1), (0, 1), grid[y][x + 1]))
   if y < len(grid) - 1:
-    cells.append(grid[y + 1][x])
+    cells.append(Neighbor((y + 1, x), (1, 0), grid[y + 1][x]))
   if x > 0:
-    cells.append(grid[y][x - 1])
+    cells.append(Neighbor((y, x - 1), (0, -1), grid[y][x - 1]))
   return cells
 
 
 def touching_cells(
-    grid: List[List[ArithRef]], y: int, x: int) -> List[ArithRef]:
+    grid: List[List[ArithRef]], y: int, x: int) -> List[Neighbor]:
   """Returns the cells touching the given cell (orthogonally and diagonally).
 
   # Arguments
@@ -41,17 +54,17 @@ def touching_cells(
   x (int): x-coordinate of the given cell.
 
   # Returns
-  (List[ArithRef]): The cells touching the given cell.
+  (List[Neighbor]): The cells touching the given cell.
   """
   cells = adjacent_cells(grid, y, x)
   if y > 0 and x > 0:
-    cells.append(grid[y - 1][x - 1])
+    cells.append(Neighbor((y - 1, x - 1), (-1, -1), grid[y - 1][x - 1]))
   if y > 0 and x < len(grid[0]) - 1:
-    cells.append(grid[y - 1][x + 1])
+    cells.append(Neighbor((y - 1, x + 1), (-1, 1), grid[y - 1][x + 1]))
   if x > 0 and y < len(grid) - 1:
-    cells.append(grid[y + 1][x - 1])
+    cells.append(Neighbor((y + 1, x - 1), (1, -1), grid[y + 1][x - 1]))
   if y < len(grid) - 1 and x < len(grid[0]) - 1:
-    cells.append(grid[y + 1][x + 1])
+    cells.append(Neighbor((y + 1, x + 1), (1, 1), grid[y + 1][x + 1]))
   return cells
 
 
@@ -105,7 +118,7 @@ class SymbolGrid:
     """(List[List[z3.ArithRef]]): The grid of cells."""
     return self.__grid
 
-  def adjacent_cells(self, y: int, x: int) -> List[ArithRef]:
+  def adjacent_cells(self, y: int, x: int) -> List[Neighbor]:
     """Returns a list of cells orthogonally adjacent to the given cell.
 
     # Arguments
@@ -113,11 +126,11 @@ class SymbolGrid:
     x (int): x-coordinate of the given cell.
 
     # Returns
-    (List[z3.ArithRef]): The cells orthogonally adjacent to the given cell.
+    (List[Neighbor]): The cells orthogonally adjacent to the given cell.
     """
     return adjacent_cells(self.__grid, y, x)
 
-  def touching_cells(self, y: int, x: int) -> List[ArithRef]:
+  def touching_cells(self, y: int, x: int) -> List[Neighbor]:
     """Returns the cells touching the given cell (orthogonally and diagonally).
 
     # Arguments
@@ -125,7 +138,7 @@ class SymbolGrid:
     x (int): x-coordinate of the given cell.
 
     # Returns
-    (List[ArithRef]): The cells touching the given cell.
+    (List[Neighbor]): The cells touching the given cell.
     """
     return touching_cells(self.__grid, y, x)
 

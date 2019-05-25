@@ -88,8 +88,12 @@ def add_adjacent_tetronimo_constraints(sc):
     for x in range(WIDTH):
       shape_type = sc.shape_type_grid[y][x]
       shape_id = sc.shape_instance_grid[y][x]
-      adjacent_types = grilops.adjacent_cells(sc.shape_type_grid, y, x)
-      adjacent_ids = grilops.adjacent_cells(sc.shape_instance_grid, y, x)
+      adjacent_types = [
+          n.symbol for n in grilops.adjacent_cells(sc.shape_type_grid, y, x)
+      ]
+      adjacent_ids = [
+          n.symbol for n in grilops.adjacent_cells(sc.shape_instance_grid, y, x)
+      ]
       for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
         sc.solver.add(
             Implies(

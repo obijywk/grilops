@@ -1,7 +1,7 @@
 """Akari solver example."""
 
 import sys
-from z3 import If, Sum
+from z3 import If
 
 import grilops
 import grilops.sightlines
@@ -63,9 +63,9 @@ def main():
         sg.solver.add(sg.cell_is(y, x, sym.BLACK))
         light_count = black_cells[(y, x)]
         if light_count is not None:
-          sg.solver.add(light_count == Sum(*[
-              If(c == sym.LIGHT, 1, 0) for c in sg.adjacent_cells(y, x)
-          ]))
+          sg.solver.add(light_count == sum(
+              If(n.symbol == sym.LIGHT, 1, 0) for n in sg.adjacent_cells(y, x)
+          ))
       else:
         # All black cells are given; don't allow this cell to be black.
         sg.solver.add(sg.cell_is_one_of(y, x, [sym.EMPTY, sym.LIGHT]))
@@ -79,19 +79,10 @@ def main():
     for x in range(size):
       if (y, x) in black_cells:
         continue
-      visible_light_count = (
+      visible_light_count = sum(
           grilops.sightlines.count_cells(
-              sg, (y - 1, x), (-1, 0), stop=is_black, count=count_light
-          ) +
-          grilops.sightlines.count_cells(
-              sg, (y + 1, x), (1, 0), stop=is_black, count=count_light
-          ) +
-          grilops.sightlines.count_cells(
-              sg, (y, x - 1), (0, -1), stop=is_black, count=count_light
-          ) +
-          grilops.sightlines.count_cells(
-              sg, (y, x + 1), (0, 1), stop=is_black, count=count_light
-          )
+              sg, n.location, n.direction, stop=is_black, count=count_light
+          ) for n in sg.adjacent_cells(y, x)
       )
       # Ensure that each light cannot see any other lights, and that each cell
       # is lit by at least one light.
