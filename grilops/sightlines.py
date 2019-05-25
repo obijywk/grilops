@@ -22,7 +22,7 @@ def count_cells(
 ):
   """Returns a computation of a sightline through a grid.
 
-  # Arguments:
+  # Arguments
   symbol_grid (SymbolGrid): The SymbolGrid to check against.
   start (Tuple[int, int]): The (y, x) coordinate of the cell where the sightline
       should begin. This is the first cell checked.
@@ -56,7 +56,7 @@ def accumulate_and_count_cells(  # pylint: disable=R0913
 ):
   """Returns a computation of a sightline through a grid, with accumulation.
 
-  # Arguments:
+  # Arguments
   symbol_grid (SymbolGrid): The SymbolGrid to check against.
   start (Tuple[int, int]): The (y, x) coordinate of the cell where the sightline
       should begin. This is the first cell checked.
@@ -70,7 +70,7 @@ def accumulate_and_count_cells(  # pylint: disable=R0913
       symbol and an accumulated value as arguments, and returns the integer
       value to add to the count when this symbol is encountered. By default,
       each symbol will count with a value of one.
-  accumulate: (Callable[[int, ArithRef], ArithRef]): A function that
+  accumulate (Callable[[int, ArithRef], ArithRef]): A function that
       accepts a symbol and an accumulated value as arguments, and returns a new
       accumulated value. This function is used to determine a new accumulated
       value for each cell along the sightline, based on the accumulated value
