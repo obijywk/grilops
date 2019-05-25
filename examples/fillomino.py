@@ -39,26 +39,19 @@ def main():
         sg.solver.add(rc.region_size_grid[y][x] == given)
 
       # Different regions of the same size may not be orthogonally adjacent.
-      if y > 0:
-        sg.solver.add(Implies(
-            rc.region_size_grid[y][x] == rc.region_size_grid[y - 1][x],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y - 1][x]
-        ))
-      if y < len(givens) - 1:
-        sg.solver.add(Implies(
-            rc.region_size_grid[y][x] == rc.region_size_grid[y + 1][x],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y + 1][x]
-        ))
-      if x > 0:
-        sg.solver.add(Implies(
-            rc.region_size_grid[y][x] == rc.region_size_grid[y][x - 1],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y][x - 1]
-        ))
-      if x < len(givens[0]) - 1:
-        sg.solver.add(Implies(
-            rc.region_size_grid[y][x] == rc.region_size_grid[y][x + 1],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y][x + 1]
-        ))
+      region_sizes = [
+          n.symbol for n in grilops.adjacent_cells(rc.region_size_grid, y, x)
+      ]
+      region_ids = [
+          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, y, x)
+      ]
+      for region_size, region_id in zip(region_sizes, region_ids):
+        sg.solver.add(
+            Implies(
+                rc.region_size_grid[y][x] == region_size,
+                rc.region_id_grid[y][x] == region_id
+            )
+        )
 
   if sg.solve():
     sg.print()
