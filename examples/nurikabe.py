@@ -86,26 +86,17 @@ def constrain_adjacent_cells(sg, rc):
   """Different regions of the same color may not be orthogonally adjacent."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      if y > 0:
-        sg.solver.add(Implies(
-            sg.grid[y][x] == sg.grid[y - 1][x],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y - 1][x]
-        ))
-      if y < HEIGHT - 1:
-        sg.solver.add(Implies(
-            sg.grid[y][x] == sg.grid[y + 1][x],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y + 1][x]
-        ))
-      if x > 0:
-        sg.solver.add(Implies(
-            sg.grid[y][x] == sg.grid[y][x - 1],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y][x - 1]
-        ))
-      if x < WIDTH - 1:
-        sg.solver.add(Implies(
-            sg.grid[y][x] == sg.grid[y][x + 1],
-            rc.region_id_grid[y][x] == rc.region_id_grid[y][x + 1]
-        ))
+      adjacent_cells = [n.symbol for n in sg.adjacent_cells(y, x)]
+      adjacent_region_ids = [
+          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, y, x)
+      ]
+      for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
+        sg.solver.add(
+            Implies(
+                sg.grid[y][x] == cell,
+                rc.region_id_grid[y][x] == region_id
+            )
+        )
 
 
 def main():
