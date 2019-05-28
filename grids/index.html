@@ -80,6 +80,10 @@
                     
     <a class="" href="../shapes/">Shapes</a>
                 </li>
+                <li class="">
+                    
+    <a class="" href="../sightlines/">Sightlines</a>
+                </li>
     </ul>
 	    </li>
           
@@ -119,11 +123,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="grilops.grids">grilops.grids</h1>
+                <h1 id="grilops.grids.Neighbor">Neighbor</h1>
 
-<p>This module supports constructing and working with grids of cells.
-<h2 id="grilops.grids.adjacent_cells">adjacent_cells</h2></p>
-<pre><code class="python">adjacent_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[z3.z3.ArithRef]
+<pre><code class="python">Neighbor(self, /, *args, **kwargs)
+</code></pre>
+
+<p>Properties of a cell that is a neighbor of another.</p>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><code>location (Tuple[int, int])</code>: The (y, x) coordinate of the location of the cell.</li>
+<li><code>direction (Tuple[int, int])</code>: The (+y, +x) distance from the original cell.</li>
+<li><code>symbol (z3.ArithRef)</code>: The symbol constant of the cell.</li>
+</ul>
+<h1 id="grilops.grids.adjacent_cells">adjacent_cells</h1>
+
+<pre><code class="python">adjacent_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[grilops.grids.Neighbor]
 </code></pre>
 
 <p>Returns a list of cells orthogonally adjacent to the given cell.</p>
@@ -134,10 +148,10 @@
 <li><strong>x (int)</strong>: x-coordinate of the given cell.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(List[z3.ArithRef])</code>: The cells orthogonally adjacent to the given cell.</p>
-<h2 id="grilops.grids.touching_cells">touching_cells</h2>
+<p><code>(List[Neighbor])</code>: The cells orthogonally adjacent to the given cell.</p>
+<h1 id="grilops.grids.touching_cells">touching_cells</h1>
 
-<pre><code class="python">touching_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[z3.z3.ArithRef]
+<pre><code class="python">touching_cells(grid:List[List[z3.z3.ArithRef]], y:int, x:int) -&gt; List[grilops.grids.Neighbor]
 </code></pre>
 
 <p>Returns the cells touching the given cell (orthogonally and diagonally).</p>
@@ -148,8 +162,8 @@
 <li><strong>x (int)</strong>: x-coordinate of the given cell.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(List[ArithRef])</code>: The cells touching the given cell.</p>
-<h2 id="grilops.grids.SymbolGrid">SymbolGrid</h2>
+<p><code>(List[Neighbor])</code>: The cells touching the given cell.</p>
+<h1 id="grilops.grids.SymbolGrid">SymbolGrid</h1>
 
 <pre><code class="python">SymbolGrid(self, height:int, width:int, symbol_set:grilops.symbols.SymbolSet, solver:z3.z3.Solver=None)
 </code></pre>
@@ -163,15 +177,15 @@
 <li><strong>solver (z3.Solver, None)</strong>: A <code>Solver</code> object. If None, a <code>Solver</code> will be
     constructed.</li>
 </ul>
-<h3 id="grilops.grids.SymbolGrid.grid">grid</h3>
+<h2 id="grilops.grids.SymbolGrid.grid">grid</h2>
 
 <p>(List[List[z3.ArithRef]]): The grid of cells.
-<h3 id="grilops.grids.SymbolGrid.solver">solver</h3></p>
+<h2 id="grilops.grids.SymbolGrid.solver">solver</h2></p>
 <p>(z3.Solver): The <code>Solver</code> object associated with this <code>SymbolGrid</code>.
-<h3 id="grilops.grids.SymbolGrid.symbol_set">symbol_set</h3></p>
+<h2 id="grilops.grids.SymbolGrid.symbol_set">symbol_set</h2></p>
 <p>(SymbolSet): The <code>SymbolSet</code> associated with this <code>SymbolGrid</code>.
-<h3 id="grilops.grids.SymbolGrid.adjacent_cells">adjacent_cells</h3></p>
-<pre><code class="python">SymbolGrid.adjacent_cells(self, y:int, x:int) -&gt; List[z3.z3.ArithRef]
+<h2 id="grilops.grids.SymbolGrid.adjacent_cells">adjacent_cells</h2></p>
+<pre><code class="python">SymbolGrid.adjacent_cells(self, y:int, x:int) -&gt; List[grilops.grids.Neighbor]
 </code></pre>
 
 <p>Returns a list of cells orthogonally adjacent to the given cell.</p>
@@ -181,10 +195,10 @@
 <li><strong>x (int)</strong>: x-coordinate of the given cell.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(List[z3.ArithRef])</code>: The cells orthogonally adjacent to the given cell.</p>
-<h3 id="grilops.grids.SymbolGrid.touching_cells">touching_cells</h3>
+<p><code>(List[Neighbor])</code>: The cells orthogonally adjacent to the given cell.</p>
+<h2 id="grilops.grids.SymbolGrid.touching_cells">touching_cells</h2>
 
-<pre><code class="python">SymbolGrid.touching_cells(self, y:int, x:int) -&gt; List[z3.z3.ArithRef]
+<pre><code class="python">SymbolGrid.touching_cells(self, y:int, x:int) -&gt; List[grilops.grids.Neighbor]
 </code></pre>
 
 <p>Returns the cells touching the given cell (orthogonally and diagonally).</p>
@@ -194,8 +208,8 @@
 <li><strong>x (int)</strong>: x-coordinate of the given cell.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(List[ArithRef])</code>: The cells touching the given cell.</p>
-<h3 id="grilops.grids.SymbolGrid.cell_is">cell_is</h3>
+<p><code>(List[Neighbor])</code>: The cells touching the given cell.</p>
+<h2 id="grilops.grids.SymbolGrid.cell_is">cell_is</h2>
 
 <pre><code class="python">SymbolGrid.cell_is(self, y:int, x:int, value:int) -&gt; z3.z3.BoolRef
 </code></pre>
@@ -210,7 +224,7 @@
 <p><strong>Returns</strong></p>
 <p><code>(z3.BoolRef)</code>: an expression that's true if and only if the cell at (y, x)
     contains this value.</p>
-<h3 id="grilops.grids.SymbolGrid.cell_is_one_of">cell_is_one_of</h3>
+<h2 id="grilops.grids.SymbolGrid.cell_is_one_of">cell_is_one_of</h2>
 
 <pre><code class="python">SymbolGrid.cell_is_one_of(self, y:int, x:int, values:List[int]) -&gt; z3.z3.BoolRef
 </code></pre>
@@ -225,20 +239,20 @@
 <p><strong>Returns</strong></p>
 <p><code>(z3.BoolRef)</code>: an expression that's true if and only if the cell at (y, x)
     contains one of the values.</p>
-<h3 id="grilops.grids.SymbolGrid.solve">solve</h3>
+<h2 id="grilops.grids.SymbolGrid.solve">solve</h2>
 
 <pre><code class="python">SymbolGrid.solve(self) -&gt; bool
 </code></pre>
 
 <p>Returns true if the puzzle has a solution, false otherwise.
-<h3 id="grilops.grids.SymbolGrid.is_unique">is_unique</h3></p>
+<h2 id="grilops.grids.SymbolGrid.is_unique">is_unique</h2></p>
 <pre><code class="python">SymbolGrid.is_unique(self) -&gt; bool
 </code></pre>
 
 <p>Returns true if the solution to the puzzle is unique, false otherwise.</p>
 <p>Should be called only after <code>SymbolGrid.solve()</code> has already completed
 successfully.</p>
-<h3 id="grilops.grids.SymbolGrid.solved_grid">solved_grid</h3>
+<h2 id="grilops.grids.SymbolGrid.solved_grid">solved_grid</h2>
 
 <pre><code class="python">SymbolGrid.solved_grid(self) -&gt; List[List[int]]
 </code></pre>
@@ -246,7 +260,7 @@ successfully.</p>
 <p>Returns the solved symbol grid.</p>
 <p>Should be called only after <code>SymbolGrid.solve()</code> has already completed
 successfully.</p>
-<h3 id="grilops.grids.SymbolGrid.print">print</h3>
+<h2 id="grilops.grids.SymbolGrid.print">print</h2>
 
 <pre><code class="python">SymbolGrid.print(self, hook_function=None)
 </code></pre>

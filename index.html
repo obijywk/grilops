@@ -89,6 +89,10 @@
                     
     <a class="" href="shapes/">Shapes</a>
                 </li>
+                <li class="">
+                    
+    <a class="" href="sightlines/">Sightlines</a>
+                </li>
     </ul>
 	    </li>
           
@@ -161,20 +165,87 @@ several modules to help automate and abstract away the introduction of common
 kinds of constraints.</p>
 <h3 id="loops">Loops</h3>
 <p>The <code>grilops.loops</code> module is helpful for adding constraints that ensure symbols
-connect to form closed loops. An example of a puzzle type for which this is
-useful is <a href="https://en.wikipedia.org/wiki/Masyu">Masyu</a>.</p>
+connect to form closed loops. Some examples of puzzle types for which this is
+useful are <a href="https://en.wikipedia.org/wiki/Masyu">Masyu</a> and
+<a href="https://en.wikipedia.org/wiki/Slitherlink">Slitherlink</a>.</p>
+<pre><code>$ python3 examples/masyu.py             $ python3 examples/slitherlink.py 
+ ┌───┐┌──┐                              ┌──┐                              
+┌┘ ┌─┘└─┐│                              │┌┐│ ┌┐                           
+└─┐│┌──┐││                              └┘│└┐││                           
+  │││┌─┘││                                │ └┘│                           
+┌─┘└┘│ ┌┘│                                └┐  │                           
+│┌──┐│ │┌┘                              ┌──┘┌┐│                           
+││┌─┘└─┘└┐                              └───┘└┘                           
+│││ ┌───┐│                                                                
+└┘│ │┌──┘│                              Unique solution
+  └─┘└───┘
+
+Unique solution
+</code></pre>
+
 <h3 id="regions">Regions</h3>
 <p>The <code>grilops.regions</code> module is helpful for adding constraints that ensure
 cells are grouped into orthogonally contiguous regions (polyominos) of variable
 shapes and sizes. Some examples of puzzle types for which this is useful are
 <a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> and
 <a href="https://en.wikipedia.org/wiki/Fillomino">Fillomino</a>.</p>
+<pre><code>$ python3 examples/nurikabe.py          $ python3 examples/fillomino.py 
+2 █   ██ 2                              8 8 3 3 101010105               
+███  █2███                              8 8 8 3 1010105 5               
+█2█ 7█ █ █                              3 3 8 10104 4 4 5               
+█ ██████ █                              1 3 8 3 102 2 4 5               
+██ █  3█3█                              2 2 8 3 3 1 3 2 2               
+ █2████3██                              6 6 2 2 1 3 3 1 3               
+2██4 █  █                               6 4 4 4 2 2 1 3 3               
+██  █████                               6 4 2 2 4 3 3 4 4               
+█1███ 2█4                               6 6 4 4 4 1 3 4 4               
+
+Unique solution                         Unique solution
+</code></pre>
+
 <h3 id="shapes">Shapes</h3>
 <p>The <code>grilops.shapes</code> module is helpful for adding constraints that ensure
 cells are grouped into orthogonally contiguous regions (polyominos) of fixed
 shapes and sizes. Some examples of puzzle types for which this is useful are
 <a href="https://en.wikipedia.org/wiki/Battleship_(puzzle)">Battleship</a> and
 <a href="https://en.wikipedia.org/wiki/LITS">LITS</a>.</p>
+<pre><code>$ python3 examples/battleship.py        $ python3 examples/lits.py
+     ▴                                        IIII
+◂▪▸  ▪ •                                   SS  L  
+     ▾                                   LSS   L I
+◂▪▪▸   •                                 L IIIILLI
+                                         LL   L  I
+ ▴    ◂▸                                  TTT L  I
+ ▾ ▴                                    SS T LL  T
+   ▾ •                                   SSLL   TT
+                                            L T  T
+Unique solution                         IIIILTTT
+
+                                        Unique solution
+</code></pre>
+
+<h3 id="sightlines">Sightlines</h3>
+<p>The <code>grilops.sightlines</code> module is helpful for adding constraints that ensure
+properties hold along straight lines through the grid. These "sightlines" may
+terminate before reaching the edge of the grid if certain conditions are met
+(e.g. if a certain symbol, such as one representing a wall, is
+encountered). Some examples of puzzle types for which this is useful are
+<a href="https://en.wikipedia.org/wiki/Light_Up_(puzzle)">Akari</a> and
+<a href="https://www.puzzlemix.com/Skyscraper">Skyscraper</a>.</p>
+<pre><code>$ python3 examples/akari.py             $ python3 examples/skyscraper.py 
+█* █*    █                              23541                            
+   *   █                                15432                            
+*█*   █  *                              34215                            
+ *█  █   █                              42153                            
+   ███*                                 51324                            
+   *███*                                                                 
+█ * █* █*                               Unique solution
+*  █*   █*
+  █     * 
+█ *   █* █
+
+Unique solution
+</code></pre>
               
             </div>
           </div>
@@ -223,5 +294,5 @@ shapes and sizes. Some examples of puzzle types for which this is useful are
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-05-20 01:57:09
+Build Date UTC : 2019-05-28 02:06:44
 -->
