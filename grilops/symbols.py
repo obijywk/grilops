@@ -54,8 +54,8 @@ class SymbolSet:
   # Arguments
   symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]]): A list of
       specifications for the symbols. Each specification may be a
-      Python-safe name, a (Python-safe name, printabel label) tuple, or a
-      (Python-safe name, printabel label, index value) tuple.
+      Python-safe name, a (Python-safe name, printable label) tuple, or a
+      (Python-safe name, printable label, index value) tuple.
   """
   def __init__(
       self,
