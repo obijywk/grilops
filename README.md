@@ -48,6 +48,22 @@ connect to form closed loops. Some examples of puzzle types for which this is
 useful are [Masyu](https://en.wikipedia.org/wiki/Masyu) and
 [Slitherlink](https://en.wikipedia.org/wiki/Slitherlink).
 
+~~~~
+$ python3 examples/masyu.py             $ python3 examples/slitherlink.py 
+ ┌───┐┌──┐                              ┌──┐                              
+┌┘ ┌─┘└─┐│                              │┌┐│ ┌┐                           
+└─┐│┌──┐││                              └┘│└┐││                           
+  │││┌─┘││                                │ └┘│                           
+┌─┘└┘│ ┌┘│                                └┐  │                           
+│┌──┐│ │┌┘                              ┌──┘┌┐│                           
+││┌─┘└─┘└┐                              └───┘└┘                           
+│││ ┌───┐│                                                                
+└┘│ │┌──┘│                              Unique solution
+  └─┘└───┘
+
+Unique solution
+~~~~
+
 ### Regions
 
 The `grilops.regions` module is helpful for adding constraints that ensure
@@ -56,6 +72,21 @@ shapes and sizes. Some examples of puzzle types for which this is useful are
 [Nurikabe](https://en.wikipedia.org/wiki/Nurikabe_(puzzle)) and
 [Fillomino](https://en.wikipedia.org/wiki/Fillomino).
 
+~~~~
+$ python3 examples/nurikabe.py          $ python3 examples/fillomino.py 
+2 █   ██ 2                              8 8 3 3 101010105               
+███  █2███                              8 8 8 3 1010105 5               
+█2█ 7█ █ █                              3 3 8 10104 4 4 5               
+█ ██████ █                              1 3 8 3 102 2 4 5               
+██ █  3█3█                              2 2 8 3 3 1 3 2 2               
+ █2████3██                              6 6 2 2 1 3 3 1 3               
+2██4 █  █                               6 4 4 4 2 2 1 3 3               
+██  █████                               6 4 2 2 4 3 3 4 4               
+█1███ 2█4                               6 6 4 4 4 1 3 4 4               
+                                                                        
+Unique solution                         Unique solution
+~~~~
+
 ### Shapes
 
 The `grilops.shapes` module is helpful for adding constraints that ensure
@@ -63,6 +94,22 @@ cells are grouped into orthogonally contiguous regions (polyominos) of fixed
 shapes and sizes. Some examples of puzzle types for which this is useful are
 [Battleship](https://en.wikipedia.org/wiki/Battleship_(puzzle)) and
 [LITS](https://en.wikipedia.org/wiki/LITS).
+
+~~~~
+$ python3 examples/battleship.py        $ python3 examples/lits.py
+     ▴                                        IIII
+◂▪▸  ▪ •                                   SS  L  
+     ▾                                   LSS   L I
+◂▪▪▸   •                                 L IIIILLI
+                                         LL   L  I
+ ▴    ◂▸                                  TTT L  I
+ ▾ ▴                                    SS T LL  T
+   ▾ •                                   SSLL   TT
+                                            L T  T
+Unique solution                         IIIILTTT
+
+                                        Unique solution
+~~~~
 
 ### Sightlines
 
@@ -73,3 +120,19 @@ terminate before reaching the edge of the grid if certain conditions are met
 encountered). Some examples of puzzle types for which this is useful are
 [Akari](https://en.wikipedia.org/wiki/Light_Up_(puzzle)) and
 [Skyscraper](https://www.puzzlemix.com/Skyscraper).
+
+~~~~
+$ python3 examples/akari.py             $ python3 examples/skyscraper.py 
+█* █*    █                              23541                            
+   *   █                                15432                            
+*█*   █  *                              34215                            
+ *█  █   █                              42153                            
+   ███*                                 51324                            
+   *███*                                                                 
+█ * █* █*                               Unique solution
+*  █*   █*
+  █     * 
+█ *   █* █
+
+Unique solution
+~~~~
