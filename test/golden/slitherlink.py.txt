@@ -7,3 +7,12 @@
 └───┘└┘
 
 Unique solution
+
+███   
+█ █  █
+  ██ █
+  ████
+   ███
+████ █
+
+Unique solution
