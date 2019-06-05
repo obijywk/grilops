@@ -133,7 +133,7 @@ also have a custom counting function, to determine a counted value for each
 symbol encountered; by default, each symbol counts with a value of one.</p>
 <h2 id="grilops.sightlines.count_cells">count_cells</h2>
 
-<pre><code class="python">count_cells(symbol_grid:grilops.grids.SymbolGrid, start:Tuple[int, int], direction:Tuple[int, int], stop:Callable[[int], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f7c5df10ae8&gt;, count:Callable[[int], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f7c5df10b70&gt;)
+<pre><code class="python">count_cells(symbol_grid:grilops.grids.SymbolGrid, start:Tuple[int, int], direction:Tuple[int, int], stop:Callable[[int], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f13b8bb2ae8&gt;, count:Callable[[int], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f13b8bb2b70&gt;)
 </code></pre>
 
 <p>Returns a computation of a sightline through a grid.</p>
@@ -155,7 +155,7 @@ symbol encountered; by default, each symbol counts with a value of one.</p>
 </ul>
 <h2 id="grilops.sightlines.accumulate_and_count_cells">accumulate_and_count_cells</h2>
 
-<pre><code class="python">accumulate_and_count_cells(symbol_grid:grilops.grids.SymbolGrid, start:Tuple[int, int], direction:Tuple[int, int], stop:Callable[[int, z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f7c5df10c80&gt;, count:Callable[[int, z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f7c5df10e18&gt;, accumulate:Callable[[int, z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f7c5df10ea0&gt;)
+<pre><code class="python">accumulate_and_count_cells(symbol_grid:grilops.grids.SymbolGrid, start:Tuple[int, int], direction:Tuple[int, int], stop:Callable[[int, z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f13b8bb2c80&gt;, count:Callable[[int, z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f13b8bb2e18&gt;, accumulate:Callable[[int, z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f13b8bb2ea0&gt;)
 </code></pre>
 
 <p>Returns a computation of a sightline through a grid, with accumulation.</p>
