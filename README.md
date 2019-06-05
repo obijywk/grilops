@@ -15,6 +15,24 @@ and refer to the
 [examples](https://github.com/obijywk/grilops/tree/master/examples) and the
 [API Documentation](https://obijywk.github.io/grilops/).
 
+## Installation
+
+grilops requires Python 3.6 or later.
+
+To install grilops for use in your own programs:
+
+```
+$ pip3 install grilops
+```
+
+To install the source code (to run the examples and/or work with the code):
+
+```
+$ git clone https://github.com/obijywk/grilops.git
+$ cd grilops
+$ pip3 install -e .
+```
+
 ## Basic Concepts and Usage
 
 The `symbols` and `grids` modules contain the core functionality needed for

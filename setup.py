@@ -19,5 +19,6 @@ setup(
     zip_safe=False,
     install_requires=[
       "z3-solver"
-    ]
+    ],
+    python_requires=">=3.6"
 )
