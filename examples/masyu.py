@@ -31,9 +31,7 @@ def main():
   sym = grilops.loops.LoopSymbolSet()
   sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(10, 10, sym)
-
-  grilops.loops.add_loop_edge_constraints(sg)
-  grilops.loops.add_single_loop_constraints(sg)
+  grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   straights = [sym.NS, sym.EW]
   turns = [sym.NE, sym.SE, sym.SW, sym.NW]

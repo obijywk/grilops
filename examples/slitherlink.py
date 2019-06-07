@@ -33,8 +33,7 @@ def loop_solve():
   # the spaces between the grid lines where the givens are written. This
   # requires increasing each dimension by one.
   sg = grilops.SymbolGrid(HEIGHT + 1, WIDTH + 1, sym)
-  grilops.loops.add_loop_edge_constraints(sg)
-  grilops.loops.add_single_loop_constraints(sg)
+  grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for (y, x), c in GIVENS.items():
     # For each side of this given location, add one if there's a loop edge

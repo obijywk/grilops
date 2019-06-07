@@ -44,9 +44,7 @@ def main():
   sym.append("BLACK", chr(0x25AE))
   sym.append("INDICATIVE", " ")
   sg = grilops.SymbolGrid(8, 8, sym)
-
-  grilops.loops.add_loop_edge_constraints(sg)
-  grilops.loops.add_single_loop_constraints(sg)
+  grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for y in range(8):
     for x in range(8):

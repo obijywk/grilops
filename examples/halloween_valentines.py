@@ -43,13 +43,12 @@ def extract_answer(sg, loop_order_grid):
 def main():
   """Halloween Town / Valentine's Day Town solver."""
   sg = grilops.SymbolGrid(8, 8, SYM)
-
-  grilops.loops.add_loop_edge_constraints(sg)
-  loop_order_grid = grilops.loops.add_single_loop_constraints(sg)
+  lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   # Cheat a little bit and force the loop order to start such that the answer
-  # extraction starts at the correct place.
-  sg.solver.add(loop_order_grid[5][6] == 0)
+  # extraction starts at the correct place and proceeds in the correct order.
+  sg.solver.add(lc.loop_order_grid[5][6] == 0)
+  sg.solver.add(lc.loop_order_grid[5][5] == 1)
 
   turn_count_terms = []
   o_count = 0
@@ -65,7 +64,7 @@ def main():
 
   if sg.solve():
     sg.print()
-    print(extract_answer(sg, loop_order_grid))
+    print(extract_answer(sg, lc.loop_order_grid))
     print()
     if sg.is_unique():
       print("Unique solution")
