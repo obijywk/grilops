@@ -81,7 +81,7 @@ def main():
         continue
       visible_light_count = sum(
           grilops.sightlines.count_cells(
-              sg, n.location, n.direction, stop=is_black, count=count_light
+              sg, n.location, n.direction, count=count_light, stop=is_black
           ) for n in sg.adjacent_cells(y, x)
       )
       # Ensure that each light cannot see any other lights, and that each cell

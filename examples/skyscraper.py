@@ -1,6 +1,6 @@
 """Skyscraper solver example."""
 
-from z3 import Distinct, If
+from z3 import Datatype, Distinct, If, IntSort
 
 import grilops
 import grilops.sightlines
@@ -24,29 +24,30 @@ def main():
   for x in range(SIZE):
     sg.solver.add(Distinct(*[sg.grid[y][x] for y in range(SIZE)]))
 
-  # We'll use the sightlines accumulator to keep track of the tallest building
-  # we've seen so far.
-  def accumulate(c, a):
-    return If(c > a, c, a)
-
-  # We'll count a building if its height is greater than or equal to the height
-  # of the tallest building we've seen so far. ("or equal to" because the
-  # accumulator is updated before the count is computed).
-  def count(c, a):
-    return If(c >= a, 1, 0)
+  # We'll use the sightlines accumulator to keep track of a tuple storing:
+  #   the tallest building we've seen so far
+  #   the number of visible buildings we've encountered
+  Acc = Datatype("Acc")  # pylint: disable=C0103
+  Acc.declare("acc", ("tallest", IntSort()), ("num_visible", IntSort()))
+  Acc = Acc.create()  # pylint: disable=C0103
+  def accumulate(a, height):
+    return Acc.acc(
+        If(height > Acc.tallest(a), height, Acc.tallest(a)),
+        If(height > Acc.tallest(a), Acc.num_visible(a) + 1, Acc.num_visible(a))
+    )
 
   for x, c in enumerate(GIVEN_TOP):
-    sg.solver.add(c == grilops.sightlines.accumulate_and_count_cells(
-        sg, (0, x), (1, 0), count=count, accumulate=accumulate))
+    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
+        sg, (0, x), (1, 0), Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_LEFT):
-    sg.solver.add(c == grilops.sightlines.accumulate_and_count_cells(
-        sg, (y, 0), (0, 1), count=count, accumulate=accumulate))
+    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
+        sg, (y, 0), (0, 1), Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_RIGHT):
-    sg.solver.add(c == grilops.sightlines.accumulate_and_count_cells(
-        sg, (y, SIZE - 1), (0, -1), count=count, accumulate=accumulate))
+    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
+        sg, (y, SIZE - 1), (0, -1), Acc.acc(0, 0), accumulate)))
   for x, c in enumerate(GIVEN_BOTTOM):
-    sg.solver.add(c == grilops.sightlines.accumulate_and_count_cells(
-        sg, (SIZE - 1, x), (-1, 0), count=count, accumulate=accumulate))
+    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
+        sg, (SIZE - 1, x), (-1, 0), Acc.acc(0, 0), accumulate)))
 
   if sg.solve():
     sg.print()
