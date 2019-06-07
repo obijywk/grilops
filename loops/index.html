@@ -125,8 +125,18 @@
               
                 <h1 id="grilops.loops">grilops.loops</h1>
 
-<p>This module supports puzzles where closed loops are filled into a grid.
-<h2 id="grilops.loops.LoopSymbolSet">LoopSymbolSet</h2></p>
+<p>This module supports puzzles where closed loops are filled into a grid.</p>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><code>L (int)</code>: The <code>LoopConstrainer.inside_outside_grid</code> value indicating that a cell
+    contains part of a loop.</li>
+<li><code>I (int)</code>: The <code>LoopConstrainer.inside_outside_grid</code> value indicating that a cell
+    is inside of a loop.</li>
+<li><code>O (int)</code>: The <code>LoopConstrainer.inside_outside_grid</code> value indicating that a cell
+    is outside of a loop.</li>
+</ul>
+<h2 id="grilops.loops.LoopSymbolSet">LoopSymbolSet</h2>
+
 <pre><code class="python">LoopSymbolSet(self)
 </code></pre>
 
@@ -154,20 +164,29 @@ to this <code>SymbolSet</code> by calling <code>SymbolSet.append()</code> after 
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>(z3.BoolRef)</code>: true if the symbol represents part of the loop.</p>
-<h2 id="grilops.loops.add_loop_edge_constraints">add_loop_edge_constraints</h2>
+<h2 id="grilops.loops.LoopConstrainer">LoopConstrainer</h2>
 
-<pre><code class="python">add_loop_edge_constraints(symbol_grid:grilops.grids.SymbolGrid)
+<pre><code class="python">LoopConstrainer(self, symbol_grid:grilops.grids.SymbolGrid, single_loop:bool=False)
 </code></pre>
 
-<p>Constrain <code>symbol_grid</code> to ensure loops are closed.
-<h2 id="grilops.loops.add_single_loop_constraints">add_single_loop_constraints</h2></p>
-<pre><code class="python">add_single_loop_constraints(symbol_grid:grilops.grids.SymbolGrid) -&gt; List[List[z3.z3.ArithRef]]
+<p>Creates constraints for ensuring symbols form closed loops.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>symbol_grid (SymbolGrid)</strong>: The <code>SymbolGrid</code> to constrain.</li>
+<li><strong>single_loop (bool)</strong>: If true, constrain the grid to contain only a single loop.</li>
+</ul>
+<h3 id="grilops.loops.LoopConstrainer.inside_outside_grid">inside_outside_grid</h3>
+
+<p>(List[List[ArithRef]]): A grid of which cells are contained by loops.
+<h3 id="grilops.loops.LoopConstrainer.loop_order_grid">loop_order_grid</h3></p>
+<p>(List[List[ArithRef]]): A grid of constants of a loop traversal order.</p>
+<p>Only populated if single_loop was true.</p>
+<h3 id="grilops.loops.LoopConstrainer.print_inside_outside_grid">print_inside_outside_grid</h3>
+
+<pre><code class="python">LoopConstrainer.print_inside_outside_grid(self)
 </code></pre>
 
-<p>Constrain <code>symbol_grid</code> to ensure a single continuous loop.</p>
-<p><strong>Returns</strong></p>
-<p><code>List[List[ArithRef]]</code>: A grid of variables representing a loop traversal order.
-    May be useful for debugging.</p>
+<p>Prints which cells are contained by loops.</p>
               
             </div>
           </div>
