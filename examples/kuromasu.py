@@ -57,7 +57,7 @@ def main():
   # root of this region to be the first given, to reduce the space of
   # possibilities.
   white_root = min(GIVENS.keys())
-  white_region_id = white_root[0] * WIDTH + white_root[1]
+  white_region_id = rc.location_to_region_id(white_root)
 
   for y in range(HEIGHT):
     for x in range(WIDTH):

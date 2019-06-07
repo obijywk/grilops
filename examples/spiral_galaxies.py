@@ -47,7 +47,8 @@ def main():
     for x in range(WIDTH):
       or_terms = []
       for (gy, gx) in GIVENS:
-        region_id = int(math.floor(gy) * WIDTH + math.floor(gx))
+        region_id = rc.location_to_region_id(
+            (int(math.floor(gy)), int(math.floor(gx))))
         py = int(2 * gy - y)
         px = int(2 * gx - x)
         if py < 0 or py >= HEIGHT or px < 0 or px >= WIDTH:
@@ -61,8 +62,7 @@ def main():
       sg.solver.add(Or(*or_terms))
 
   def show_cell(y, x, region_id):
-    ry = region_id // WIDTH
-    rx = region_id % WIDTH
+    ry, rx = rc.region_id_to_location(region_id)
     for i, (gy, gx) in enumerate(GIVENS):
       if int(math.floor(gy)) == ry and int(math.floor(gx)) == rx:
         return chr(65 + i)
