@@ -1,6 +1,6 @@
 """Slitherlink solver example."""
 
-from z3 import If, Int, Or, Sum
+from z3 import And, If, Implies, Int, Or, Sum
 
 import grilops
 import grilops.loops
@@ -105,6 +105,27 @@ def region_solve():
               sg.grid[y][x] == sym.I,
               given == num_different_neighbors + num_grid_borders,
               given == num_different_neighbors
+          )
+      )
+
+  # "Inside" cells may not diagonally touch each other unless they also share
+  # an adjacent cell.
+  for y in range(HEIGHT - 1):
+    for x in range(WIDTH - 1):
+      nw = sg.grid[y][x]
+      ne = sg.grid[y][x + 1]
+      sw = sg.grid[y + 1][x]
+      se = sg.grid[y + 1][x + 1]
+      sg.solver.add(
+          Implies(
+              And(nw == sym.I, se == sym.I),
+              Or(ne == sym.I, sw == sym.I)
+          )
+      )
+      sg.solver.add(
+          Implies(
+              And(ne == sym.I, sw == sym.I),
+              Or(nw == sym.I, se == sym.I)
           )
       )
 
