@@ -37,6 +37,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       constructed.
   complete (bool): If true, every cell must be part of a region. Defaults to
       true.
+  min_region_size(int, None): The minimum possible size of a region.
   max_region_size(int, None): The maximum possible size of a region.
   """
   _instance_index = 0
@@ -47,6 +48,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       width: int,
       solver: Solver = None,
       complete: bool = True,
+      min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
     RegionConstrainer._instance_index += 1
@@ -55,6 +57,10 @@ class RegionConstrainer:  # pylint: disable=R0902
     else:
       self.__solver = Solver()
     self.__complete = complete
+    if min_region_size is not None:
+      self.__min_region_size = min_region_size
+    else:
+      self.__min_region_size = 1
     if max_region_size is not None:
       self.__max_region_size = max_region_size
     else:
@@ -114,9 +120,9 @@ class RegionConstrainer:  # pylint: disable=R0902
       for x in range(width):
         v = Int(f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__solver.add(v >= 1)
+          self.__solver.add(v >= self.__min_region_size)
         else:
-          self.__solver.add(Or(v >= 1, v == -1))
+          self.__solver.add(Or(v >= self.__min_region_size, v == -1))
         self.__solver.add(v <= self.__max_region_size)
         parent = self.__parent_grid[y][x]
         subtree_size = self.__subtree_size_grid[y][x]
