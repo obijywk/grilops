@@ -1,7 +1,5 @@
 """Sudoku solver example."""
 
-from z3 import Distinct
-
 import grilops
 
 
@@ -25,19 +23,19 @@ def main():
   for given_row, grid_row in zip(givens, sg.grid):
     for given, grid_cell in zip(given_row, grid_row):
       if given != 0:
-        sg.solver.add(grid_cell == sym[given])
+        sg.btor.Assert(grid_cell == sym[given])
 
   for y in range(9):
-    sg.solver.add(Distinct(*sg.grid[y]))
+    sg.btor.Assert(grilops.distinct(sg.btor, sg.grid[y]))
 
   for x in range(9):
-    sg.solver.add(Distinct(*[r[x] for r in sg.grid]))
+    sg.btor.Assert(grilops.distinct(sg.btor, [r[x] for r in sg.grid]))
 
   for z in range(9):
     top = (z // 3) * 3
     left = (z % 3) * 3
     cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
-    sg.solver.add(Distinct(*cells))
+    sg.btor.Assert(grilops.distinct(sg.btor, cells))
 
   if sg.solve():
     sg.print()

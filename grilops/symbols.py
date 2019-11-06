@@ -1,5 +1,6 @@
 """This module supports defining symbols that may be filled into grid cells."""
 
+import math
 from typing import Dict, List, Optional, Tuple, Union
 
 
@@ -112,6 +113,10 @@ class SymbolSet:
   def max_index(self):
     """Returns the maximum index value of all of the symbols."""
     return max(self.__index_to_symbol.keys())
+
+  def bit_width(self):
+    """Returns the required bit vector width for representing a symbol."""
+    return math.ceil(math.log2(self.max_index() + 1))
 
   @property
   def symbols(self) -> Dict[int, Symbol]:

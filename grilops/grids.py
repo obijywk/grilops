@@ -1,8 +1,9 @@
 """This module supports constructing and working with grids of cells."""
 
+from functools import reduce
+from pyboolector import BTOR_OPT_INCREMENTAL, BTOR_OPT_MODEL_GEN, Boolector, BoolectorNode  # type: ignore
 import sys
 from typing import List, NamedTuple, Tuple
-from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
 
@@ -13,19 +14,19 @@ class Neighbor(NamedTuple):
   # Attributes
   location (Tuple[int, int]): The (y, x) coordinate of the location of the cell.
   direction (Tuple[int, int]): The (+y, +x) distance from the original cell.
-  symbol (z3.ArithRef): The symbol constant of the cell.
+  symbol (pyboolector.BoolectorNode): The symbol constant of the cell.
   """
   location: Tuple[int, int]
   direction: Tuple[int, int]
-  symbol: ArithRef
+  symbol: BoolectorNode
 
 
 def adjacent_cells(
-    grid: List[List[ArithRef]], y: int, x: int) -> List[Neighbor]:
+    grid: List[List[BoolectorNode]], y: int, x: int) -> List[Neighbor]:
   """Returns a list of cells orthogonally adjacent to the given cell.
 
   # Arguments
-  grid (List[List[z3.ArithRef]]): A grid of z3 constants.
+  grid (List[List[pyboolector.BoolectorNode]]): A grid of nodes.
   y (int): y-coordinate of the given cell.
   x (int): x-coordinate of the given cell.
 
@@ -45,11 +46,11 @@ def adjacent_cells(
 
 
 def touching_cells(
-    grid: List[List[ArithRef]], y: int, x: int) -> List[Neighbor]:
+    grid: List[List[BoolectorNode]], y: int, x: int) -> List[Neighbor]:
   """Returns the cells touching the given cell (orthogonally and diagonally).
 
   # Arguments
-  grid (List[List[z3.ArithRef]]): A grid of z3 constants.
+  grid (List[List[pyboolector.BoolectorNode]]): A grid of nodes.
   y (int): y-coordinate of the given cell.
   x (int): x-coordinate of the given cell.
 
@@ -75,7 +76,7 @@ class SymbolGrid:
   height (int): The height of the grid.
   width (int): The width of the grid.
   symbol_set (SymbolSet): The set of symbols to be filled into the grid.
-  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+  btor (Boolector, None): A #Boolector object. If None, a #Boolector will be
       constructed.
   """
   _instance_index = 0
@@ -85,28 +86,32 @@ class SymbolGrid:
       height: int,
       width: int,
       symbol_set: SymbolSet,
-      solver: Solver = None
+      btor: Boolector = None
   ):
     SymbolGrid._instance_index += 1
-    if solver:
-      self.__solver = solver
+    if btor:
+      self.__btor = btor
     else:
-      self.__solver = Solver()
+      self.__btor = Boolector()
+      self.__btor.Set_opt(BTOR_OPT_MODEL_GEN, 1)
+      self.__btor.Set_opt(BTOR_OPT_INCREMENTAL, 1)
     self.__symbol_set = symbol_set
-    self.__grid: List[List[ArithRef]] = []
+    symbol_sort = self.__btor.BitVecSort(symbol_set.bit_width())
+    self.__grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"sg-{SymbolGrid._instance_index}-{y}-{x}")
-        self.__solver.add(v >= symbol_set.min_index())
-        self.__solver.add(v <= symbol_set.max_index())
+        v = self.__btor.Var(
+            symbol_sort, f"sg-{SymbolGrid._instance_index}-{y}-{x}")
+        self.__btor.Assert(v >= symbol_set.min_index())
+        self.__btor.Assert(v <= symbol_set.max_index())
         row.append(v)
       self.__grid.append(row)
 
   @property
-  def solver(self) -> Solver:
-    """(z3.Solver): The #Solver object associated with this #SymbolGrid."""
-    return self.__solver
+  def btor(self) -> Boolector:
+    """(pyboolector.Boolector): The associated #Boolector object."""
+    return self.__btor
 
   @property
   def symbol_set(self) -> SymbolSet:
@@ -114,8 +119,8 @@ class SymbolGrid:
     return self.__symbol_set
 
   @property
-  def grid(self) -> List[List[ArithRef]]:
-    """(List[List[z3.ArithRef]]): The grid of cells."""
+  def grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[pyboolector.BoolectorNode]]): The grid of cells."""
     return self.__grid
 
   def adjacent_cells(self, y: int, x: int) -> List[Neighbor]:
@@ -142,7 +147,7 @@ class SymbolGrid:
     """
     return touching_cells(self.__grid, y, x)
 
-  def cell_is(self, y: int, x: int, value: int) -> BoolRef:
+  def cell_is(self, y: int, x: int, value: int) -> BoolectorNode:
     """Returns an expression for whether this cell contains this value.
 
     # Arguments
@@ -151,12 +156,12 @@ class SymbolGrid:
     value (int): The value to satisfy the expression.
 
     # Returns
-    (z3.BoolRef): an expression that's true if and only if the cell at (y, x)
-        contains this value.
+    (pyboolector.BoolectorNode): an expression that's true if and only if the
+        cell at (y, x) contains this value.
     """
     return self.__grid[y][x] == value
 
-  def cell_is_one_of(self, y: int, x: int, values: List[int]) -> BoolRef:
+  def cell_is_one_of(self, y: int, x: int, values: List[int]) -> BoolectorNode:
     """Returns an expression for whether this cell contains one of these values.
 
     # Arguments
@@ -165,16 +170,15 @@ class SymbolGrid:
     values (list(int)): The list of values to satisfy the expression.
 
     # Returns
-    (z3.BoolRef): an expression that's true if and only if the cell at (y, x)
-        contains one of the values.
+    (pyboolector.BoolectorNode): an expression that's true if and only if the
+        cell at (y, x) contains one of the values.
     """
     cell = self.__grid[y][x]
-    return Or(*[cell == value for value in values])
+    return reduce(self.__btor.Or, [cell == value for value in values])
 
   def solve(self) -> bool:
     """Returns true if the puzzle has a solution, false otherwise."""
-    result = self.__solver.check()
-    return result == sat
+    return self.__btor.Sat() == self.__btor.SAT
 
   def is_unique(self) -> bool:
     """Returns true if the solution to the puzzle is unique, false otherwise.
@@ -182,14 +186,13 @@ class SymbolGrid:
     Should be called only after #SymbolGrid.solve() has already completed
     successfully.
     """
-    model = self.__solver.model()
     or_terms = []
     for row in self.__grid:
       for cell in row:
-        or_terms.append(cell != model.eval(cell).as_long())
-    self.__solver.add(Or(*or_terms))
-    result = self.__solver.check()
-    return result == unsat
+        cell_value = int(cell.assignment, 2)
+        or_terms.append(cell != cell_value)
+    self.__btor.Assert(reduce(self.__btor.Or, or_terms))
+    return self.__btor.Sat() == self.__btor.UNSAT
 
   def solved_grid(self) -> List[List[int]]:
     """Returns the solved symbol grid.
@@ -197,12 +200,12 @@ class SymbolGrid:
     Should be called only after #SymbolGrid.solve() has already completed
     successfully.
     """
-    model = self.__solver.model()
     solved = []
     for row in self.__grid:
       solved_row = []
       for cell in row:
-        solved_row.append(model.eval(cell).as_long())
+        cell_value = int(cell.assignment, 2)
+        solved_row.append(cell_value)
       solved.append(solved_row)
     return solved
 
@@ -219,11 +222,10 @@ class SymbolGrid:
         x (int), and the symbol index for that cell (int). It may return a
         string to print for that cell, or None to keep the default behavior.
     """
-    model = self.__solver.model()
     label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
     for y, row in enumerate(self.__grid):
       for x, cell in enumerate(row):
-        i = model.eval(cell).as_long()
+        i = int(cell.assignment, 2)
         label = None
         if hook_function:
           label = hook_function(y, x, i)
