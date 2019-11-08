@@ -26,16 +26,16 @@ def main():
         sg.btor.Assert(grid_cell == sym[given])
 
   for y in range(9):
-    sg.btor.Assert(grilops.distinct(sg.btor, sg.grid[y]))
+    sg.btor.Assert(sg.btor.Distinct(*sg.grid[y]))
 
   for x in range(9):
-    sg.btor.Assert(grilops.distinct(sg.btor, [r[x] for r in sg.grid]))
+    sg.btor.Assert(sg.btor.Distinct(*[r[x] for r in sg.grid]))
 
   for z in range(9):
     top = (z // 3) * 3
     left = (z % 3) * 3
     cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
-    sg.btor.Assert(grilops.distinct(sg.btor, cells))
+    sg.btor.Assert(sg.btor.Distinct(*cells))
 
   if sg.solve():
     sg.print()

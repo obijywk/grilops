@@ -1,11 +1,12 @@
 """This module supports constructing and working with grids of cells."""
 
-from functools import reduce
-from pyboolector import BTOR_OPT_INCREMENTAL, BTOR_OPT_MODEL_GEN, Boolector, BoolectorNode  # type: ignore
 import sys
 from typing import List, NamedTuple, Tuple
 
+from pyboolector import BoolectorNode  # type: ignore
+
 from .symbols import SymbolSet
+from .zboolector import ZBoolector
 
 
 class Neighbor(NamedTuple):
@@ -76,7 +77,7 @@ class SymbolGrid:
   height (int): The height of the grid.
   width (int): The width of the grid.
   symbol_set (SymbolSet): The set of symbols to be filled into the grid.
-  btor (Boolector, None): A #Boolector object. If None, a #Boolector will be
+  btor (ZBoolector, None): A #ZBoolector object. If None, a #ZBoolector will be
       constructed.
   """
   _instance_index = 0
@@ -86,15 +87,13 @@ class SymbolGrid:
       height: int,
       width: int,
       symbol_set: SymbolSet,
-      btor: Boolector = None
+      btor: ZBoolector = None
   ):
     SymbolGrid._instance_index += 1
     if btor:
       self.__btor = btor
     else:
-      self.__btor = Boolector()
-      self.__btor.Set_opt(BTOR_OPT_MODEL_GEN, 1)
-      self.__btor.Set_opt(BTOR_OPT_INCREMENTAL, 1)
+      self.__btor = ZBoolector()
     self.__symbol_set = symbol_set
     symbol_sort = self.__btor.BitVecSort(symbol_set.bit_width())
     self.__grid: List[List[BoolectorNode]] = []
@@ -109,8 +108,8 @@ class SymbolGrid:
       self.__grid.append(row)
 
   @property
-  def btor(self) -> Boolector:
-    """(pyboolector.Boolector): The associated #Boolector object."""
+  def btor(self) -> ZBoolector:
+    """(ZBoolector): The associated #ZBoolector object."""
     return self.__btor
 
   @property
@@ -174,7 +173,7 @@ class SymbolGrid:
         cell at (y, x) contains one of the values.
     """
     cell = self.__grid[y][x]
-    return reduce(self.__btor.Or, [cell == value for value in values])
+    return self.__btor.Or(*[cell == value for value in values])
 
   def solve(self) -> bool:
     """Returns true if the puzzle has a solution, false otherwise."""
@@ -191,7 +190,7 @@ class SymbolGrid:
       for cell in row:
         cell_value = int(cell.assignment, 2)
         or_terms.append(cell != cell_value)
-    self.__btor.Assert(reduce(self.__btor.Or, or_terms))
+    self.__btor.Assert(self.__btor.Or(*or_terms))
     return self.__btor.Sat() == self.__btor.UNSAT
 
   def solved_grid(self) -> List[List[int]]:
