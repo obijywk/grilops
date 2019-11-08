@@ -19,9 +19,13 @@ W (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
     child of the cell to the left of it in its region's subtree.
 """
 
+import math
 import sys
 from typing import List, Optional, Tuple
-from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum  # type: ignore
+
+from pyboolector import BoolectorNode  # type: ignore
+
+from .zboolector import ZBoolector
 
 
 X, R, N, E, S, W = range(6)
@@ -33,7 +37,7 @@ class RegionConstrainer:  # pylint: disable=R0902
   # Arguments
   height (int): The height of the grid.
   width (int): The width of the grid.
-  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+  btor (ZBoolector, None): A #ZBoolector object. If None, a #ZBoolector will be
       constructed.
   complete (bool): If true, every cell must be part of a region. Defaults to
       true.
@@ -46,16 +50,16 @@ class RegionConstrainer:  # pylint: disable=R0902
       self,
       height: int,
       width: int,
-      solver: Solver = None,
+      btor: ZBoolector = None,
       complete: bool = True,
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
     RegionConstrainer._instance_index += 1
-    if solver:
-      self.__solver = solver
+    if btor:
+      self.__btor = btor
     else:
-      self.__solver = Solver()
+      self.__btor = ZBoolector()
     self.__complete = complete
     if min_region_size is not None:
       self.__min_region_size = min_region_size
@@ -67,82 +71,102 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__max_region_size = height * width
     self.__width = width
     self.__create_grids(height, width)
+    self.__create_size_grids(height, width)
     self.__add_constraints()
 
   def __create_grids(self, height: int, width: int):
-    """Create the grids used to model region constraints."""
-    self.__parent_grid: List[List[ArithRef]] = []
+    """Create the grids used to model parent and region ID constraints."""
+    self.__parent_grid: List[List[BoolectorNode]] = []
+    parent_sort = self.__btor.BitVecSort(3)
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"rcp-{RegionConstrainer._instance_index}-{y}-{x}")
+        v = self.__btor.Var(
+            parent_sort, f"rcp-{RegionConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__solver.add(v >= R)
+          self.__btor.Assert(v >= R)
         else:
-          self.__solver.add(v >= X)
-        self.__solver.add(v <= W)
+          self.__btor.Assert(v >= X)
+        self.__btor.Assert(v <= W)
         row.append(v)
       self.__parent_grid.append(row)
 
-    self.__subtree_size_grid: List[List[ArithRef]] = []
+    region_id_sort = self.__btor.BitVecSort(
+        math.ceil(math.log2(height * width)))
+    self.__region_id_grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"rcss-{RegionConstrainer._instance_index}-{y}-{x}")
+        v = self.__btor.Var(
+            region_id_sort, f"rcid-{RegionConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__solver.add(v >= 1)
+          self.__btor.Assert(v >= 0)
         else:
-          self.__solver.add(v >= 0)
-        self.__solver.add(v <= self.__max_region_size)
-        row.append(v)
-      self.__subtree_size_grid.append(row)
-
-    self.__region_id_grid: List[List[ArithRef]] = []
-    for y in range(height):
-      row = []
-      for x in range(width):
-        v = Int(f"rcid-{RegionConstrainer._instance_index}-{y}-{x}")
-        if self.__complete:
-          self.__solver.add(v >= 0)
-        else:
-          self.__solver.add(v >= -1)
-        self.__solver.add(v < height * width)
+          self.__btor.Assert(v >= -1)
+        self.__btor.Assert(v < height * width)
         parent = self.__parent_grid[y][x]
-        self.__solver.add(Implies(parent == X, v == -1))
-        self.__solver.add(Implies(
+        self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
+        self.__btor.Assert(self.__btor.Implies(
             parent == R, v == self.location_to_region_id((y, x))))
         row.append(v)
       self.__region_id_grid.append(row)
 
-    self.__region_size_grid: List[List[ArithRef]] = []
+  def __create_size_grids(self, height: int, width: int):
+    """Create the grids used to model subtree and region size constraints."""
+    subtree_size_sort = self.__btor.BitVecSort(
+        math.ceil(math.log2(self.__max_region_size + 1)))
+
+    self.__subtree_size_grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}")
+        v = self.__btor.Var(
+            subtree_size_sort,
+            f"rcss-{RegionConstrainer._instance_index}-{y}-{x}"
+        )
         if self.__complete:
-          self.__solver.add(v >= self.__min_region_size)
+          self.__btor.Assert(v >= 1)
         else:
-          self.__solver.add(Or(v >= self.__min_region_size, v == -1))
-        self.__solver.add(v <= self.__max_region_size)
+          self.__btor.Assert(v >= 0)
+        self.__btor.Assert(v <= self.__max_region_size)
+        row.append(v)
+      self.__subtree_size_grid.append(row)
+
+    self.__region_size_grid: List[List[BoolectorNode]] = []
+    for y in range(height):
+      row = []
+      for x in range(width):
+        v = self.__btor.Var(
+            subtree_size_sort,
+            f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}"
+        )
+        if self.__complete:
+          self.__btor.Assert(v >= self.__min_region_size)
+        else:
+          self.__btor.Assert(
+              self.__btor.Or(v >= self.__min_region_size, v == -1))
+        self.__btor.Assert(v <= self.__max_region_size)
         parent = self.__parent_grid[y][x]
         subtree_size = self.__subtree_size_grid[y][x]
-        self.__solver.add(Implies(parent == X, v == -1))
-        self.__solver.add(Implies(parent == R, v == subtree_size))
+        self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
+        self.__btor.Assert(self.__btor.Implies(parent == R, v == subtree_size))
         row.append(v)
       self.__region_size_grid.append(row)
 
   def __add_constraints(self):
     """Add constraints to the region modeling grids."""
+    subtree_size_width = math.ceil(math.log2(self.__max_region_size + 1))
+
     def constrain_side(yx, sysx, sd):
       y, x = yx
       sy, sx = sysx
-      self.__solver.add(Implies(
+      self.__btor.Assert(self.__btor.Implies(
           self.__parent_grid[y][x] == X,
           self.__parent_grid[sy][sx] != sd
       ))
-      self.__solver.add(Implies(
+      self.__btor.Assert(self.__btor.Implies(
           self.__parent_grid[sy][sx] == sd,
-          And(
+          self.__btor.And(
               self.__region_id_grid[y][x] == self.__region_id_grid[sy][sx],
               self.__region_size_grid[y][x] == self.__region_size_grid[sy][sx],
           )
@@ -150,45 +174,49 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     def subtree_size_term(sysx, sd):
       sy, sx = sysx
-      return If(
+      return self.__btor.Cond(
           self.__parent_grid[sy][sx] == sd,
           self.__subtree_size_grid[sy][sx],
-          0
+          self.__btor.Const(0, width=subtree_size_width)
       )
 
     for y in range(len(self.__parent_grid)):
       for x in range(len(self.__parent_grid[0])):
         parent = self.__parent_grid[y][x]
         subtree_size_terms = [
-            If(parent != X, 1, 0)
+            self.__btor.Cond(
+                parent != X,
+                self.__btor.Const(1, width=subtree_size_width),
+                self.__btor.Const(0, width=subtree_size_width)
+            )
         ]
 
         if y > 0:
           constrain_side((y, x), (y - 1, x), S)
           subtree_size_terms.append(subtree_size_term((y - 1, x), S))
         else:
-          self.__solver.add(parent != N)
+          self.__btor.Assert(parent != N)
 
         if y < len(self.__parent_grid) - 1:
           constrain_side((y, x), (y + 1, x), N)
           subtree_size_terms.append(subtree_size_term((y + 1, x), N))
         else:
-          self.__solver.add(parent != S)
+          self.__btor.Assert(parent != S)
 
         if x > 0:
           constrain_side((y, x), (y, x - 1), E)
           subtree_size_terms.append(subtree_size_term((y, x - 1), E))
         else:
-          self.__solver.add(parent != W)
+          self.__btor.Assert(parent != W)
 
         if x < len(self.__parent_grid[0]) - 1:
           constrain_side((y, x), (y, x + 1), W)
           subtree_size_terms.append(subtree_size_term((y, x + 1), W))
         else:
-          self.__solver.add(parent != E)
+          self.__btor.Assert(parent != E)
 
-        self.__solver.add(
-            self.__subtree_size_grid[y][x] == Sum(*subtree_size_terms)
+        self.__btor.Assert(
+            self.__subtree_size_grid[y][x] == sum(subtree_size_terms)
         )
 
   def location_to_region_id(self, location: Tuple[int, int]) -> int:
@@ -215,13 +243,13 @@ class RegionConstrainer:  # pylint: disable=R0902
     return divmod(region_id, self.__width)
 
   @property
-  def solver(self) -> Solver:
-    """(z3.Solver): The #Solver associated with this #RegionConstrainer."""
-    return self.__solver
+  def btor(self) -> ZBoolector:
+    """(ZBoolector): The associated #ZBoolector object."""
+    return self.__btor
 
   @property
-  def region_id_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of numbers identifying regions.
+  def region_id_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of numbers identifying regions.
 
     A region's identifier is the position in the grid (going in order from left
     to right, top to bottom) of the root of that region's subtree.
@@ -229,13 +257,13 @@ class RegionConstrainer:  # pylint: disable=R0902
     return self.__region_id_grid
 
   @property
-  def region_size_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of region sizes."""
+  def region_size_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of region sizes."""
     return self.__region_size_grid
 
   @property
-  def parent_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of region subtree parent pointers.
+  def parent_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of region subtree parent pointers.
 
     The values that may be present in this grid are the module
     attributes #X, #R, #N, #E, #S, and #W.
@@ -243,8 +271,8 @@ class RegionConstrainer:  # pylint: disable=R0902
     return self.__parent_grid
 
   @property
-  def subtree_size_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of cell subtree sizes.
+  def subtree_size_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of cell subtree sizes.
 
     A cell's subtree size is one plus the number of cells that are descendents
     of the cell in its region's subtree.
@@ -264,10 +292,9 @@ class RegionConstrainer:  # pylint: disable=R0902
         S: chr(0x25BE),
         W: chr(0x25C2),
     }
-    model = self.__solver.model()
     for row in self.__parent_grid:
       for v in row:
-        sys.stdout.write(labels[model.eval(v).as_long()])
+        sys.stdout.write(labels[int(v.assignment, 2)])
       print()
 
   def print_subtree_sizes(self):
@@ -275,10 +302,9 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     Should be called only after the solver has been checked.
     """
-    model = self.__solver.model()
     for row in self.__subtree_size_grid:
       for v in row:
-        sys.stdout.write(f"{model.eval(v).as_long():3}")
+        sys.stdout.write(f"{int(v.assignment, 2):3}")
       print()
 
   def print_region_ids(self):
@@ -286,10 +312,9 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     Should be called only after the solver has been checked.
     """
-    model = self.__solver.model()
     for row in self.__region_id_grid:
       for v in row:
-        sys.stdout.write(f"{model.eval(v).as_long():3}")
+        sys.stdout.write(f"{int(v.assignment, 2):3}")
       print()
 
   def print_region_sizes(self):
@@ -297,8 +322,7 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     Should be called only after the solver has been checked.
     """
-    model = self.__solver.model()
     for row in self.__region_size_grid:
       for v in row:
-        sys.stdout.write(f"{model.eval(v).as_long():3}")
+        sys.stdout.write(f"{int(v.assignment, 2):3}")
       print()

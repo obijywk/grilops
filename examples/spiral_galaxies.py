@@ -1,7 +1,6 @@
 """Spiral Galaxies solver example."""
 
 import math
-from z3 import And, Or
 
 import grilops
 import grilops.regions
@@ -28,17 +27,17 @@ def main():
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.solver)
+  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.btor)
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(sg.cell_is(y, x, rc.region_id_grid[y][x]))
+      sg.btor.Assert(sg.cell_is(y, x, rc.region_id_grid[y][x]))
 
   # Make the upper-left-most cell covered by a circle the root of its region.
   roots = {(int(math.floor(y)), int(math.floor(x))) for (y, x) in GIVENS}
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(
+      sg.btor.Assert(
           (rc.parent_grid[y][x] == grilops.regions.R) == ((y, x) in roots))
 
   # Ensure that each cell has a "partner" within the same region that is
@@ -54,12 +53,12 @@ def main():
         if py < 0 or py >= HEIGHT or px < 0 or px >= WIDTH:
           continue
         or_terms.append(
-            And(
+            sg.btor.And(
                 rc.region_id_grid[y][x] == region_id,
                 rc.region_id_grid[py][px] == region_id,
             )
         )
-      sg.solver.add(Or(*or_terms))
+      sg.btor.Assert(sg.btor.Or(*or_terms))
 
   def show_cell(y, x, region_id):
     ry, rx = rc.region_id_to_location(region_id)
