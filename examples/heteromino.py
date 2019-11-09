@@ -1,7 +1,5 @@
 """Heteromino solver example."""
 
-from z3 import And, Implies, Not
-
 import grilops
 import grilops.regions
 
@@ -27,24 +25,24 @@ def main():
   ])
   sg = grilops.SymbolGrid(size, size, sym)
   rc = grilops.regions.RegionConstrainer(
-      size, size, solver=sg.solver, complete=False)
+      size, size, btor=sg.btor, complete=False)
 
   for y in range(size):
     for x in range(size):
       if (y, x) in black_cells:
-        sg.solver.add(sg.cell_is(y, x, sym.BL))
+        sg.btor.Assert(sg.cell_is(y, x, sym.BL))
 
         # Black cells are not part of a region.
-        sg.solver.add(rc.region_id_grid[y][x] == -1)
+        sg.btor.Assert(rc.region_id_grid[y][x] == -1)
       else:
-        sg.solver.add(Not(sg.cell_is(y, x, sym.BL)))
+        sg.btor.Assert(sg.btor.Not(sg.cell_is(y, x, sym.BL)))
 
         # All regions have size 3.
-        sg.solver.add(rc.region_size_grid[y][x] == 3)
+        sg.btor.Assert(rc.region_size_grid[y][x] == 3)
 
         # Force the root of each region subtree to be in the middle of the
         # region, by not allowing non-root cells to have children.
-        sg.solver.add(Implies(
+        sg.btor.Assert(sg.btor.Implies(
             rc.parent_grid[y][x] != grilops.regions.R,
             rc.subtree_size_grid[y][x] == 1
         ))
@@ -55,38 +53,50 @@ def main():
         shape = sg.grid[y][x]
         is_root = rc.parent_grid[y][x] == grilops.regions.R
 
-        has_north = False
+        has_north = sg.btor.Const(0)
         if y > 0:
           has_north = rc.parent_grid[y - 1][x] == grilops.regions.S
-          sg.solver.add(Implies(And(is_root, has_north), sg.grid[y - 1][x] == shape))
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
+              sg.btor.And(is_root, has_north),
+              sg.grid[y - 1][x] == shape
+          ))
+          sg.btor.Assert(sg.btor.Implies(
               rc.region_id_grid[y][x] != rc.region_id_grid[y - 1][x],
               sg.grid[y - 1][x] != shape
           ))
 
-        has_south = False
+        has_south = sg.btor.Const(0)
         if y < size - 1:
           has_south = rc.parent_grid[y + 1][x] == grilops.regions.N
-          sg.solver.add(Implies(And(is_root, has_south), sg.grid[y + 1][x] == shape))
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
+              sg.btor.And(is_root, has_south),
+              sg.grid[y + 1][x] == shape
+          ))
+          sg.btor.Assert(sg.btor.Implies(
               rc.region_id_grid[y][x] != rc.region_id_grid[y + 1][x],
               sg.grid[y + 1][x] != shape
           ))
 
-        has_west = False
+        has_west = sg.btor.Const(0)
         if x > 0:
           has_west = rc.parent_grid[y][x - 1] == grilops.regions.E
-          sg.solver.add(Implies(And(is_root, has_west), sg.grid[y][x - 1] == shape))
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
+              sg.btor.And(is_root, has_west),
+              sg.grid[y][x - 1] == shape
+          ))
+          sg.btor.Assert(sg.btor.Implies(
               rc.region_id_grid[y][x] != rc.region_id_grid[y][x - 1],
               sg.grid[y][x - 1] != shape
           ))
 
-        has_east = False
+        has_east = sg.btor.Const(0)
         if x < size - 1:
           has_east = rc.parent_grid[y][x + 1] == grilops.regions.W
-          sg.solver.add(Implies(And(is_root, has_east), sg.grid[y][x + 1] == shape))
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
+              sg.btor.And(is_root, has_east),
+              sg.grid[y][x + 1] == shape
+          ))
+          sg.btor.Assert(sg.btor.Implies(
               rc.region_id_grid[y][x] != rc.region_id_grid[y][x + 1],
               sg.grid[y][x + 1] != shape
           ))
@@ -100,7 +110,10 @@ def main():
             (sym.SW, (has_south, has_west)),
             (sym.NW, (has_north, has_west)),
         ]:
-          sg.solver.add(Implies(And(*region_presence), shape == shape_symbol))
+          sg.btor.Assert(sg.btor.Implies(
+              sg.btor.And(*region_presence),
+              shape == shape_symbol
+          ))
 
   if sg.solve():
     sg.print()

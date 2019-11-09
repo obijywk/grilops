@@ -92,7 +92,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__parent_grid.append(row)
 
     region_id_sort = self.__btor.BitVecSort(
-        math.ceil(math.log2(height * width)))
+        math.ceil(math.log2(height * width + 2)))
     self.__region_id_grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
@@ -100,10 +100,8 @@ class RegionConstrainer:  # pylint: disable=R0902
         v = self.__btor.Var(
             region_id_sort, f"rcid-{RegionConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__btor.Assert(v >= 0)
-        else:
-          self.__btor.Assert(v >= -1)
-        self.__btor.Assert(v < height * width)
+          self.__btor.Assert(v != -1)
+        self.__btor.Assert(self.__btor.Or(v < height * width, v == -1))
         parent = self.__parent_grid[y][x]
         self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
         self.__btor.Assert(self.__btor.Implies(
@@ -114,7 +112,7 @@ class RegionConstrainer:  # pylint: disable=R0902
   def __create_size_grids(self, height: int, width: int):
     """Create the grids used to model subtree and region size constraints."""
     subtree_size_sort = self.__btor.BitVecSort(
-        math.ceil(math.log2(self.__max_region_size + 1)))
+        math.ceil(math.log2(self.__max_region_size + 2)))
 
     self.__subtree_size_grid: List[List[BoolectorNode]] = []
     for y in range(height):
@@ -126,8 +124,6 @@ class RegionConstrainer:  # pylint: disable=R0902
         )
         if self.__complete:
           self.__btor.Assert(v >= 1)
-        else:
-          self.__btor.Assert(v >= 0)
         self.__btor.Assert(v <= self.__max_region_size)
         row.append(v)
       self.__subtree_size_grid.append(row)
@@ -141,11 +137,9 @@ class RegionConstrainer:  # pylint: disable=R0902
             f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}"
         )
         if self.__complete:
-          self.__btor.Assert(v >= self.__min_region_size)
-        else:
-          self.__btor.Assert(
-              self.__btor.Or(v >= self.__min_region_size, v == -1))
-        self.__btor.Assert(v <= self.__max_region_size)
+          self.__btor.Assert(v != -1)
+        self.__btor.Assert(v >= self.__min_region_size)
+        self.__btor.Assert(self.__btor.Or(v <= self.__max_region_size, v == -1))
         parent = self.__parent_grid[y][x]
         subtree_size = self.__subtree_size_grid[y][x]
         self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
@@ -155,7 +149,7 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def __add_constraints(self):
     """Add constraints to the region modeling grids."""
-    subtree_size_width = math.ceil(math.log2(self.__max_region_size + 1))
+    subtree_size_width = math.ceil(math.log2(self.__max_region_size + 2))
 
     def constrain_side(yx, sysx, sd):
       y, x = yx
@@ -216,7 +210,8 @@ class RegionConstrainer:  # pylint: disable=R0902
           self.__btor.Assert(parent != E)
 
         self.__btor.Assert(
-            self.__subtree_size_grid[y][x] == sum(subtree_size_terms)
+            self.__subtree_size_grid[y][x] ==
+            self.__btor.Add(*subtree_size_terms)
         )
 
   def location_to_region_id(self, location: Tuple[int, int]) -> int:

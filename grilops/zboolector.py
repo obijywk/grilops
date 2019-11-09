@@ -16,6 +16,13 @@ class ZBoolector(Boolector):
   # Disable invalid-name snake_case warning to conform to pyboolector API.
   # pylint: disable=C0103
 
+  def Add(
+      self,
+      *args: BoolectorNode
+  ) -> BoolectorNode:
+    """Returns the bitwise sum of all args."""
+    return reduce(super().Add, args)
+
   def And(
       self,
       *args: BoolectorNode
