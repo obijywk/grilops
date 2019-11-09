@@ -1,7 +1,5 @@
 """Fillomino solver example."""
 
-from z3 import Implies  # type: ignore
-
 import grilops
 import grilops.regions
 
@@ -19,24 +17,26 @@ def main():
       [0, 4, 0, 0, 4, 3, 3, 0, 0],
       [6, 0, 0, 0, 0, 1, 0, 0, 0],
   ]
+  max_region_size = 10
 
-  sym = grilops.make_number_range_symbol_set(1, 10)
+  sym = grilops.make_number_range_symbol_set(1, max_region_size)
   sg = grilops.SymbolGrid(len(givens), len(givens[0]), sym)
   rc = grilops.regions.RegionConstrainer(
       len(givens),
       len(givens[0]),
-      solver=sg.solver
+      btor=sg.btor,
+      max_region_size=max_region_size
   )
 
   for y in range(len(givens)):
     for x in range(len(givens[0])):
       # The filled number must match the size of the region.
-      sg.solver.add(sg.grid[y][x] == rc.region_size_grid[y][x])
+      sg.btor.Assert(sg.grid[y][x] == rc.region_size_grid[y][x])
 
       # The size of the region must match the clue.
       given = givens[y][x]
       if given != 0:
-        sg.solver.add(rc.region_size_grid[y][x] == given)
+        sg.btor.Assert(rc.region_size_grid[y][x] == given)
 
       # Different regions of the same size may not be orthogonally adjacent.
       region_sizes = [
@@ -46,8 +46,8 @@ def main():
           n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, y, x)
       ]
       for region_size, region_id in zip(region_sizes, region_ids):
-        sg.solver.add(
-            Implies(
+        sg.btor.Assert(
+            sg.btor.Implies(
                 rc.region_size_grid[y][x] == region_size,
                 rc.region_id_grid[y][x] == region_id
             )
