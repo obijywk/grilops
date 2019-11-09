@@ -70,9 +70,9 @@ class RegionConstrainer:  # pylint: disable=R0902
     else:
       self.__max_region_size = height * width
     self.__width = width
-    self.__region_id_bit_vec_width = math.ceil(math.log2(height * width + 2))
+    self.__region_id_bit_vec_width = math.ceil(math.log2(height * width + 1))
     self.__region_size_bit_vec_width = math.ceil(
-        math.log2(self.__max_region_size + 2))
+        math.log2(self.__max_region_size + 1))
     self.__create_grids(height, width)
     self.__create_size_grids(height, width)
     self.__add_constraints()
@@ -208,10 +208,12 @@ class RegionConstrainer:  # pylint: disable=R0902
         else:
           self.__btor.Assert(parent != E)
 
+        subtree_size_terms_sum, subtree_size_terms_overflow = (
+            self.__btor.UAddDetectOverflow(*subtree_size_terms))
         self.__btor.Assert(
-            self.__subtree_size_grid[y][x] ==
-            self.__btor.Add(*subtree_size_terms)
+            self.__subtree_size_grid[y][x] == subtree_size_terms_sum
         )
+        self.__btor.Assert(self.__btor.Not(subtree_size_terms_overflow))
 
   def location_to_region_id(self, location: Tuple[int, int]) -> int:
     """Returns the region root ID for a grid location.

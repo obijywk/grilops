@@ -26,6 +26,22 @@ class ZBoolector(Boolector):
     """Returns the bitwise sum of all args."""
     return reduce(super().Add, args)
 
+  def UAddDetectOverflow(self, *args: BoolectorNode) -> BoolectorNode:
+    """Returns the bitwise sum of all args and a node detecting overflow.
+
+    # Returns
+    (Tuple[BoolectorNode, BoolectorNode]): A tuple of (the sum of all args,
+        a 1-bit value that is true when unsigned arithmetic would cause the sum
+        to overflow).
+    """
+    it = iter(args)
+    acc = next(it)
+    overflow = self.Const(0, width=1)
+    for node in it:
+      overflow = self.Or(overflow, self.Uaddo(acc, node))
+      acc = self.Add(acc, node)
+    return acc, overflow
+
   def And(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns the bitwise 'and' of all args."""
     return reduce(super().And, args)
