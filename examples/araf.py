@@ -1,7 +1,5 @@
 """Araf solver example."""
 
-from z3 import And, Implies, If, Not, Sum
-
 import grilops
 import grilops.regions
 
@@ -38,26 +36,28 @@ def add_given_pair_constraints(sg, rc):
         continue
       if lv <= sv:
         continue
-      partner_terms.append(
-          And(
+      partner_terms.append(sg.btor.Cond(
+          sg.btor.And(
               # The smaller given must not be a region root.
-              Not(rc.parent_grid[sy][sx] == grilops.regions.R),
+              sg.btor.Not(rc.parent_grid[sy][sx] == grilops.regions.R),
 
               # The givens must share a region, rooted at the larger given.
               rc.region_id_grid[sy][sx] == rc.location_to_region_id((ly, lx)),
 
               # The region must be larger than the smaller given's value.
               sv < rc.region_size_grid[ly][lx]
-          )
-      )
+          ),
+          sg.btor.Const(1, width=sg.btor.BitWidthFor(len(GIVENS))),
+          sg.btor.Const(0, width=sg.btor.BitWidthFor(len(GIVENS)))
+      ))
     if not partner_terms:
       continue
-    sg.solver.add(
-        Implies(
+    sg.btor.Assert(
+        sg.btor.Implies(
             rc.parent_grid[ly][lx] == grilops.regions.R,
-            And(
+            sg.btor.And(
                 rc.region_size_grid[ly][lx] < lv,
-                Sum(*[If(pt, 1, 0) for pt in partner_terms]) == 1
+                sg.btor.Add(*partner_terms) == 1
             )
         )
     )
@@ -72,13 +72,13 @@ def main():
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, sg.solver,
+      HEIGHT, WIDTH, sg.btor,
       min_region_size=min_given_value + 1,
       max_region_size=max_given_value - 1
   )
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(sg.cell_is(y, x, rc.region_id_grid[y][x]))
+      sg.btor.Assert(sg.cell_is(y, x, rc.region_id_grid[y][x]))
 
   # Exactly half of the givens must be region roots. As an optimization, add
   # constraints that the smallest givens must not be region roots, and that the
@@ -87,15 +87,17 @@ def main():
   num_undetermined_roots = len(GIVENS) // 2
   for (y, x), v in GIVENS.items():
     if v == min_given_value:
-      sg.solver.add(Not(rc.parent_grid[y][x] == grilops.regions.R))
+      sg.btor.Assert(sg.btor.Not(rc.parent_grid[y][x] == grilops.regions.R))
     elif v == max_given_value:
-      sg.solver.add(rc.parent_grid[y][x] == grilops.regions.R)
+      sg.btor.Assert(rc.parent_grid[y][x] == grilops.regions.R)
       num_undetermined_roots -= 1
     else:
       undetermined_given_locations.append((y, x))
-  sg.solver.add(
-      Sum(*[
-          If(rc.parent_grid[y][x] == grilops.regions.R, 1, 0)
+  one = sg.btor.Const(1, width=sg.btor.BitWidthFor(len(GIVENS)))
+  zero = sg.btor.Const(0, width=sg.btor.BitWidthFor(len(GIVENS)))
+  sg.btor.Assert(
+      sg.btor.Add(*[
+          sg.btor.Cond(rc.parent_grid[y][x] == grilops.regions.R, one, zero)
           for (y, x) in undetermined_given_locations
       ]) == num_undetermined_roots
   )
@@ -104,7 +106,7 @@ def main():
   for y in range(HEIGHT):
     for x in range(WIDTH):
       if (y, x) not in GIVENS:
-        sg.solver.add(Not(rc.parent_grid[y][x] == grilops.regions.R))
+        sg.btor.Assert(sg.btor.Not(rc.parent_grid[y][x] == grilops.regions.R))
 
   add_given_pair_constraints(sg, rc)
 
