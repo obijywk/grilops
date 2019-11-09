@@ -30,34 +30,34 @@ def add_given_pair_constraints(sg, rc):
   # Each larger (root) given must be paired with a single smaller given in its
   # same region, and the size of the region must be between the givens' values.
   for (ly, lx), lv in GIVENS.items():
-    partner_terms = []
+    partner_vector = sg.btor.Const(0, width=1)
     for (sy, sx), sv in GIVENS.items():
       if (ly, lx) == (sy, sx):
         continue
       if lv <= sv:
         continue
-      partner_terms.append(sg.btor.Cond(
+      partner_vector = sg.btor.Concat(
+          partner_vector,
           sg.btor.And(
               # The smaller given must not be a region root.
               sg.btor.Not(rc.parent_grid[sy][sx] == grilops.regions.R),
 
               # The givens must share a region, rooted at the larger given.
-              rc.region_id_grid[sy][sx] == rc.location_to_region_id((ly, lx)),
+              rc.region_id_grid[sy][sx] ==
+              rc.location_to_region_id((ly, lx)),
 
               # The region must be larger than the smaller given's value.
               sv < rc.region_size_grid[ly][lx]
-          ),
-          sg.btor.Const(1, width=sg.btor.BitWidthFor(len(GIVENS))),
-          sg.btor.Const(0, width=sg.btor.BitWidthFor(len(GIVENS)))
-      ))
-    if not partner_terms:
+          )
+      )
+    if partner_vector.width == 1:
       continue
     sg.btor.Assert(
         sg.btor.Implies(
             rc.parent_grid[ly][lx] == grilops.regions.R,
             sg.btor.And(
                 rc.region_size_grid[ly][lx] < lv,
-                sg.btor.Add(*partner_terms) == 1
+                sg.btor.PopCount(partner_vector) == 1
             )
         )
     )
@@ -93,13 +93,13 @@ def main():
       num_undetermined_roots -= 1
     else:
       undetermined_given_locations.append((y, x))
-  one = sg.btor.Const(1, width=sg.btor.BitWidthFor(len(GIVENS)))
-  zero = sg.btor.Const(0, width=sg.btor.BitWidthFor(len(GIVENS)))
   sg.btor.Assert(
-      sg.btor.Add(*[
-          sg.btor.Cond(rc.parent_grid[y][x] == grilops.regions.R, one, zero)
-          for (y, x) in undetermined_given_locations
-      ]) == num_undetermined_roots
+      sg.btor.PopCount(
+          sg.btor.Concat(*[
+              rc.parent_grid[y][x] == grilops.regions.R
+              for (y, x) in undetermined_given_locations
+          ])
+      ) == num_undetermined_roots
   )
 
   # Non-givens must not be region roots.

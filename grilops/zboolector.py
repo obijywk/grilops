@@ -30,6 +30,10 @@ class ZBoolector(Boolector):
     """Returns the bitwise 'and' of all args."""
     return reduce(super().And, args)
 
+  def Concat(self, *args: BoolectorNode) -> BoolectorNode:
+    """Returns the bitwise concatenation of all args."""
+    return reduce(super().Concat, args)
+
   def Or(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns the bitwise 'or' of all orgs."""
     return reduce(super().Or, args)
@@ -42,3 +46,23 @@ class ZBoolector(Boolector):
       for b in terms[i + 1:]:
         and_terms.append(a != b)
     return self.And(*and_terms)
+
+  def PopCount(self, node: BoolectorNode) -> BoolectorNode:
+    """Returns the number of bits in node with value 1."""
+    if math.ceil(math.log2(node.width)) != math.floor(math.log2(node.width)):
+      node = self.Uext(
+          node, 2 ** math.ceil(math.log2(node.width)) - node.width)
+    i = 1
+    while i < node.width:
+      mask = self.Repeat(
+          self.Concat(
+              self.Const(0, width=i),
+              self.Not(self.Const(0, width=i))
+          ),
+          2 ** (math.log2(node.width) - math.log2(i) - 1)
+      )
+      l = self.And(node, mask)
+      r = self.And(self.Srl(node, i), mask)
+      node = self.Add(l, r)
+      i *= 2
+    return node
