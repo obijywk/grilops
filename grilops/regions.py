@@ -70,6 +70,9 @@ class RegionConstrainer:  # pylint: disable=R0902
     else:
       self.__max_region_size = height * width
     self.__width = width
+    self.__region_id_bit_vec_width = math.ceil(math.log2(height * width + 2))
+    self.__region_size_bit_vec_width = math.ceil(
+        math.log2(self.__max_region_size + 2))
     self.__create_grids(height, width)
     self.__create_size_grids(height, width)
     self.__add_constraints()
@@ -91,8 +94,7 @@ class RegionConstrainer:  # pylint: disable=R0902
         row.append(v)
       self.__parent_grid.append(row)
 
-    region_id_sort = self.__btor.BitVecSort(
-        math.ceil(math.log2(height * width + 2)))
+    region_id_sort = self.__btor.BitVecSort(self.__region_id_bit_vec_width)
     self.__region_id_grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
@@ -111,15 +113,14 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def __create_size_grids(self, height: int, width: int):
     """Create the grids used to model subtree and region size constraints."""
-    subtree_size_sort = self.__btor.BitVecSort(
-        math.ceil(math.log2(self.__max_region_size + 2)))
+    region_size_sort = self.__btor.BitVecSort(self.__region_size_bit_vec_width)
 
     self.__subtree_size_grid: List[List[BoolectorNode]] = []
     for y in range(height):
       row = []
       for x in range(width):
         v = self.__btor.Var(
-            subtree_size_sort,
+            region_size_sort,
             f"rcss-{RegionConstrainer._instance_index}-{y}-{x}"
         )
         if self.__complete:
@@ -133,7 +134,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       row = []
       for x in range(width):
         v = self.__btor.Var(
-            subtree_size_sort,
+            region_size_sort,
             f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}"
         )
         if self.__complete:
@@ -149,8 +150,6 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def __add_constraints(self):
     """Add constraints to the region modeling grids."""
-    subtree_size_width = math.ceil(math.log2(self.__max_region_size + 2))
-
     def constrain_side(yx, sysx, sd):
       y, x = yx
       sy, sx = sysx
@@ -171,7 +170,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       return self.__btor.Cond(
           self.__parent_grid[sy][sx] == sd,
           self.__subtree_size_grid[sy][sx],
-          self.__btor.Const(0, width=subtree_size_width)
+          self.__btor.Const(0, width=self.__region_size_bit_vec_width)
       )
 
     for y in range(len(self.__parent_grid)):
@@ -180,8 +179,8 @@ class RegionConstrainer:  # pylint: disable=R0902
         subtree_size_terms = [
             self.__btor.Cond(
                 parent != X,
-                self.__btor.Const(1, width=subtree_size_width),
-                self.__btor.Const(0, width=subtree_size_width)
+                self.__btor.Const(1, width=self.__region_size_bit_vec_width),
+                self.__btor.Const(0, width=self.__region_size_bit_vec_width)
             )
         ]
 
