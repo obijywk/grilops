@@ -1,7 +1,5 @@
 """Nurikabe solver example."""
 
-from z3 import And, Implies, Int, Not  # type: ignore
-
 import grilops
 import grilops.regions
 
@@ -29,18 +27,19 @@ def constrain_sea(sym, sg, rc):
   """Add constraints to the sea cells."""
 
   # There must be only one sea, containing all black cells.
-  sea_id = Int("sea-id")
-  sg.solver.add(sea_id >= 0)
-  sg.solver.add(sea_id < HEIGHT * WIDTH)
+  sea_id = sg.btor.Var(
+      sg.btor.BitVecSort(rc.region_id_grid[0][0].width), "sea-id")
+  sg.btor.Assert(sea_id >= 0)
+  sg.btor.Assert(sea_id < HEIGHT * WIDTH)
   for (y, x) in GIVENS:
-    sg.solver.add(sea_id != rc.location_to_region_id((y, x)))
+    sg.btor.Assert(sea_id != rc.location_to_region_id((y, x)))
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(Implies(
+      sg.btor.Assert(sg.btor.Implies(
           sg.cell_is(y, x, sym.B),
           rc.region_id_grid[y][x] == sea_id
       ))
-      sg.solver.add(Implies(
+      sg.btor.Assert(sg.btor.Implies(
           sg.cell_is(y, x, sym.W),
           rc.region_id_grid[y][x] != sea_id
       ))
@@ -51,7 +50,8 @@ def constrain_sea(sym, sg, rc):
       pool_cells = [
           sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
-      sg.solver.add(Not(And(*[cell == sym.B for cell in pool_cells])))
+      sg.btor.Assert(
+          sg.btor.Not(sg.btor.And(*[cell == sym.B for cell in pool_cells])))
 
 
 def constrain_islands(sym, sg, rc):
@@ -61,22 +61,22 @@ def constrain_islands(sym, sg, rc):
   for y in range(HEIGHT):
     for x in range(WIDTH):
       if (y, x) in GIVENS:
-        sg.solver.add(sg.cell_is(y, x, sym.W))
+        sg.btor.Assert(sg.cell_is(y, x, sym.W))
         # Might as well force the given cell to be the root of the region's tree,
         # to reduce the number of possibilities.
-        sg.solver.add(rc.parent_grid[y][x] == grilops.regions.R)
-        sg.solver.add(rc.region_size_grid[y][x] == GIVENS[(y, x)])
+        sg.btor.Assert(rc.parent_grid[y][x] == grilops.regions.R)
+        sg.btor.Assert(rc.region_size_grid[y][x] == GIVENS[(y, x)])
       else:
         # Ensure that cells that are part of island regions are colored white.
         for (gy, gx) in GIVENS:
           island_id = rc.location_to_region_id((gy, gx))
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               rc.region_id_grid[y][x] == island_id,
               sg.cell_is(y, x, sym.W)
           ))
         # Force a non-given white cell to not be the root of the region's tree,
         # to reduce the number of possibilities.
-        sg.solver.add(Implies(
+        sg.btor.Assert(sg.btor.Implies(
             sg.cell_is(y, x, sym.W),
             rc.parent_grid[y][x] != grilops.regions.R
         ))
@@ -91,8 +91,8 @@ def constrain_adjacent_cells(sg, rc):
           n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, y, x)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
-        sg.solver.add(
-            Implies(
+        sg.btor.Assert(
+            sg.btor.Implies(
                 sg.grid[y][x] == cell,
                 rc.region_id_grid[y][x] == region_id
             )
@@ -103,7 +103,7 @@ def main():
   """Nurikabe solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
+  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, btor=sg.btor)
 
   constrain_sea(sym, sg, rc)
   constrain_islands(sym, sg, rc)
