@@ -1,6 +1,7 @@
 """A wrapper around Boolector adding useful additional functionality."""
 
 from functools import reduce
+import math
 from pyboolector import (  # type: ignore
     BTOR_OPT_INCREMENTAL, BTOR_OPT_MODEL_GEN, Boolector, BoolectorNode
 )
@@ -16,31 +17,24 @@ class ZBoolector(Boolector):
   # Disable invalid-name snake_case warning to conform to pyboolector API.
   # pylint: disable=C0103
 
-  def Add(
-      self,
-      *args: BoolectorNode
-  ) -> BoolectorNode:
+  @staticmethod
+  def BitWidthFor(value: int) -> int:
+    """Returns the necessary bit vector width for storing value."""
+    return math.ceil(math.log2(value + 1))
+
+  def Add(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns the bitwise sum of all args."""
     return reduce(super().Add, args)
 
-  def And(
-      self,
-      *args: BoolectorNode
-  ) -> BoolectorNode:
+  def And(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns the bitwise 'and' of all args."""
     return reduce(super().And, args)
 
-  def Or(
-      self,
-      *args: BoolectorNode
-  ) -> BoolectorNode:
+  def Or(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns the bitwise 'or' of all orgs."""
     return reduce(super().Or, args)
 
-  def Distinct(
-      self,
-      *args: BoolectorNode
-  ) -> BoolectorNode:
+  def Distinct(self, *args: BoolectorNode) -> BoolectorNode:
     """Returns a BoolectorNode that's true if all args have distinct values."""
     terms = list(args)
     and_terms = []
