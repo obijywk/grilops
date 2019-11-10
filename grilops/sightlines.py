@@ -41,9 +41,12 @@ def count_cells(  # pylint: disable=R0913
   """
   def accumulate(a, c):
     count_result = count(c)
-    if count_result.width < a.width:
-      count_result = symbol_grid.btor.Uext(
-          count_result, a.width - count_result.width)
+    if isinstance(count_result, BoolectorNode):
+      if count_result.width < a.width:
+        count_result = symbol_grid.btor.Uext(
+            count_result, a.width - count_result.width)
+    else:
+      count_result = symbol_grid.btor.Const(count_result, width=count_bit_width)
     return a + count_result
 
   return reduce_cells(
