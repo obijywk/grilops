@@ -1,7 +1,5 @@
 """Slitherlink solver example."""
 
-from z3 import And, If, Implies, Int, Or, Sum
-
 import grilops
 import grilops.loops
 import grilops.regions
@@ -41,18 +39,18 @@ def loop_solve():
     # symbols in the north-west and south-east corners of this given location.
     terms = [
         # Check for east edge of north-west corner (given's north edge).
-        If(sg.cell_is_one_of(y, x, [sym.EW, sym.NE, sym.SE]), 1, 0),
+        sg.cell_is_one_of(y, x, [sym.EW, sym.NE, sym.SE]),
 
         # Check for north edge of south-east corner (given's east edge).
-        If(sg.cell_is_one_of(y + 1, x + 1, [sym.NS, sym.NE, sym.NW]), 1, 0),
+        sg.cell_is_one_of(y + 1, x + 1, [sym.NS, sym.NE, sym.NW]),
 
         # Check for west edge of south-east corner (given's south edge).
-        If(sg.cell_is_one_of(y + 1, x + 1, [sym.EW, sym.SW, sym.NW]), 1, 0),
+        sg.cell_is_one_of(y + 1, x + 1, [sym.EW, sym.SW, sym.NW]),
 
         # Check for south edge of north-west corner (given's west edge).
-        If(sg.cell_is_one_of(y, x, [sym.NS, sym.SE, sym.SW]), 1, 0),
+        sg.cell_is_one_of(y, x, [sym.NS, sym.SE, sym.SW]),
     ]
-    sg.solver.add(Sum(*terms) == c)
+    sg.btor.Assert(sg.btor.PopCount(sg.btor.Concat(*terms)) == c)
 
   if sg.solve():
     sg.print()
@@ -71,20 +69,21 @@ def region_solve():
   sym = grilops.SymbolSet([("I", chr(0x2588)), ("O", " ")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      HEIGHT, WIDTH, btor=sg.btor, complete=False)
 
-  region_id = Int("region_id")
+  region_id = sg.btor.Var(
+      sg.btor.BitVecSort(rc.region_id_grid[0][0].width), "region_id")
   for y in range(HEIGHT):
     for x in range(WIDTH):
       # Each cell must be either "inside" (part of a single region) or
       # "outside" (not part of any region).
-      sg.solver.add(
-          Or(
+      sg.btor.Assert(
+          sg.btor.Or(
               rc.region_id_grid[y][x] == region_id,
               rc.region_id_grid[y][x] == -1
           )
       )
-      sg.solver.add(
+      sg.btor.Assert(
           (sg.grid[y][x] == sym.I) == (rc.region_id_grid[y][x] == region_id))
 
       if (y, x) not in GIVENS:
@@ -94,13 +93,13 @@ def region_solve():
       # The number of grid edge border segments adjacent to this cell.
       num_grid_borders = 4 - len(neighbors)
       # The number of adjacent cells on the opposite side of the loop line.
-      num_different_neighbors = sum(
-          If(n.symbol != sg.grid[y][x], 1, 0) for n in neighbors
+      num_different_neighbors = sg.btor.PopCount(
+          sg.btor.Concat(*[n.symbol != sg.grid[y][x] for n in neighbors])
       )
       # If this is an "inside" cell, we should count grid edge borders as loop
       # segments, but if this is an "outside" cell, we should not.
-      sg.solver.add(
-          If(
+      sg.btor.Assert(
+          sg.btor.Cond(
               sg.grid[y][x] == sym.I,
               given == num_different_neighbors + num_grid_borders,
               given == num_different_neighbors
@@ -115,16 +114,16 @@ def region_solve():
       ne = sg.grid[y][x + 1]
       sw = sg.grid[y + 1][x]
       se = sg.grid[y + 1][x + 1]
-      sg.solver.add(
-          Implies(
-              And(nw == sym.I, se == sym.I),
-              Or(ne == sym.I, sw == sym.I)
+      sg.btor.Assert(
+          sg.btor.Implies(
+              sg.btor.And(nw == sym.I, se == sym.I),
+              sg.btor.Or(ne == sym.I, sw == sym.I)
           )
       )
-      sg.solver.add(
-          Implies(
-              And(ne == sym.I, sw == sym.I),
-              Or(nw == sym.I, se == sym.I)
+      sg.btor.Assert(
+          sg.btor.Implies(
+              sg.btor.And(ne == sym.I, sw == sym.I),
+              sg.btor.Or(nw == sym.I, se == sym.I)
           )
       )
 
