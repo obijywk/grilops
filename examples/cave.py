@@ -56,11 +56,13 @@ def main():
         continue
       sg.btor.Assert(sg.cell_is(y, x, SYM.W))
       # Count the cells visible along sightlines from the given cell.
-      visible_cell_count = 1 + sum(
+      visible_cell_count, overflow = sg.btor.UAddDetectOverflow(*([
           grilops.sightlines.count_cells(
-              sg, n.location, n.direction, stop=lambda c: c == SYM.B
+              sg, n.location, n.direction, stop=lambda c: c == SYM.B,
+              count_bit_width=sg.btor.BitWidthFor(HEIGHT + WIDTH)
           ) for n in sg.adjacent_cells(y, x)
-      )
+      ] + [1]))
+      sg.btor.Assert(sg.btor.Not(overflow))
       sg.btor.Assert(visible_cell_count == GIVENS[y][x])
 
   def print_grid():
