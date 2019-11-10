@@ -1,7 +1,5 @@
 """Kuromasu solver example."""
 
-from z3 import And, Implies, If  # type: ignore
-
 import grilops
 import grilops.regions
 import grilops.sightlines
@@ -35,22 +33,24 @@ def main():
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      HEIGHT, WIDTH, btor=sg.btor, complete=False)
 
   for (y, x), c in GIVENS.items():
     # Numbered cells may not be black.
-    sg.solver.add(sg.cell_is(y, x, sym.W))
+    sg.btor.Assert(sg.cell_is(y, x, sym.W))
 
     # Each number on the board represents the number of white cells that can be
     # seen from that cell, including itself. A cell can be seen from another
     # cell if they are in the same row or column, and there are no black cells
     # between them in that row or column.
-    visible_cell_count = 1 + sum(
+    visible_cell_count, overflow = sg.btor.UAddDetectOverflow(*([
         grilops.sightlines.count_cells(
-            sg, n.location, n.direction, stop=lambda c: c == sym.B
+            sg, n.location, n.direction, stop=lambda c: c == sym.B,
+            count_bit_width=sg.btor.BitWidthFor(HEIGHT + WIDTH)
         ) for n in sg.adjacent_cells(y, x)
-    )
-    sg.solver.add(visible_cell_count == c)
+    ] + [1]))
+    sg.btor.Assert(sg.btor.Not(overflow))
+    sg.btor.Assert(visible_cell_count == c)
 
   # All the white cells must be connected horizontally or vertically. Enforce
   # this by requiring all white cells to have the same region ID. Force the
@@ -62,17 +62,17 @@ def main():
   for y in range(HEIGHT):
     for x in range(WIDTH):
       # No two black cells may be horizontally or vertically adjacent.
-      sg.solver.add(
-          Implies(
+      sg.btor.Assert(
+          sg.btor.Implies(
               sg.cell_is(y, x, sym.B),
-              And(*[n.symbol == sym.W for n in sg.adjacent_cells(y, x)])
+              sg.btor.And(*[n.symbol == sym.W for n in sg.adjacent_cells(y, x)])
           )
       )
 
       # All white cells must have the same region ID. All black cells must not
       # be part of a region.
-      sg.solver.add(
-          If(
+      sg.btor.Assert(
+          sg.btor.Cond(
               sg.cell_is(y, x, sym.W),
               rc.region_id_grid[y][x] == white_region_id,
               rc.region_id_grid[y][x] == -1
