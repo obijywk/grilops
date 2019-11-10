@@ -160,9 +160,10 @@ class LoopConstrainer:
         row.append(v)
       loop_order_grid.append(row)
 
-    # Ensure there's only a single cell with loop order zero.
-    li_zero_exprs = [li == 0 for row in loop_order_grid for li in row]
-    btor.Assert(btor.PopCount(btor.Concat(*li_zero_exprs)) == 1)
+    # Ensure there's at most one cell for each positive loop order value.
+    for i in range(cell_count):
+      li_exprs = [li == i for row in loop_order_grid for li in row]
+      btor.Assert(btor.Slte(btor.PopCount(btor.Concat(*li_exprs)), 1))
 
     for y in range(len(grid)):
       for x in range(len(grid[0])):
