@@ -2,6 +2,8 @@
 
 from functools import reduce
 import math
+from typing import Tuple
+
 from pyboolector import (  # type: ignore
     BTOR_OPT_INCREMENTAL, BTOR_OPT_MODEL_GEN, Boolector, BoolectorNode
 )
@@ -26,7 +28,10 @@ class ZBoolector(Boolector):
     """Returns the bitwise sum of all args."""
     return reduce(super().Add, args)
 
-  def UAddDetectOverflow(self, *args: BoolectorNode) -> BoolectorNode:
+  def UAddDetectOverflow(
+      self,
+      *args: BoolectorNode
+  ) -> Tuple[BoolectorNode, BoolectorNode]:
     """Returns the bitwise sum of all args and a node detecting overflow.
 
     # Returns
