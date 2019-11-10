@@ -138,7 +138,7 @@ class LoopConstrainer:
           btor.Assert(cell != sym.NE)
           btor.Assert(cell != sym.SE)
 
-  def __add_single_loop_constraints(self):
+  def __add_single_loop_constraints(self):  # pylint: disable=R0914
     grid = self.__symbol_grid.grid
     btor = self.__symbol_grid.btor
     sym: Any = self.__symbol_grid.symbol_set
@@ -146,7 +146,7 @@ class LoopConstrainer:
     cell_count = len(grid) * len(grid[0])
 
     loop_order_grid = self.__loop_order_grid
-    loop_order_grid_sort = btor.BitVecSort(btor.BitWidthFor(cell_count * 2 + 1))
+    loop_order_grid_sort = btor.BitVecSort(btor.BitWidthFor(cell_count * 2))
 
     for y in range(len(grid)):
       row: List[BoolectorNode] = []
@@ -155,71 +155,75 @@ class LoopConstrainer:
             loop_order_grid_sort,
             f"log-{LoopConstrainer._instance_index}-{y}-{x}"
         )
-        btor.Assert(btor.Sgte(v, -cell_count))
+        btor.Assert(btor.Sgte(v, -1))
         btor.Assert(btor.Slt(v, cell_count))
         row.append(v)
       loop_order_grid.append(row)
 
-    btor.Assert(btor.Distinct(*[v for row in loop_order_grid for v in row]))
+    # Ensure there's only a single cell with loop order zero.
+    li_zero_exprs = [li == 0 for row in loop_order_grid for li in row]
+    btor.Assert(btor.PopCount(btor.Concat(*li_zero_exprs)) == 1)
 
     for y in range(len(grid)):
       for x in range(len(grid[0])):
         cell = grid[y][x]
         li = loop_order_grid[y][x]
+        li_minus_one = li - 1
+        li_gt_zero = btor.Sgt(li, 0)
 
         btor.Assert(sym.is_loop(cell) == btor.Sgte(li, 0))
 
         if 0 < y < len(grid) - 1:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.NS, btor.Sgt(li, 0)),
+              btor.And(cell == sym.NS, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y + 1][x] == li - 1
+                  loop_order_grid[y - 1][x] == li_minus_one,
+                  loop_order_grid[y + 1][x] == li_minus_one
               )
           ))
 
         if 0 < x < len(grid[0]) - 1:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.EW, btor.Sgt(li, 0)),
+              btor.And(cell == sym.EW, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y][x - 1] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
+                  loop_order_grid[y][x - 1] == li_minus_one,
+                  loop_order_grid[y][x + 1] == li_minus_one
               )
           ))
 
         if y > 0 and x < len(grid[0]) - 1:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.NE, btor.Sgt(li, 0)),
+              btor.And(cell == sym.NE, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
+                  loop_order_grid[y - 1][x] == li_minus_one,
+                  loop_order_grid[y][x + 1] == li_minus_one
               )
           ))
 
         if y < len(grid) - 1 and x < len(grid[0]) - 1:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.SE, btor.Sgt(li, 0)),
+              btor.And(cell == sym.SE, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y + 1][x] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
+                  loop_order_grid[y + 1][x] == li_minus_one,
+                  loop_order_grid[y][x + 1] == li_minus_one
               )
           ))
 
         if y < len(grid) - 1 and x > 0:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.SW, btor.Sgt(li, 0)),
+              btor.And(cell == sym.SW, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y + 1][x] == li - 1,
-                  loop_order_grid[y][x - 1] == li - 1
+                  loop_order_grid[y + 1][x] == li_minus_one,
+                  loop_order_grid[y][x - 1] == li_minus_one
               )
           ))
 
         if y > 0 and x > 0:
           btor.Assert(btor.Implies(
-              btor.And(cell == sym.NW, btor.Sgt(li, 0)),
+              btor.And(cell == sym.NW, li_gt_zero),
               btor.Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y][x - 1] == li - 1
+                  loop_order_grid[y - 1][x] == li_minus_one,
+                  loop_order_grid[y][x - 1] == li_minus_one
               )
           ))
 
