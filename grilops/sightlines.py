@@ -6,18 +6,20 @@ satisfied, results in no further symbols along the line being counted. It may
 also have a custom counting or accumulation function.
 """
 
-from typing import Callable, Tuple, TypeVar
-from z3 import ArithRef, BoolRef, If  # type: ignore
+from typing import Callable, Tuple
+
+from pyboolector import BoolectorNode  # type: ignore
 
 from .grids import SymbolGrid
 
 
-def count_cells(
+def count_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Tuple[int, int],
     direction: Tuple[int, int],
-    count: Callable[[int], ArithRef] = lambda c: 1,
-    stop: Callable[[int], BoolRef] = lambda c: False
+    count: Callable[[int], BoolectorNode] = lambda c: 1,
+    stop: Callable[[int], BoolectorNode] = lambda c: 0,
+    count_bit_width: int = 16
 ):
   """Returns a count of cells along a sightline through a grid.
 
@@ -27,35 +29,40 @@ def count_cells(
       should begin. This is the first cell checked.
   direction (Tuple[int, int]): The (delta-y, delta-x) distance to advance to
       reach the next cell in the sightline.
-  count (Callable[[int], ArithRef]): A function that accepts a symbol as
+  count (Callable[[int], BoolectorNode]): A function that accepts a symbol as
       an argument and returns the integer value to add to the count when this
       symbol is encountered. By default, each symbol will count with a value of
       one.
-  stop (Callable[[int], BoolRef]): A function that accepts a symbol as
-      an argument and returns True if we should stop following the sightline
+  stop (Callable[[int], BoolectorNode]): A function that accepts a symbol as
+      an argument and returns 1 if we should stop following the sightline
       when this symbol is encountered. By default, the sightline will continue
       to the edge of the grid.
+  count_bit_width (int): The bit width of the accumulator for the count.
   """
+  def accumulate(a, c):
+    count_result = count(c)
+    if count_result.width < a.width:
+      count_result = symbol_grid.btor.Uext(
+          count_result, a.width - count_result.width)
+    return a + count_result
+
   return reduce_cells(
       symbol_grid,
       start,
       direction,
-      0,
-      lambda a, c: a + count(c),
+      symbol_grid.btor.Const(0, width=count_bit_width),
+      accumulate,
       lambda a, c: stop(c)
   )
-
-
-Accumulator = TypeVar("Accumulator")
 
 
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Tuple[int, int],
     direction: Tuple[int, int],
-    initializer: Accumulator,
-    accumulate: Callable[[Accumulator, int], Accumulator],
-    stop: Callable[[Accumulator, int], BoolRef] = lambda a, c: False,
+    initializer: BoolectorNode,
+    accumulate: Callable[[BoolectorNode, int], BoolectorNode],
+    stop: Callable[[BoolectorNode, int], BoolectorNode] = lambda a, c: 0,
 ):
   """Returns a computation of a sightline through a grid.
 
@@ -65,15 +72,15 @@ def reduce_cells(  # pylint: disable=R0913
       should begin. This is the first cell checked.
   direction (Tuple[int, int]): The (delta-y, delta-x) distance to advance to
       reach the next cell in the sightline.
-  initializer (Accumulator): The initial value for the accumulator.
-  accumulate (Callable[[Accumulator, int], Accumulator]): A function that
+  initializer (BoolectorNode): The initial value for the accumulator.
+  accumulate (Callable[[BoolectorNode, int], BoolectorNode]): A function that
       accepts an accumulated value and a symbol as arguments, and returns a new
       accumulated value. This function is used to determine a new accumulated
       value for each cell along the sightline, based on the accumulated value
       from the previously encountered cells as well as the symbol in the
       current cell.
-  stop (Callable[[Accumulator, int], BoolRef]): A function that accepts an
-      accumulated value and a symbol as arguments, and returns True if we
+  stop (Callable[[BoolectorNode, int], BoolectorNode]): A function that accepts
+      an accumulated value and a symbol as arguments, and returns 1 if we
       should stop following the sightline when this symbol is encountered. By
       default, the sightline will continue to the edge of the grid.
   """
@@ -85,11 +92,14 @@ def reduce_cells(  # pylint: disable=R0913
   ):
     cell = symbol_grid.grid[y][x]
     acc_term = accumulate(acc_terms[-1], cell)
+    if acc_term.width < initializer.width:
+      acc_term = symbol_grid.btor.Uext(
+          acc_term, initializer.width - acc_term.width)
     acc_terms.append(acc_term)
     stop_terms.append(stop(acc_term, cell))
     y += direction[0]
     x += direction[1]
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
-    expr = If(stop_term, acc_term, expr)
+    expr = symbol_grid.btor.Cond(stop_term, acc_term, expr)
   return expr

@@ -1,7 +1,5 @@
 """Skyscraper solver example."""
 
-from z3 import Datatype, Distinct, If, IntSort
-
 import grilops
 import grilops.sightlines
 
@@ -20,34 +18,40 @@ def main():
 
   # Each row and each column contains each building height exactly once.
   for y in range(SIZE):
-    sg.solver.add(Distinct(*sg.grid[y]))
+    sg.btor.Assert(sg.btor.Distinct(*sg.grid[y]))
   for x in range(SIZE):
-    sg.solver.add(Distinct(*[sg.grid[y][x] for y in range(SIZE)]))
+    sg.btor.Assert(sg.btor.Distinct(*[sg.grid[y][x] for y in range(SIZE)]))
 
   # We'll use the sightlines accumulator to keep track of a tuple storing:
   #   the tallest building we've seen so far
   #   the number of visible buildings we've encountered
-  Acc = Datatype("Acc")  # pylint: disable=C0103
-  Acc.declare("acc", ("tallest", IntSort()), ("num_visible", IntSort()))
-  Acc = Acc.create()  # pylint: disable=C0103
+  acc_bit_width = sg.btor.BitWidthFor(SIZE) * 2
+  def acc(tallest, num_visible):
+    return sg.btor.Concat(tallest, num_visible)
+  def tallest(v):
+    return v[acc_bit_width - 1:(acc_bit_width >> 1)]
+  def num_visible(v):
+    return v[(acc_bit_width >> 1) - 1:0]
+
   def accumulate(a, height):
-    return Acc.acc(
-        If(height > Acc.tallest(a), height, Acc.tallest(a)),
-        If(height > Acc.tallest(a), Acc.num_visible(a) + 1, Acc.num_visible(a))
+    return acc(
+        sg.btor.Cond(height > tallest(a), height, tallest(a)),
+        sg.btor.Cond(height > tallest(a), num_visible(a) + 1, num_visible(a))
     )
 
+  initializer = sg.btor.Const(0, width=acc_bit_width)
   for x, c in enumerate(GIVEN_TOP):
-    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (0, x), (1, 0), Acc.acc(0, 0), accumulate)))
+    sg.btor.Assert(c == num_visible(grilops.sightlines.reduce_cells(
+        sg, (0, x), (1, 0), initializer, accumulate)))
   for y, c in enumerate(GIVEN_LEFT):
-    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (y, 0), (0, 1), Acc.acc(0, 0), accumulate)))
+    sg.btor.Assert(c == num_visible(grilops.sightlines.reduce_cells(
+        sg, (y, 0), (0, 1), initializer, accumulate)))
   for y, c in enumerate(GIVEN_RIGHT):
-    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (y, SIZE - 1), (0, -1), Acc.acc(0, 0), accumulate)))
+    sg.btor.Assert(c == num_visible(grilops.sightlines.reduce_cells(
+        sg, (y, SIZE - 1), (0, -1), initializer, accumulate)))
   for x, c in enumerate(GIVEN_BOTTOM):
-    sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (SIZE - 1, x), (-1, 0), Acc.acc(0, 0), accumulate)))
+    sg.btor.Assert(c == num_visible(grilops.sightlines.reduce_cells(
+        sg, (SIZE - 1, x), (-1, 0), initializer, accumulate)))
 
   if sg.solve():
     sg.print()

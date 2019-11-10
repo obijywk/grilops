@@ -1,7 +1,6 @@
 """Akari solver example."""
 
 import sys
-from z3 import If
 
 import grilops
 import grilops.sightlines
@@ -60,20 +59,26 @@ def main():
   for y in range(size):
     for x in range(size):
       if (y, x) in black_cells:
-        sg.solver.add(sg.cell_is(y, x, sym.BLACK))
+        sg.btor.Assert(sg.cell_is(y, x, sym.BLACK))
         light_count = black_cells[(y, x)]
         if light_count is not None:
-          sg.solver.add(light_count == sum(
-              If(n.symbol == sym.LIGHT, 1, 0) for n in sg.adjacent_cells(y, x)
+          sg.btor.Assert(light_count == sg.btor.PopCount(
+              sg.btor.Concat(
+                  *[n.symbol == sym.LIGHT for n in sg.adjacent_cells(y, x)]
+              )
           ))
       else:
         # All black cells are given; don't allow this cell to be black.
-        sg.solver.add(sg.cell_is_one_of(y, x, [sym.EMPTY, sym.LIGHT]))
+        sg.btor.Assert(sg.cell_is_one_of(y, x, [sym.EMPTY, sym.LIGHT]))
 
   def is_black(c):
     return c == sym.BLACK
   def count_light(c):
-    return If(c == sym.LIGHT, 1, 0)
+    return sg.btor.Cond(
+        c == sym.LIGHT,
+        sg.btor.Const(1),
+        sg.btor.Const(0)
+    )
 
   for y in range(size):
     for x in range(size):
@@ -86,8 +91,8 @@ def main():
       )
       # Ensure that each light cannot see any other lights, and that each cell
       # is lit by at least one light.
-      sg.solver.add(
-          If(
+      sg.btor.Assert(
+          sg.btor.Cond(
               sg.cell_is(y, x, sym.LIGHT),
               visible_light_count == 0,
               visible_light_count > 0
