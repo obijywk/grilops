@@ -1,7 +1,5 @@
 """Castle Wall solver example."""
 
-from z3 import If, Or
-
 import grilops
 from grilops.loops import I, O, LoopSymbolSet, LoopConstrainer
 import grilops.sightlines
@@ -43,16 +41,16 @@ def main():
   for (y, x), (io, expected_count, direction) in GIVENS.items():
     # Constrain whether the given cell is inside or outside of the loop. This
     # also prevents these cells from containing loop symbols themselves.
-    sg.solver.add(lc.inside_outside_grid[y][x] == io)
+    sg.btor.Assert(lc.inside_outside_grid[y][x] == io)
 
     if expected_count is not None and direction is not None:
       # Count and constrain the number of loop segments in the given direction.
       segment_symbols = DIRECTION_SEGMENT_SYMBOLS[direction]
       actual_count = grilops.sightlines.count_cells(
           sg, (y, x), direction,
-          lambda c: If(Or(*[c == s for s in segment_symbols]), 1, 0)
+          lambda c: sg.btor.Or(*[c == s for s in segment_symbols])
       )
-      sg.solver.add(actual_count == expected_count)
+      sg.btor.Assert(actual_count == expected_count)
 
   def show_cell(y, x, _):
     if (y, x) in GIVENS:

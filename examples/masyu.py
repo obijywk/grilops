@@ -1,7 +1,6 @@
 """Masyu solver example."""
 
 import sys
-from z3 import Implies, Or
 
 import grilops
 import grilops.loops
@@ -40,47 +39,47 @@ def main():
     for x in range(len(givens[0])):
       if givens[y][x] == b:
         # The loop must turn at a black circle.
-        sg.solver.add(sg.cell_is_one_of(y, x, turns))
+        sg.btor.Assert(sg.cell_is_one_of(y, x, turns))
 
         # All connected adjacent cells must contain straight loop segments.
         if y > 0:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is_one_of(y, x, [sym.NE, sym.NW]),
               sg.cell_is(y - 1, x, sym.NS)
           ))
         if y < len(sg.grid) - 1:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is_one_of(y, x, [sym.SE, sym.SW]),
               sg.cell_is(y + 1, x, sym.NS)
           ))
         if x > 0:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is_one_of(y, x, [sym.SW, sym.NW]),
               sg.cell_is(y, x - 1, sym.EW)
           ))
         if x < len(sg.grid[0]) - 1:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is_one_of(y, x, [sym.NE, sym.SE]),
               sg.cell_is(y, x + 1, sym.EW)
           ))
 
       elif givens[y][x] == w:
         # The loop must go straight through a white circle.
-        sg.solver.add(sg.cell_is_one_of(y, x, straights))
+        sg.btor.Assert(sg.cell_is_one_of(y, x, straights))
 
         # At least one connected adjacent cell must turn.
         if 0 < y < len(sg.grid) - 1:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is(y, x, sym.NS),
-              Or(
+              sg.btor.Or(
                   sg.cell_is_one_of(y - 1, x, turns),
                   sg.cell_is_one_of(y + 1, x, turns)
               )
           ))
         if 0 < x < len(sg.grid[0]) - 1:
-          sg.solver.add(Implies(
+          sg.btor.Assert(sg.btor.Implies(
               sg.cell_is(y, x, sym.EW),
-              Or(
+              sg.btor.Or(
                   sg.cell_is_one_of(y, x - 1, turns),
                   sg.cell_is_one_of(y, x + 1, turns)
               )

@@ -11,10 +11,8 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
 
 import sys
 from typing import Any, List
-from z3 import (  # type: ignore
-    And, ArithRef, BoolRef, BoolSort, Datatype, Distinct, If, Implies, Int, Not,
-    Or, Xor
-)
+
+from pyboolector import BoolectorNode  # type: ignore
 
 from .grids import SymbolGrid
 from .symbols import SymbolSet
@@ -50,21 +48,16 @@ class LoopSymbolSet(SymbolSet):
     ])
     self.__max_loop_symbol_index = self.max_index()
 
-  def is_loop(self, symbol: ArithRef) -> BoolRef:
+  def is_loop(self, symbol: BoolectorNode) -> BoolectorNode:
     """Returns true if #symbol represents part of the loop.
 
     # Arguments
-    symbol (z3.ArithRef): A z3 expression representing a symbol.
+    symbol (BoolectorNode): A BoolectorNode representing a symbol.
 
     # Returns
-    (z3.BoolRef): true if the symbol represents part of the loop.
+    (BoolectorNode): true if the symbol represents part of the loop.
     """
     return symbol < self.__max_loop_symbol_index + 1
-
-
-_IOGAcc = Datatype("IOGAcc")  # pylint: disable=C0103
-_IOGAcc.declare("acc", ("l", BoolSort()), ("r", BoolSort()))
-_IOGAcc = _IOGAcc.create()  # pylint: disable=C0103
 
 
 class LoopConstrainer:
@@ -84,8 +77,8 @@ class LoopConstrainer:
     LoopConstrainer._instance_index += 1
 
     self.__symbol_grid = symbol_grid
-    self.__inside_outside_grid: List[List[ArithRef]] = []
-    self.__loop_order_grid: List[List[ArithRef]] = []
+    self.__inside_outside_grid: List[List[BoolectorNode]] = []
+    self.__loop_order_grid: List[List[BoolectorNode]] = []
 
     self.__add_loop_edge_constraints()
     self.__make_inside_outside_grid()
@@ -94,7 +87,7 @@ class LoopConstrainer:
 
   def __add_loop_edge_constraints(self):
     grid = self.__symbol_grid.grid
-    solver = self.__symbol_grid.solver
+    btor = self.__symbol_grid.btor
     sym: Any = self.__symbol_grid.symbol_set
 
     for y in range(len(grid)):
@@ -103,124 +96,128 @@ class LoopConstrainer:
 
         if y > 0:
           n = grid[y - 1][x]
-          solver.add(Implies(
-              Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
-              Or(n == sym.NS, n == sym.SE, n == sym.SW)
+          btor.Assert(btor.Implies(
+              btor.Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
+              btor.Or(n == sym.NS, n == sym.SE, n == sym.SW)
           ))
         else:
-          solver.add(cell != sym.NS)
-          solver.add(cell != sym.NE)
-          solver.add(cell != sym.NW)
+          btor.Assert(cell != sym.NS)
+          btor.Assert(cell != sym.NE)
+          btor.Assert(cell != sym.NW)
 
         if y < len(grid) - 1:
           s = grid[y + 1][x]
-          solver.add(Implies(
-              Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
-              Or(s == sym.NS, s == sym.NE, s == sym.NW)
+          btor.Assert(btor.Implies(
+              btor.Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
+              btor.Or(s == sym.NS, s == sym.NE, s == sym.NW)
           ))
         else:
-          solver.add(cell != sym.NS)
-          solver.add(cell != sym.SE)
-          solver.add(cell != sym.SW)
+          btor.Assert(cell != sym.NS)
+          btor.Assert(cell != sym.SE)
+          btor.Assert(cell != sym.SW)
 
         if x > 0:
           w = grid[y][x - 1]
-          solver.add(Implies(
-              Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
-              Or(w == sym.EW, w == sym.NE, w == sym.SE)
+          btor.Assert(btor.Implies(
+              btor.Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
+              btor.Or(w == sym.EW, w == sym.NE, w == sym.SE)
           ))
         else:
-          solver.add(cell != sym.EW)
-          solver.add(cell != sym.SW)
-          solver.add(cell != sym.NW)
+          btor.Assert(cell != sym.EW)
+          btor.Assert(cell != sym.SW)
+          btor.Assert(cell != sym.NW)
 
         if x < len(grid[0]) - 1:
           e = grid[y][x + 1]
-          solver.add(Implies(
-              Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
-              Or(e == sym.EW, e == sym.SW, e == sym.NW)
+          btor.Assert(btor.Implies(
+              btor.Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
+              btor.Or(e == sym.EW, e == sym.SW, e == sym.NW)
           ))
         else:
-          solver.add(cell != sym.EW)
-          solver.add(cell != sym.NE)
-          solver.add(cell != sym.SE)
+          btor.Assert(cell != sym.EW)
+          btor.Assert(cell != sym.NE)
+          btor.Assert(cell != sym.SE)
 
   def __add_single_loop_constraints(self):
     grid = self.__symbol_grid.grid
-    solver = self.__symbol_grid.solver
+    btor = self.__symbol_grid.btor
     sym: Any = self.__symbol_grid.symbol_set
 
     cell_count = len(grid) * len(grid[0])
 
     loop_order_grid = self.__loop_order_grid
+    loop_order_grid_sort = btor.BitVecSort(btor.BitWidthFor(cell_count * 2 + 1))
 
     for y in range(len(grid)):
-      row: List[ArithRef] = []
+      row: List[BoolectorNode] = []
       for x in range(len(grid[0])):
-        v = Int(f"log-{LoopConstrainer._instance_index}-{y}-{x}")
-        solver.add(v >= -cell_count)
-        solver.add(v < cell_count)
+        v = btor.Var(
+            loop_order_grid_sort,
+            f"log-{LoopConstrainer._instance_index}-{y}-{x}"
+        )
+        btor.Assert(btor.Sgte(v, -cell_count))
+        btor.Assert(btor.Slt(v, cell_count))
         row.append(v)
       loop_order_grid.append(row)
 
-    solver.add(Distinct(*[v for row in loop_order_grid for v in row]))
+    btor.Assert(btor.Distinct(*[v for row in loop_order_grid for v in row]))
 
     for y in range(len(grid)):
       for x in range(len(grid[0])):
         cell = grid[y][x]
         li = loop_order_grid[y][x]
 
-        solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
+        btor.Assert(sym.is_loop(cell) == btor.Sgte(li, 0))
 
         if 0 < y < len(grid) - 1:
-          solver.add(Implies(
-              And(cell == sym.NS, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.NS, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y - 1][x] == li - 1,
                   loop_order_grid[y + 1][x] == li - 1
               )
           ))
 
         if 0 < x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.EW, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.EW, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y][x - 1] == li - 1,
                   loop_order_grid[y][x + 1] == li - 1
               )
           ))
 
         if y > 0 and x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.NE, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.NE, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y - 1][x] == li - 1,
                   loop_order_grid[y][x + 1] == li - 1
               )
           ))
 
         if y < len(grid) - 1 and x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.SE, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.SE, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y + 1][x] == li - 1,
                   loop_order_grid[y][x + 1] == li - 1
               )
           ))
 
         if y < len(grid) - 1 and x > 0:
-          solver.add(Implies(
-              And(cell == sym.SW, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.SW, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y + 1][x] == li - 1,
                   loop_order_grid[y][x - 1] == li - 1
               )
           ))
 
         if y > 0 and x > 0:
-          solver.add(Implies(
-              And(cell == sym.NW, li > 0),
-              Or(
+          btor.Assert(btor.Implies(
+              btor.And(cell == sym.NW, btor.Sgt(li, 0)),
+              btor.Or(
                   loop_order_grid[y - 1][x] == li - 1,
                   loop_order_grid[y][x - 1] == li - 1
               )
@@ -228,58 +225,69 @@ class LoopConstrainer:
 
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
+    btor = self.__symbol_grid.btor
     sym: Any = self.__symbol_grid.symbol_set
 
+    def iog_acc(l, r):
+      return btor.Concat(l, r)
+    def iog_acc_l(v):
+      return v[1]
+    def iog_acc_r(v):
+      return v[0]
+
     def accumulate(a, c):
-      cl = Or(c == sym.EW, c == sym.NW, c == sym.SW)
-      cr = Or(c == sym.EW, c == sym.NE, c == sym.SE)
-      return _IOGAcc.acc(
-          Xor(_IOGAcc.l(a), cl),
-          Xor(_IOGAcc.r(a), cr)
+      cl = btor.Or(c == sym.EW, c == sym.NW, c == sym.SW)
+      cr = btor.Or(c == sym.EW, c == sym.NE, c == sym.SE)
+      return iog_acc(
+          btor.Xor(iog_acc_l(a), cl),
+          btor.Xor(iog_acc_r(a), cr)
       )
 
     for y in range(len(grid)):
-      row: List[ArithRef] = []
+      row: List[BoolectorNode] = []
       for x in range(len(grid[0])):
         a = reduce_cells(
             self.__symbol_grid, (y, x), (-1, 0),
-            _IOGAcc.acc(False, False), accumulate
+            iog_acc(btor.Const(0), btor.Const(0)), accumulate
         )
         row.append(
-            If(
+            btor.Cond(
                 sym.is_loop(grid[y][x]),
-                L,
-                If(
-                    Not(Or(_IOGAcc.l(a), _IOGAcc.r(a))),
-                    O,
-                    I
+                btor.Const(L, width=2),
+                btor.Cond(
+                    btor.Not(btor.Or(iog_acc_l(a), iog_acc_r(a))),
+                    btor.Const(O, width=2),
+                    btor.Const(I, width=2)
                 )
             )
         )
       self.__inside_outside_grid.append(row)
 
   @property
-  def loop_order_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of constants of a loop traversal order.
+  def loop_order_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of loop traversal order indices.
 
     Only populated if single_loop was true.
     """
     return self.__loop_order_grid
 
   @property
-  def inside_outside_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of which cells are contained by loops."""
+  def inside_outside_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of which cells are inside loops."""
     return self.__inside_outside_grid
 
   def print_inside_outside_grid(self):
-    """Prints which cells are contained by loops."""
+    """Prints which cells are contained by loops.
+
+    Should be called only after #SymbolGrid.solve() has already completed
+    successfully.
+    """
     labels = {
         L: " ",
         I: "I",
         O: "O",
     }
-    model = self.__symbol_grid.solver.model()
     for row in self.__inside_outside_grid:
       for v in row:
-        sys.stdout.write(labels[model.eval(v).as_long()])
+        sys.stdout.write(labels[int(v.assignment, 2)])
       print()
