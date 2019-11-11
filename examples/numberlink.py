@@ -1,7 +1,5 @@
 """Numberlink solver example."""
 
-from z3 import And, Distinct, Int, Or  # type: ignore
-
 import grilops
 import grilops.loops
 import grilops.regions
@@ -32,14 +30,15 @@ W_SYMS = [SYM.EW, SYM.SW, SYM.NW, SYM.TERMINAL]
 def main():
   """Numberlink solver example."""
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.solver)
+  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.btor)
 
   numbers = sorted(list(set(GIVENS.values())))
-  number_regions = {n: Int(f"nr-{n}") for n in numbers}
-  sg.solver.add(Distinct(*number_regions.values()))
+  number_sort = sg.btor.BitVecSort(rc.region_id_grid[0][0].width)
+  number_regions = {n: sg.btor.Var(number_sort, f"nr-{n}") for n in numbers}
+  sg.btor.Assert(sg.btor.Distinct(*number_regions.values()))
 
   def append_or_term(sym, a, a_syms, b, b_syms):
-    or_terms.append(And(
+    or_terms.append(sg.btor.And(
         sg.cell_is(y, x, sym),
         sg.cell_is_one_of(a[0], a[1], a_syms),
         sg.cell_is_one_of(b[0], b[1], b_syms),
@@ -51,8 +50,8 @@ def main():
     for x in range(WIDTH):
       if (y, x) in GIVENS:
         n = GIVENS[(y, x)]
-        sg.solver.add(sg.cell_is(y, x, SYM.TERMINAL))
-        sg.solver.add(rc.region_id_grid[y][x] == number_regions[n])
+        sg.btor.Assert(sg.cell_is(y, x, SYM.TERMINAL))
+        sg.btor.Assert(rc.region_id_grid[y][x] == number_regions[n])
         continue
       or_terms = []
       if 0 < y < HEIGHT - 1:
@@ -67,7 +66,7 @@ def main():
         append_or_term(SYM.SW, (y + 1, x), N_SYMS, (y, x - 1), E_SYMS)
       if y > 0 and x > 0:
         append_or_term(SYM.NW, (y - 1, x), S_SYMS, (y, x - 1), E_SYMS)
-      sg.solver.add(Or(*or_terms))
+      sg.btor.Assert(sg.btor.Or(*or_terms))
 
   def print_grid():
     sg.print(lambda y, x, _: str(GIVENS[(y, x)]) if (y, x) in GIVENS else None)
