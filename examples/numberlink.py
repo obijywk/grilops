@@ -53,6 +53,8 @@ def main():
         sg.btor.Assert(sg.cell_is(y, x, SYM.TERMINAL))
         sg.btor.Assert(rc.region_id_grid[y][x] == number_regions[n])
         continue
+      # Constrain the region roots to be givens to reduce possibility space.
+      sg.btor.Assert(rc.parent_grid[y][x] != grilops.regions.R)
       or_terms = []
       if 0 < y < HEIGHT - 1:
         append_or_term(SYM.NS, (y - 1, x), S_SYMS, (y + 1, x), N_SYMS)
