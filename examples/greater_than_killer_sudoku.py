@@ -5,7 +5,6 @@ https://www.mumspuzzlehunt.com/puzzles/III.S%20Killer%20Cluedoku.pdf
 """
 
 from collections import defaultdict
-from z3 import Distinct, Sum
 
 import grilops
 
@@ -13,14 +12,14 @@ import grilops
 def add_sudoku_constraints(sg):
   """Add constraints for the normal Sudoku rules."""
   for y in range(9):
-    sg.solver.add(Distinct(*sg.grid[y]))
+    sg.btor.Assert(sg.btor.Distinct(*sg.grid[y]))
   for x in range(9):
-    sg.solver.add(Distinct(*[r[x] for r in sg.grid]))
+    sg.btor.Assert(sg.btor.Distinct(*[r[x] for r in sg.grid]))
   for z in range(9):
     top = (z // 3) * 3
     left = (z % 3) * 3
     cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
-    sg.solver.add(Distinct(*cells))
+    sg.btor.Assert(sg.btor.Distinct(*cells))
 
 
 def main():
@@ -73,17 +72,22 @@ def main():
 
   # The digits used in each cage must be unique.
   for cells_in_cage in cage_cells.values():
-    sg.solver.add(Distinct(*cells_in_cage))
+    sg.btor.Assert(sg.btor.Distinct(*cells_in_cage))
+
+  def extend_and_sum(vs):
+    return sg.btor.Add(*[sg.btor.Uext(v, 1) for v in vs])
 
   # Add constraints for cages with given sums.
   for cage_label, cage_sum in cage_sums.items():
-    sg.solver.add(Sum(*cage_cells[cage_label]) == cage_sum)
+    sg.btor.Assert(extend_and_sum(cage_cells[cage_label]) == cage_sum)
 
   # Add constraints between cage sums.
   def cage_sum_greater(a, b):
-    sg.solver.add(Sum(*cage_cells[a]) > Sum(*cage_cells[b]))
+    sg.btor.Assert(
+        extend_and_sum(cage_cells[a]) > extend_and_sum(cage_cells[b]))
   def cage_sum_equal(a, b):
-    sg.solver.add(Sum(*cage_cells[a]) == Sum(*cage_cells[b]))
+    sg.btor.Assert(
+        extend_and_sum(cage_cells[a]) == extend_and_sum(cage_cells[b]))
   cage_sum_equal("C", "G")
   cage_sum_greater("J", "E")
   cage_sum_greater("E", "K")
