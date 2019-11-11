@@ -1,7 +1,5 @@
 """Tapa solver example."""
 
-from z3 import And, Int, Not, Or
-
 import grilops
 import grilops.regions
 
@@ -113,28 +111,28 @@ def add_neighbor_constraints(sg, y, x):
     and_terms = []
     for (ny, nx), symbol in zip(neighbor_locations, pattern):
       and_terms.append(sg.cell_is(ny, nx, symbol))
-    or_terms.append(And(*and_terms))
-  sg.solver.add(Or(*or_terms))
+    or_terms.append(sg.btor.And(*and_terms))
+  sg.btor.Assert(sg.btor.Or(*or_terms))
 
 
 def main():
   """Tapa solver example."""
   sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      HEIGHT, WIDTH, btor=sg.btor, complete=False)
 
   # Ensure the wall consists of a single region and is made up of shaded
   # symbols.
-  wall_id = Int("wall_id")
-  sg.solver.add(wall_id >= 0)
-  sg.solver.add(wall_id < HEIGHT * WIDTH)
+  wall_id = sg.btor.Var(
+      sg.btor.BitVecSort(rc.region_id_grid[0][0].width), "wall_id")
+  sg.btor.Assert(wall_id != -1)
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.solver.add(
+      sg.btor.Assert(
           sg.cell_is(y, x, SYM.B) == (rc.region_id_grid[y][x] == wall_id))
       # Ensure that given clue cells are not part of the wall.
       if (y, x) in GIVENS:
-        sg.solver.add(sg.cell_is(y, x, SYM.W))
+        sg.btor.Assert(sg.cell_is(y, x, SYM.W))
 
   # Shaded cells may not form a 2x2 square anywhere in the grid.
   for sy in range(HEIGHT - 1):
@@ -142,7 +140,8 @@ def main():
       pool_cells = [
           sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
-      sg.solver.add(Not(And(*[cell == SYM.B for cell in pool_cells])))
+      sg.btor.Assert(
+          sg.btor.Not(sg.btor.And(*[cell == SYM.B for cell in pool_cells])))
 
   # Add constraints for the given clues.
   for (y, x) in GIVENS:
