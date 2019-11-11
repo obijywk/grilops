@@ -1,7 +1,6 @@
 """Yajilin solver example."""
 
 import sys
-from z3 import And, If, Implies, Not, Sum
 
 import grilops
 import grilops.loops
@@ -49,12 +48,12 @@ def main():
   for y in range(8):
     for x in range(8):
       if (y, x) in givens:
-        sg.solver.add(sg.cell_is(y, x, sym.INDICATIVE))
+        sg.btor.Assert(sg.cell_is(y, x, sym.INDICATIVE))
       else:
-        sg.solver.add(Not(sg.cell_is(y, x, sym.INDICATIVE)))
-      sg.solver.add(Implies(
+        sg.btor.Assert(sg.btor.Not(sg.cell_is(y, x, sym.INDICATIVE)))
+      sg.btor.Assert(sg.btor.Implies(
           sg.cell_is(y, x, sym.BLACK),
-          And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(y, x)])
+          sg.btor.And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(y, x)])
       ))
 
   for (sy, sx), (direction, count) in givens.items():
@@ -66,10 +65,11 @@ def main():
       cells = [(y, sx) for y in range(sy + 1, len(sg.grid))]
     elif direction == l:
       cells = [(sy, x) for x in range(sx)]
-    sg.solver.add(
-        count == Sum(*[
-            If(sg.cell_is(y, x, sym.BLACK), 1, 0) for (y, x) in cells
+    sg.btor.Assert(
+        count == sg.btor.PopCount(sg.btor.Concat(*[
+            sg.cell_is(y, x, sym.BLACK) for (y, x) in cells
         ]))
+    )
 
   def print_grid():
     sg.print(lambda y, x, _: givens[(y, x)][0] if (y, x) in givens else None)
