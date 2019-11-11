@@ -47,7 +47,7 @@ def add_given_pair_constraints(sg, rc):
               rc.location_to_region_id((ly, lx)),
 
               # The region must be larger than the smaller given's value.
-              sv < rc.region_size_grid[ly][lx]
+              sg.btor.Slt(sv, rc.region_size_grid[ly][lx])
           )
       )
     if partner_vector.width == 1:
@@ -78,7 +78,7 @@ def main():
   )
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.btor.Assert(sg.cell_is(y, x, rc.region_id_grid[y][x]))
+      sg.btor.Assert(sg.btor.Uext(sg.grid[y][x], 1) == rc.region_id_grid[y][x])
 
   # Exactly half of the givens must be region roots. As an optimization, add
   # constraints that the smallest givens must not be region roots, and that the

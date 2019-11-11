@@ -1,5 +1,7 @@
 """Kuromasu solver example."""
 
+import math
+
 import grilops
 import grilops.regions
 import grilops.sightlines
@@ -43,13 +45,16 @@ def main():
     # seen from that cell, including itself. A cell can be seen from another
     # cell if they are in the same row or column, and there are no black cells
     # between them in that row or column.
-    visible_cell_count, overflow = sg.btor.UAddDetectOverflow(*([
-        grilops.sightlines.count_cells(
-            sg, n.location, n.direction, stop=lambda c: c == sym.B,
-            count_bit_width=sg.btor.BitWidthFor(HEIGHT + WIDTH)
+    acc_width = 2 ** math.ceil(math.log2(max(HEIGHT, WIDTH)))
+    visible_cell_bv = sg.btor.Concat(*[
+        grilops.sightlines.reduce_cells(
+            sg, n.location, n.direction,
+            initializer=sg.btor.Const(0, width=acc_width),
+            accumulate=lambda a, _: sg.btor.Rol(a | 1, 1),
+            stop=lambda _, c: c == sym.B
         ) for n in sg.adjacent_cells(y, x)
-    ] + [1]))
-    sg.btor.Assert(sg.btor.Not(overflow))
+    ])
+    visible_cell_count = sg.btor.PopCount(visible_cell_bv) + 1
     sg.btor.Assert(visible_cell_count == c)
 
   # All the white cells must be connected horizontally or vertically. Enforce

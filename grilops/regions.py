@@ -19,7 +19,6 @@ W (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
     child of the cell to the left of it in its region's subtree.
 """
 
-import math
 import sys
 from typing import List, Optional, Tuple
 
@@ -70,9 +69,9 @@ class RegionConstrainer:  # pylint: disable=R0902
     else:
       self.__max_region_size = height * width
     self.__width = width
-    self.__region_id_bit_vec_width = math.ceil(math.log2(height * width + 1))
-    self.__region_size_bit_vec_width = math.ceil(
-        math.log2(self.__max_region_size + 1))
+    self.__region_id_bit_vec_width = self.__btor.BitWidthFor(height * width * 2)
+    self.__region_size_bit_vec_width = self.__btor.BitWidthFor(
+        self.__max_region_size * 2)
     self.__create_grids(height, width)
     self.__create_size_grids(height, width)
     self.__add_constraints()
@@ -102,10 +101,13 @@ class RegionConstrainer:  # pylint: disable=R0902
         v = self.__btor.Var(
             region_id_sort, f"rcid-{RegionConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__btor.Assert(v != -1)
-        self.__btor.Assert(self.__btor.Or(v < height * width, v == -1))
+          self.__btor.Assert(self.__btor.Sgte(v, 0))
+        else:
+          self.__btor.Assert(self.__btor.Sgte(v, -1))
+        self.__btor.Assert(self.__btor.Slt(v, height * width))
         parent = self.__parent_grid[y][x]
-        self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
+        self.__btor.Assert(
+            self.__btor.Implies(parent == X, v == -1))
         self.__btor.Assert(self.__btor.Implies(
             parent == R, v == self.location_to_region_id((y, x))))
         row.append(v)
@@ -124,8 +126,10 @@ class RegionConstrainer:  # pylint: disable=R0902
             f"rcss-{RegionConstrainer._instance_index}-{y}-{x}"
         )
         if self.__complete:
-          self.__btor.Assert(v >= 1)
-        self.__btor.Assert(v <= self.__max_region_size)
+          self.__btor.Assert(self.__btor.Sgte(v, 1))
+        else:
+          self.__btor.Assert(self.__btor.Sgte(v, -1))
+        self.__btor.Assert(self.__btor.Slte(v, self.__max_region_size))
         row.append(v)
       self.__subtree_size_grid.append(row)
 
@@ -138,12 +142,17 @@ class RegionConstrainer:  # pylint: disable=R0902
             f"rcrs-{RegionConstrainer._instance_index}-{y}-{x}"
         )
         if self.__complete:
-          self.__btor.Assert(v != -1)
-        self.__btor.Assert(v >= self.__min_region_size)
-        self.__btor.Assert(self.__btor.Or(v <= self.__max_region_size, v == -1))
+          self.__btor.Assert(self.__btor.Sgte(v, self.__min_region_size))
+        else:
+          self.__btor.Assert(self.__btor.Or(
+              v == -1,
+              self.__btor.Sgte(v, self.__min_region_size)
+          ))
+        self.__btor.Assert(self.__btor.Slte(v, self.__max_region_size))
         parent = self.__parent_grid[y][x]
         subtree_size = self.__subtree_size_grid[y][x]
-        self.__btor.Assert(self.__btor.Implies(parent == X, v == -1))
+        self.__btor.Assert(
+            self.__btor.Implies(parent == X, v == -1))
         self.__btor.Assert(self.__btor.Implies(parent == R, v == subtree_size))
         row.append(v)
       self.__region_size_grid.append(row)

@@ -31,7 +31,7 @@ def main():
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      sg.btor.Assert(sg.cell_is(y, x, rc.region_id_grid[y][x]))
+      sg.btor.Assert(sg.btor.Uext(sg.grid[y][x], 1) == rc.region_id_grid[y][x])
 
   # Make the upper-left-most cell covered by a circle the root of its region.
   roots = {(int(math.floor(y)), int(math.floor(x))) for (y, x) in GIVENS}

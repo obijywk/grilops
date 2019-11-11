@@ -31,7 +31,8 @@ def main():
   for y in range(len(givens)):
     for x in range(len(givens[0])):
       # The filled number must match the size of the region.
-      sg.btor.Assert(sg.grid[y][x] == rc.region_size_grid[y][x])
+      sg.btor.Assert(
+          sg.btor.Uext(sg.grid[y][x], 1) == rc.region_size_grid[y][x])
 
       # The size of the region must match the clue.
       given = givens[y][x]

@@ -35,6 +35,9 @@ def main():
   numbers = sorted(list(set(GIVENS.values())))
   number_sort = sg.btor.BitVecSort(rc.region_id_grid[0][0].width)
   number_regions = {n: sg.btor.Var(number_sort, f"nr-{n}") for n in numbers}
+  for region_id in number_regions.values():
+    sg.btor.Assert(sg.btor.Sgte(region_id, 0))
+    sg.btor.Assert(sg.btor.Slt(region_id, HEIGHT * WIDTH))
   sg.btor.Assert(sg.btor.Distinct(*number_regions.values()))
 
   def append_or_term(sym, a, a_syms, b, b_syms):
