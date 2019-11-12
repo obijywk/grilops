@@ -2,7 +2,10 @@
 
 import sys
 from typing import List, Tuple
-from z3 import And, ArithRef, If, Int, Or, Solver, Sum  # type: ignore
+
+from pyboolector import BoolectorNode  # type: ignore
+
+from .zboolector import ZBoolector
 
 
 def rotate_shape_clockwise(shape):
@@ -70,7 +73,7 @@ class ShapeConstrainer:
       The same region shape definition may be included multiple times to
       indicate the number of times that shape may appear (if allow_copies
       is false).
-  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+  btor (ZBoolector, None): A #ZBoolector object. If None, a #ZBoolector will be
       constructed.
   complete (bool): If true, every cell must be part of a shape region. Defaults
       to false.
@@ -88,17 +91,17 @@ class ShapeConstrainer:
       height: int,
       width: int,
       shapes: List[List[Tuple[int, int]]],
-      solver: Solver = None,
+      btor: ZBoolector = None,
       complete: bool = False,
       allow_rotations: bool = False,
       allow_reflections: bool = False,
       allow_copies: bool = False
   ):
     ShapeConstrainer._instance_index += 1
-    if solver:
-      self.__solver = solver
+    if btor:
+      self.__btor = btor
     else:
-      self.__solver = Solver()
+      self.__btor = ZBoolector()
 
     self.__complete = complete
     self.__allow_copies = allow_copies
@@ -129,29 +132,37 @@ class ShapeConstrainer:
 
   def __create_grids(self, height: int, width: int):
     """Create the grids used to model shape region constraints."""
-    self.__shape_type_grid: List[List[ArithRef]] = []
+    self.__shape_type_grid: List[List[BoolectorNode]] = []
+    shape_type_sort = self.__btor.BitVecSort(
+        self.__btor.BitWidthFor(len(self.__shapes) * 2))
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"scst-{ShapeConstrainer._instance_index}-{y}-{x}")
+        v = self.__btor.Var(
+            shape_type_sort, f"scst-{ShapeConstrainer._instance_index}-{y}-{x}")
         if self.__complete:
-          self.__solver.add(v >= 0)
+          self.__btor.Assert(self.__btor.Sgte(v, 0))
         else:
-          self.__solver.add(v >= -1)
-        self.__solver.add(v < len(self.__shapes))
+          self.__btor.Assert(self.__btor.Sgte(v, -1))
+        self.__btor.Assert(self.__btor.Slt(v, len(self.__shapes)))
         row.append(v)
       self.__shape_type_grid.append(row)
 
-    self.__shape_instance_grid: List[List[ArithRef]] = []
+    self.__shape_instance_grid: List[List[BoolectorNode]] = []
+    shape_instance_sort = self.__btor.BitVecSort(
+        self.__btor.BitWidthFor(height * width * 2))
     for y in range(height):
       row = []
       for x in range(width):
-        v = Int(f"scsi-{ShapeConstrainer._instance_index}-{y}-{x}")
+        v = self.__btor.Var(
+            shape_instance_sort,
+            f"scsi-{ShapeConstrainer._instance_index}-{y}-{x}"
+        )
         if self.__complete:
-          self.__solver.add(v >= 0)
+          self.__btor.Assert(self.__btor.Sgte(v, 0))
         else:
-          self.__solver.add(v >= -1)
-        self.__solver.add(v < height * width)
+          self.__btor.Assert(self.__btor.Sgte(v, -1))
+        self.__btor.Assert(self.__btor.Slt(v, height * width))
         row.append(v)
       self.__shape_instance_grid.append(row)
 
@@ -165,13 +176,13 @@ class ShapeConstrainer:
   def __add_grid_agreement_constraints(self):
     for y in range(len(self.__shape_type_grid)):
       for x in range(len(self.__shape_type_grid[0])):
-        self.__solver.add(
-            Or(
-                And(
+        self.__btor.Assert(
+            self.__btor.Or(
+                self.__btor.And(
                     self.__shape_type_grid[y][x] == -1,
                     self.__shape_instance_grid[y][x] == -1
                 ),
-                And(
+                self.__btor.And(
                     self.__shape_type_grid[y][x] != -1,
                     self.__shape_instance_grid[y][x] != -1
                 )
@@ -182,18 +193,16 @@ class ShapeConstrainer:
     for gy in range(len(self.__shape_instance_grid)):
       for gx in range(len(self.__shape_instance_grid[0])):
         instance_id = gy * len(self.__shape_instance_grid[0]) + gx
-        instance_size = Sum(*[
-            If(c == instance_id, 1, 0)
-            for row in self.__shape_instance_grid
-            for c in row
-        ])
+        instance_size = self.__btor.PopCount(self.__btor.Concat(*[
+            c == instance_id for row in self.__shape_instance_grid for c in row
+        ]))
 
         or_terms = [self.__shape_instance_grid[gy][gx] == -1]
         for shape_index, variants in enumerate(self.__variants):
           for variant in variants:
             or_terms.extend(self.__make_instance_constraints_for_variant(
                 gy, gx, shape_index, variant, instance_size))
-        self.__solver.add(Or(*or_terms))
+        self.__btor.Assert(self.__btor.Or(*or_terms))
 
   # pylint: disable=R0913,R0914
   def __make_instance_constraints_for_variant(
@@ -208,7 +217,7 @@ class ShapeConstrainer:
       constraint = self.__make_instance_constraint_for_variant_coordinate(
           gy, gx, sry, srx, shape_index, variant, instance_id)
       if gy == gidy and gx == gidx:
-        constraint = And(constraint, instance_size == len(variant))
+        constraint = self.__btor.And(constraint, instance_size == len(variant))
       or_terms.append(constraint)
     return or_terms
 
@@ -223,29 +232,29 @@ class ShapeConstrainer:
       if gpx < 0 or gpx >= len(self.__shape_instance_grid[0]):
         return False
       and_terms.append(
-          And(
+          self.__btor.And(
               self.__shape_instance_grid[gpy][gpx] == instance_id,
               self.__shape_type_grid[gpy][gpx] == shape_index
           )
       )
-    return And(*and_terms)
+    return self.__btor.And(*and_terms)
 
   def __add_single_copy_constraints(self, shape_index, shape):
-    sum_terms = []
+    concat_terms = []
     for y in range(len(self.__shape_type_grid)):
       for x in range(len(self.__shape_type_grid[0])):
-        sum_terms.append(
-            If(self.__shape_type_grid[y][x] == shape_index, 1, 0))
-    self.__solver.add(Sum(*sum_terms) == len(shape))
+        concat_terms.append(self.__shape_type_grid[y][x] == shape_index)
+    self.__btor.Assert(
+        self.__btor.PopCount(self.__btor.Concat(*concat_terms)) == len(shape))
 
   @property
-  def solver(self) -> Solver:
-    """(z3.Solver): The #Solver associated with this #ShapeConstrainer."""
-    return self.__solver
+  def btor(self) -> ZBoolector:
+    """(ZBoolector): The #ZBoolector associated with this #ShapeConstrainer."""
+    return self.__btor
 
   @property
-  def shape_type_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of z3 constants of shape types.
+  def shape_type_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of variables of shape types.
 
     Each cell contains the index of the shape type placed in that cell (as
     indexed by the shapes list passed in to the #ShapeConstrainer constructor),
@@ -254,8 +263,8 @@ class ShapeConstrainer:
     return self.__shape_type_grid
 
   @property
-  def shape_instance_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of z3 constants of shape instance IDs.
+  def shape_instance_grid(self) -> List[List[BoolectorNode]]:
+    """(List[List[BoolectorNode]]): A grid of variables of shape instance IDs.
 
     Each cell contains a number shared among all cells containing the same
     instance of the shape, or -1 if no shape is placed within that cell.
@@ -267,11 +276,10 @@ class ShapeConstrainer:
 
     Should be called only after the solver has been checked.
     """
-    model = self.__solver.model()
     for row in self.__shape_type_grid:
       for v in row:
-        shape_index = model.eval(v).as_long()
-        if shape_index >= 0:
+        shape_index = int(v.assignment, 2)
+        if shape_index != 2 ** v.width - 1:
           sys.stdout.write(f"{shape_index:3}")
         else:
           sys.stdout.write("   ")
@@ -282,11 +290,10 @@ class ShapeConstrainer:
 
     Should be called only after the solver has been checked.
     """
-    model = self.__solver.model()
     for row in self.__shape_instance_grid:
       for v in row:
-        shape_index = model.eval(v).as_long()
-        if shape_index >= 0:
+        shape_index = int(v.assignment, 2)
+        if shape_index != 2 ** v.width - 1:
           sys.stdout.write(f"{shape_index:3}")
         else:
           sys.stdout.write("   ")
