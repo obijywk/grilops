@@ -1,6 +1,6 @@
 """Battleship solver example."""
 
-from z3 import And, If, Implies, Or, Sum  # type: ignore
+from z3 import And, Not, Implies, Or, PbEq  # type: ignore
 
 import grilops
 import grilops.shapes
@@ -48,14 +48,12 @@ def main():
   # Constrain the given ship segment counts and ship segments.
   for y, count in enumerate(GIVENS_Y):
     sg.solver.add(
-        Sum(
-            *[If(sg.cell_is(y, x, SYM.X), 0, 1) for x in range(WIDTH)]
-        ) == count)
+      PbEq([(Not(sg.cell_is(y, x, SYM.X)), 1) for x in range(WIDTH)], count)
+      )
   for x, count in enumerate(GIVENS_X):
     sg.solver.add(
-        Sum(
-            *[If(sg.cell_is(y, x, SYM.X), 0, 1) for y in range(HEIGHT)]
-        ) == count)
+      PbEq([(Not(sg.cell_is(y, x, SYM.X)), 1) for y in range(HEIGHT)], count)
+      )
   for (y, x), s in GIVENS.items():
     sg.solver.add(sg.cell_is(y, x, s))
 
@@ -86,17 +84,16 @@ def main():
       sg.solver.add(And(*and_terms))
 
       # Choose the correct symbol for each ship segment.
-      touching_count = Sum(
-          *[If(c == shape_type, 1, 0) for c in touching_types])
+      touching_count = [(c == shape_type, 1) for c in touching_types]
       sg.solver.add(
           Implies(
-              And(shape_type >= 0, touching_count == 2),
+              And(shape_type >= 0, PbEq(touching_count, 2)),
               sg.cell_is(y, x, SYM.B)
           )
       )
       sg.solver.add(
           Implies(
-              And(shape_type >= 0, touching_count == 0),
+              And(shape_type >= 0, PbEq(touching_count, 0)),
               sg.cell_is(y, x, SYM.O)
           )
       )
@@ -105,7 +102,7 @@ def main():
             Implies(
                 And(
                     shape_type >= 0,
-                    touching_count == 1,
+                    PbEq(touching_count, 1),
                     sc.shape_type_grid[y - 1][x] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.S)
@@ -116,7 +113,7 @@ def main():
             Implies(
                 And(
                     shape_type >= 0,
-                    touching_count == 1,
+                    PbEq(touching_count, 1),
                     sc.shape_type_grid[y + 1][x] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.N)
@@ -127,7 +124,7 @@ def main():
             Implies(
                 And(
                     shape_type >= 0,
-                    touching_count == 1,
+                    PbEq(touching_count, 1),
                     sc.shape_type_grid[y][x - 1] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.E)
@@ -138,7 +135,7 @@ def main():
             Implies(
                 And(
                     shape_type >= 0,
-                    touching_count == 1,
+                    PbEq(touching_count, 1),
                     sc.shape_type_grid[y][x + 1] == shape_type
                 ),
                 sg.cell_is(y, x, SYM.W)

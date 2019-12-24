@@ -1,7 +1,7 @@
 """Gokigen Naname solver example."""
 
 from functools import reduce
-from z3 import And, BitVec, BitVecVal, If
+from z3 import And, BitVec, BitVecVal, If, PbEq
 
 import grilops
 
@@ -170,15 +170,15 @@ def main():
     terms = []
     if y > 0:
       if x > 0:
-        terms.append(If(sg.cell_is(y - 1, x - 1, sym.B), 1, 0))
+        terms.append(sg.cell_is(y - 1, x - 1, sym.B))
       if x < WIDTH:
-        terms.append(If(sg.cell_is(y - 1, x, sym.F), 1, 0))
+        terms.append(sg.cell_is(y - 1, x, sym.F))
     if y < HEIGHT:
       if x > 0:
-        terms.append(If(sg.cell_is(y, x - 1, sym.F), 1, 0))
+        terms.append(sg.cell_is(y, x - 1, sym.F))
       if x < WIDTH:
-        terms.append(If(sg.cell_is(y, x, sym.B), 1, 0))
-    sg.solver.add(sum(terms) == v)
+        terms.append(sg.cell_is(y, x, sym.B))
+    sg.solver.add(PbEq([(term, 1) for term in terms], v))
 
   add_loop_constraints(sym, sg)
 
