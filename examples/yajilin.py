@@ -7,31 +7,40 @@ import grilops
 import grilops.loops
 
 
+U, R, D, L = chr(0x25B4), chr(0x25B8), chr(0x25BE), chr(0x25C2)
+HEIGHT, WIDTH = 12, 12
+GIVENS = {
+    (0, 4): (D, 1),
+    (2, 5): (R, 1),
+    (2, 10): (U, 1),
+    (4, 6): (L, 2),
+    (4, 11): (L, 3),
+    (5, 9): (D, 2),
+    (6, 2): (R, 2),
+    (7, 0): (U, 2),
+    (7, 5): (U, 3),
+    (9, 1): (U, 0),
+    (9, 6): (D, 1),
+    (11, 7): (L, 3),
+}
+GRAYS = [
+    (1, 2),
+    (3, 3),
+    (3, 8),
+    (5, 4),
+    (6, 7),
+    (8, 3),
+    (8, 8),
+    (10, 9),
+]
+
+
 def main():
   """Yajilin solver example."""
-  u, r, d, l = chr(0x25B4), chr(0x25B8), chr(0x25BE), chr(0x25C2)
-  givens = {
-      (0, 0): (r, 2),
-      (1, 1): (r, 2),
-      (1, 4): (u, 0),
-      (1, 7): (l, 3),
-      (2, 0): (d, 3),
-      (2, 3): (u, 1),
-      (3, 2): (d, 2),
-      (4, 0): (r, 1),
-      (4, 2): (u, 0),
-      (4, 3): (l, 0),
-      (5, 6): (u, 1),
-      (6, 0): (u, 3),
-      (6, 5): (u, 2),
-      (7, 1): (u, 1),
-      (7, 3): (l, 2),
-  }
-
-  for y in range(8):
-    for x in range(8):
-      if (y, x) in givens:
-        direction, count = givens[(y, x)]
+  for y in range(HEIGHT):
+    for x in range(WIDTH):
+      if (y, x) in GIVENS:
+        direction, count = GIVENS[(y, x)]
         sys.stdout.write(str(count))
         sys.stdout.write(direction)
         sys.stdout.write(" ")
@@ -42,29 +51,32 @@ def main():
 
   sym = grilops.loops.LoopSymbolSet()
   sym.append("BLACK", chr(0x25AE))
+  sym.append("GRAY", chr(0x25AF))
   sym.append("INDICATIVE", " ")
-  sg = grilops.SymbolGrid(8, 8, sym)
+  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
-  for y in range(8):
-    for x in range(8):
-      if (y, x) in givens:
+  for y in range(HEIGHT):
+    for x in range(WIDTH):
+      if (y, x) in GIVENS:
         sg.solver.add(sg.cell_is(y, x, sym.INDICATIVE))
+      elif (y, x) in GRAYS:
+        sg.solver.add(sg.cell_is(y, x, sym.GRAY))
       else:
-        sg.solver.add(Not(sg.cell_is(y, x, sym.INDICATIVE)))
+        sg.solver.add(Not(sg.cell_is_one_of(y, x, [sym.INDICATIVE, sym.GRAY])))
       sg.solver.add(Implies(
           sg.cell_is(y, x, sym.BLACK),
           And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(y, x)])
       ))
 
-  for (sy, sx), (direction, count) in givens.items():
-    if direction == u:
+  for (sy, sx), (direction, count) in GIVENS.items():
+    if direction == U:
       cells = [(y, sx) for y in range(sy)]
-    elif direction == r:
+    elif direction == R:
       cells = [(sy, x) for x in range(sx + 1, len(sg.grid[0]))]
-    elif direction == d:
+    elif direction == D:
       cells = [(y, sx) for y in range(sy + 1, len(sg.grid))]
-    elif direction == l:
+    elif direction == L:
       cells = [(sy, x) for x in range(sx)]
     sg.solver.add(
         count == Sum(*[
@@ -72,7 +84,7 @@ def main():
         ]))
 
   def print_grid():
-    sg.print(lambda y, x, _: givens[(y, x)][0] if (y, x) in givens else None)
+    sg.print(lambda y, x, _: GIVENS[(y, x)][0] if (y, x) in GIVENS else None)
 
   if sg.solve():
     print_grid()
