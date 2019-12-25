@@ -2,7 +2,7 @@
 
 import sys
 from typing import List, Tuple
-from z3 import And, ArithRef, If, Int, Or, Solver, Sum  # type: ignore
+from z3 import And, ArithRef, If, Int, Or, Solver, Sum, PbEq  # type: ignore
 
 
 def rotate_shape_clockwise(shape):
@@ -235,8 +235,8 @@ class ShapeConstrainer:
     for y in range(len(self.__shape_type_grid)):
       for x in range(len(self.__shape_type_grid[0])):
         sum_terms.append(
-            If(self.__shape_type_grid[y][x] == shape_index, 1, 0))
-    self.__solver.add(Sum(*sum_terms) == len(shape))
+            (self.__shape_type_grid[y][x] == shape_index, 1))
+    self.__solver.add(PbEq(sum_terms, len(shape)))
 
   @property
   def solver(self) -> Solver:

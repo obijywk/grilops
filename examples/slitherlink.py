@@ -1,6 +1,6 @@
 """Slitherlink solver example."""
 
-from z3 import And, If, Implies, Int, Or, Sum
+from z3 import And, If, Implies, Int, Or, PbEq
 
 import grilops
 import grilops.loops
@@ -41,18 +41,18 @@ def loop_solve():
     # symbols in the north-west and south-east corners of this given location.
     terms = [
         # Check for east edge of north-west corner (given's north edge).
-        If(sg.cell_is_one_of(y, x, [sym.EW, sym.NE, sym.SE]), 1, 0),
+        sg.cell_is_one_of(y, x, [sym.EW, sym.NE, sym.SE]),
 
         # Check for north edge of south-east corner (given's east edge).
-        If(sg.cell_is_one_of(y + 1, x + 1, [sym.NS, sym.NE, sym.NW]), 1, 0),
+        sg.cell_is_one_of(y + 1, x + 1, [sym.NS, sym.NE, sym.NW]),
 
         # Check for west edge of south-east corner (given's south edge).
-        If(sg.cell_is_one_of(y + 1, x + 1, [sym.EW, sym.SW, sym.NW]), 1, 0),
+        sg.cell_is_one_of(y + 1, x + 1, [sym.EW, sym.SW, sym.NW]),
 
         # Check for south edge of north-west corner (given's west edge).
-        If(sg.cell_is_one_of(y, x, [sym.NS, sym.SE, sym.SW]), 1, 0),
+        sg.cell_is_one_of(y, x, [sym.NS, sym.SE, sym.SW]),
     ]
-    sg.solver.add(Sum(*terms) == c)
+    sg.solver.add(PbEq([(term, 1) for term in terms], c))
 
   if sg.solve():
     sg.print()
@@ -94,16 +94,16 @@ def region_solve():
       # The number of grid edge border segments adjacent to this cell.
       num_grid_borders = 4 - len(neighbors)
       # The number of adjacent cells on the opposite side of the loop line.
-      num_different_neighbors = sum(
-          If(n.symbol != sg.grid[y][x], 1, 0) for n in neighbors
-      )
+      num_different_neighbors = [
+          (n.symbol != sg.grid[y][x], 1) for n in neighbors
+      ]
       # If this is an "inside" cell, we should count grid edge borders as loop
       # segments, but if this is an "outside" cell, we should not.
       sg.solver.add(
           If(
               sg.grid[y][x] == sym.I,
-              given == num_different_neighbors + num_grid_borders,
-              given == num_different_neighbors
+              PbEq(num_different_neighbors, given - num_grid_borders),
+              PbEq(num_different_neighbors, given)
           )
       )
 

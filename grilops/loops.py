@@ -62,11 +62,6 @@ class LoopSymbolSet(SymbolSet):
     return symbol < self.__max_loop_symbol_index + 1
 
 
-_IOGAcc = Datatype("IOGAcc")  # pylint: disable=C0103
-_IOGAcc.declare("acc", ("l", BoolSort()), ("r", BoolSort()))
-_IOGAcc = _IOGAcc.create()  # pylint: disable=C0103
-
-
 class LoopConstrainer:
   """Creates constraints for ensuring symbols form closed loops.
 
@@ -231,29 +226,20 @@ class LoopConstrainer:
     sym: Any = self.__symbol_grid.symbol_set
 
     def accumulate(a, c):
-      cl = Or(c == sym.EW, c == sym.NW, c == sym.SW)
-      cr = Or(c == sym.EW, c == sym.NE, c == sym.SE)
-      return _IOGAcc.acc(
-          Xor(_IOGAcc.l(a), cl),
-          Xor(_IOGAcc.r(a), cr)
-      )
+      return Xor(a, Or(c == sym.EW, c == sym.NW, c == sym.SW))
 
     for y in range(len(grid)):
       row: List[ArithRef] = []
       for x in range(len(grid[0])):
         a = reduce_cells(
             self.__symbol_grid, (y, x), (-1, 0),
-            _IOGAcc.acc(False, False), accumulate
+            False, accumulate
         )
         row.append(
             If(
                 sym.is_loop(grid[y][x]),
                 L,
-                If(
-                    Not(Or(_IOGAcc.l(a), _IOGAcc.r(a))),
-                    O,
-                    I
-                )
+                If(a, I, O)
             )
         )
       self.__inside_outside_grid.append(row)

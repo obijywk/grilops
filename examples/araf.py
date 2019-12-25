@@ -1,6 +1,6 @@
 """Araf solver example."""
 
-from z3 import And, Implies, If, Not, Sum
+from z3 import And, Implies, If, Not, PbEq
 
 import grilops
 import grilops.regions
@@ -57,7 +57,7 @@ def add_given_pair_constraints(sg, rc):
             rc.parent_grid[ly][lx] == grilops.regions.R,
             And(
                 rc.region_size_grid[ly][lx] < lv,
-                Sum(*[If(pt, 1, 0) for pt in partner_terms]) == 1
+                PbEq([(term, 1) for term in partner_terms], 1)
             )
         )
     )
@@ -94,10 +94,9 @@ def main():
     else:
       undetermined_given_locations.append((y, x))
   sg.solver.add(
-      Sum(*[
-          If(rc.parent_grid[y][x] == grilops.regions.R, 1, 0)
-          for (y, x) in undetermined_given_locations
-      ]) == num_undetermined_roots
+      PbEq([(rc.parent_grid[y][x] == grilops.regions.R, 1)
+           for (y, x) in undetermined_given_locations],
+           num_undetermined_roots)
   )
 
   # Non-givens must not be region roots.

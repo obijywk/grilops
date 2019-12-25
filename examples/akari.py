@@ -1,7 +1,7 @@
 """Akari solver example."""
 
 import sys
-from z3 import If
+from z3 import If, PbEq
 
 import grilops
 import grilops.sightlines
@@ -63,8 +63,9 @@ def main():
         sg.solver.add(sg.cell_is(y, x, sym.BLACK))
         light_count = black_cells[(y, x)]
         if light_count is not None:
-          sg.solver.add(light_count == sum(
-              If(n.symbol == sym.LIGHT, 1, 0) for n in sg.adjacent_cells(y, x)
+          sg.solver.add(PbEq(
+            [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(y, x)],
+            light_count
           ))
       else:
         # All black cells are given; don't allow this cell to be black.
