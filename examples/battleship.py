@@ -145,8 +145,6 @@ def main():
   if sg.solve():
     sg.print()
     print()
-    sc.print_shape_types()
-    print()
     sc.print_shape_instances()
     print()
     if sg.is_unique():
@@ -154,8 +152,6 @@ def main():
     else:
       print("Alternate solution")
       sg.print()
-      print()
-      sc.print_shape_types()
       print()
       sc.print_shape_instances()
       print()
