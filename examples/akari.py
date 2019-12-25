@@ -64,8 +64,8 @@ def main():
         light_count = black_cells[(y, x)]
         if light_count is not None:
           sg.solver.add(PbEq(
-            [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(y, x)],
-            light_count
+              [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(y, x)],
+              light_count
           ))
       else:
         # All black cells are given; don't allow this cell to be black.

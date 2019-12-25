@@ -94,7 +94,7 @@ def region_solve():
       # The number of grid edge border segments adjacent to this cell.
       num_grid_borders = 4 - len(neighbors)
       # The number of adjacent cells on the opposite side of the loop line.
-      num_different_neighbors = [
+      num_different_neighbors_terms = [
           (n.symbol != sg.grid[y][x], 1) for n in neighbors
       ]
       # If this is an "inside" cell, we should count grid edge borders as loop
@@ -102,8 +102,8 @@ def region_solve():
       sg.solver.add(
           If(
               sg.grid[y][x] == sym.I,
-              PbEq(num_different_neighbors, given - num_grid_borders),
-              PbEq(num_different_neighbors, given)
+              PbEq(num_different_neighbors_terms, given - num_grid_borders),
+              PbEq(num_different_neighbors_terms, given)
           )
       )
 

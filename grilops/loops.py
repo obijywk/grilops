@@ -12,8 +12,7 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
 import sys
 from typing import Any, List
 from z3 import (  # type: ignore
-    And, ArithRef, BoolRef, BoolSort, Datatype, Distinct, If, Implies, Int, Not,
-    Or, Xor
+    And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
 )
 
 from .grids import SymbolGrid

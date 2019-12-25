@@ -1,6 +1,6 @@
 """Araf solver example."""
 
-from z3 import And, Implies, If, Not, PbEq
+from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.regions
@@ -94,9 +94,13 @@ def main():
     else:
       undetermined_given_locations.append((y, x))
   sg.solver.add(
-      PbEq([(rc.parent_grid[y][x] == grilops.regions.R, 1)
-           for (y, x) in undetermined_given_locations],
-           num_undetermined_roots)
+      PbEq(
+          [
+              (rc.parent_grid[y][x] == grilops.regions.R, 1)
+              for (y, x) in undetermined_given_locations
+          ],
+          num_undetermined_roots
+      )
   )
 
   # Non-givens must not be region roots.

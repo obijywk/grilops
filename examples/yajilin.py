@@ -1,7 +1,7 @@
 """Yajilin solver example."""
 
 import sys
-from z3 import And, If, Implies, Not, PbEq
+from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.loops
@@ -78,10 +78,12 @@ def main():
       cells = [(y, sx) for y in range(sy + 1, len(sg.grid))]
     elif direction == L:
       cells = [(sy, x) for x in range(sx)]
-    sg.solver.add(PbEq(
-      [(sg.cell_is(y, x, sym.BLACK), 1) for (y, x) in cells],
-      count
-      ))
+    sg.solver.add(
+        PbEq(
+            [(sg.cell_is(y, x, sym.BLACK), 1) for (y, x) in cells],
+            count
+        )
+    )
 
   def print_grid():
     sg.print(lambda y, x, _: GIVENS[(y, x)][0] if (y, x) in GIVENS else None)
