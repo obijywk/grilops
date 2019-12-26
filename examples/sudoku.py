@@ -1,4 +1,7 @@
-"""Sudoku solver example."""
+"""Sudoku solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Sudoku.
+"""
 
 from z3 import Distinct
 

@@ -1,4 +1,8 @@
-"""Tapa solver example."""
+"""Tapa solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/tapa-rules-and-info/.
+"""
 
 from z3 import And, Int, Not, Or
 

@@ -1,4 +1,7 @@
-"""Kuromasu solver example."""
+"""Kuromasu solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Kuromasu.
+"""
 
 from z3 import And, Implies, If  # type: ignore
 

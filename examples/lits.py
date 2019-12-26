@@ -1,4 +1,7 @@
-"""LITS solver example."""
+"""LITS solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/LITS.
+"""
 
 from z3 import And, If, Implies, Int, Not, Or, Sum  # type: ignore
 

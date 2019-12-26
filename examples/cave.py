@@ -1,4 +1,8 @@
-"""Cave solver example."""
+"""Cave solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/cave-rules-and-info/.
+"""
 
 from z3 import Implies, Int  # type: ignore
 

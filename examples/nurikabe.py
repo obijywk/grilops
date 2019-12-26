@@ -1,4 +1,7 @@
-"""Nurikabe solver example."""
+"""Nurikabe solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Nurikabe_(puzzle).
+"""
 
 from z3 import And, Implies, Int, Not  # type: ignore
 

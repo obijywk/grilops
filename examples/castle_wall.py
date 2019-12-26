@@ -1,4 +1,8 @@
-"""Castle Wall solver example."""
+"""Castle Wall solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/castle-wall-rules-and-info/.
+"""
 
 from z3 import If, Or
 

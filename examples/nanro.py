@@ -1,4 +1,8 @@
-"""Nanro solver example."""
+"""Nanro solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/nanro-rules-and-info/.
+"""
 
 from collections import defaultdict
 from z3 import And, If, Implies, Or, Sum

@@ -1,4 +1,8 @@
-"""Yajilin solver example."""
+"""Yajilin solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/yajilin-rules-and-info/.
+"""
 
 import sys
 from z3 import And, Implies, Not, PbEq

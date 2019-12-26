@@ -1,4 +1,8 @@
-"""Heteromino solver example."""
+"""Heteromino solver example.
+
+Example puzzle can be found at
+https://jacoblance.wordpress.com/2015/03/24/heteromino-rules/.
+"""
 
 from z3 import And, Implies, Not
 

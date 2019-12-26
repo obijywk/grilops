@@ -1,4 +1,7 @@
-"""Fillomino solver example."""
+"""Fillomino solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Fillomino.
+"""
 
 from z3 import Implies  # type: ignore
 

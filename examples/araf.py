@@ -1,4 +1,8 @@
-"""Araf solver example."""
+"""Araf solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/araf-rules-and-info/.
+"""
 
 from z3 import And, Implies, Not, PbEq
 

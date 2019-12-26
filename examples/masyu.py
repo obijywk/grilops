@@ -1,4 +1,7 @@
-"""Masyu solver example."""
+"""Masyu solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Masyu.
+"""
 
 import sys
 from z3 import Implies, Or

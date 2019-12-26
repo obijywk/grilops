@@ -1,4 +1,7 @@
-"""Akari solver example."""
+"""Akari solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Light_Up_(puzzle).
+"""
 
 import sys
 from z3 import If, PbEq

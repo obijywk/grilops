@@ -1,4 +1,8 @@
-"""Star Battle solver example."""
+"""Star Battle solver example.
+
+Example puzzle can be found at
+https://krazydad.com/starbattle/tutorial/tutorial_10x10.php.
+"""
 
 from collections import defaultdict
 from z3 import And, If, Implies, Sum  # type: ignore

@@ -1,4 +1,7 @@
-"""Slitherlink solver example."""
+"""Slitherlink solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Slitherlink.
+"""
 
 from z3 import And, If, Implies, Int, Or, PbEq
 

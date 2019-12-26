@@ -1,4 +1,7 @@
-"""Skyscraper solver example."""
+"""Skyscraper solver example.
+
+Example puzzle can be found at https://www.puzzlemix.com/Skyscraper.
+"""
 
 from z3 import Datatype, Distinct, If, IntSort
 

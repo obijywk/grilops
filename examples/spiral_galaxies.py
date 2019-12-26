@@ -1,4 +1,8 @@
-"""Spiral Galaxies solver example."""
+"""Spiral Galaxies solver example.
+
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/spiral-galaxies-rules-info/.
+"""
 
 import math
 from z3 import And, Or

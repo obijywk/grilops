@@ -1,4 +1,7 @@
-"""Gokigen Naname solver example."""
+"""Gokigen Naname solver example.
+
+Example puzzle can be found at https://en.wikipedia.org/wiki/Gokigen_Naname.
+"""
 
 from functools import reduce
 from z3 import And, BitVec, BitVecVal, If, PbEq
