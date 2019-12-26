@@ -42,6 +42,16 @@ def add_given_pair_constraints(sg, rc):
         continue
       if lv <= sv:
         continue
+
+      # Rule out pairs that can't possibly work, due to the Manhattan distance
+      # between givens being too large.
+      manhattan_distance = abs(ly - sy) + abs(lx - sx)
+      min_region_size = manhattan_distance + 1
+      if lv < min_region_size:
+        sg.solver.add(
+            rc.region_id_grid[sy][sx] != rc.location_to_region_id((ly, lx)))
+        continue
+
       partner_terms.append(
           And(
               # The smaller given must not be a region root.
@@ -55,16 +65,17 @@ def add_given_pair_constraints(sg, rc):
           )
       )
     if not partner_terms:
-      continue
-    sg.solver.add(
-        Implies(
-            rc.parent_grid[ly][lx] == grilops.regions.R,
-            And(
-                rc.region_size_grid[ly][lx] < lv,
-                PbEq([(term, 1) for term in partner_terms], 1)
-            )
-        )
-    )
+      sg.solver.add(rc.parent_grid[ly][lx] != grilops.regions.R)
+    else:
+      sg.solver.add(
+          Implies(
+              rc.parent_grid[ly][lx] == grilops.regions.R,
+              And(
+                  rc.region_size_grid[ly][lx] < lv,
+                  PbEq([(term, 1) for term in partner_terms], 1)
+              )
+          )
+      )
 
 
 def main():
