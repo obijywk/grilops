@@ -3,7 +3,7 @@
 Example puzzle can be found at https://en.wikipedia.org/wiki/LITS.
 """
 
-from z3 import And, If, Implies, Int, Not, Or, Sum  # type: ignore
+from z3 import And, If, Implies, Int, Not, Or, PbEq  # type: ignore
 
 import grilops
 import grilops.regions
@@ -50,13 +50,17 @@ def add_area_constraints(sc):
           area_instance_cells.append(sc.shape_instance_grid[y][x])
 
     area_type = Int(f"at-{area_label}")
+    sc.solver.add(area_type >= 0)
+    sc.solver.add(area_type <= 3)
     sc.solver.add(And(*[Or(c == -1, c == area_type) for c in area_type_cells]))
 
     area_instance = Int(f"ai-{area_label}")
+    sc.solver.add(area_instance >= 0)
+    sc.solver.add(area_instance < HEIGHT * WIDTH)
     sc.solver.add(And(
         *[Or(c == -1, c == area_instance) for c in area_instance_cells]))
 
-    sc.solver.add(Sum(*[If(c == -1, 0, 1) for c in area_type_cells]) == 4)
+    sc.solver.add(PbEq([(c != -1, 1) for c in area_type_cells], 4))
 
 
 def add_nurikabe_constraints(sym, sg, rc):
