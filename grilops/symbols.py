@@ -1,6 +1,6 @@
 """This module supports defining symbols that may be filled into grid cells."""
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import cast, Dict, List, Optional, Tuple, Union
 
 
 class Symbol:
@@ -69,16 +69,18 @@ class SymbolSet:
         i = self.__next_unused_index()
         symbol = Symbol(i, name=spec)
         self.__index_to_symbol[i] = symbol
-      elif isinstance(spec, tuple) and len(spec) == 2:
-        i = self.__next_unused_index()
-        symbol = Symbol(i, name=spec[0], label=spec[1])
-        self.__index_to_symbol[i] = symbol
-      elif isinstance(spec, tuple) and len(spec) == 3:
-        i = spec[2]
-        if i in self.__index_to_symbol:
-          raise Exception(
-              f"Index of {spec} already used by {self.__index_to_symbol[i]}")
-        symbol = Symbol(i, name=spec[0], label=spec[1])
+      elif isinstance(spec, tuple):
+        if len(spec) == 3:
+          name, label, i = cast(Tuple[str, str, int], spec)
+          if i in self.__index_to_symbol:
+            raise Exception(
+                f"Index of {spec} already used by {self.__index_to_symbol[i]}")
+        elif len(spec) == 2:
+          name, label = cast(Tuple[str, str], spec)
+          i = self.__next_unused_index()
+        else:
+          raise Exception(f"Invalid symbol spec: {spec}")
+        symbol = Symbol(i, name=name, label=label)
         self.__index_to_symbol[i] = symbol
       else:
         raise Exception(f"Invalid symbol spec: {spec}")
