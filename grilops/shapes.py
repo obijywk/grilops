@@ -15,12 +15,7 @@ def rotate_shape_clockwise(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the 90-degree
       clockwise rotation of the input shape.
   """
-  min_y = min(p[0] for p in shape)
-  max_y = max(p[0] for p in shape)
-  rotated_shape = []
-  for y, x in shape:
-    rotated_shape.append((x, max_y - min_y - y))
-  return rotated_shape
+  return [(x, -y) for (y, x) in shape]
 
 
 def reflect_shape_y(shape):
@@ -33,12 +28,7 @@ def reflect_shape_y(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the vertical
       reflection of the input shape.
   """
-  min_y = min(p[0] for p in shape)
-  max_y = max(p[0] for p in shape)
-  reflected_shape = []
-  for y, x in shape:
-    reflected_shape.append((max_y - min_y - y, x))
-  return reflected_shape
+  return [(-y, x) for (y, x) in shape]
 
 
 def reflect_shape_x(shape):
@@ -51,12 +41,25 @@ def reflect_shape_x(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the horizontal
       reflection of the input shape.
   """
-  min_x = min(p[1] for p in shape)
-  max_x = max(p[1] for p in shape)
-  reflected_shape = []
-  for y, x in shape:
-    reflected_shape.append((y, max_x - min_x - x))
-  return reflected_shape
+  return [(y, -x) for (y, x) in shape]
+
+
+def canonicalize_shape(shape):
+  """Returns a new shape that's canonicalized, i.e., it's in sorted order
+  and its first point is (0, 0).  This helps with deduplication, since
+  equivalent shapes will be canonicalized identically.
+
+  # Arguments:
+  shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.
+
+  # Returns.
+  (List[Tuple[int, int]]): A list of (y, x) coordinates defining the
+     canonicalized version of the shape, i.e., in sorted order and
+     with first point (0, 0).
+  """
+  shape = sorted(shape)
+  ulp = shape[0]
+  return [(p[0] - ulp[0], p[1] - ulp[1]) for p in shape]
 
 
 class ShapeConstrainer:
@@ -123,7 +126,10 @@ class ShapeConstrainer:
           more_variants.append(reflect_shape_y(variant))
           more_variants.append(reflect_shape_x(variant))
         variants = more_variants
-      variants = [list(s) for s in {tuple(sorted(s)) for s in variants}]
+      variants = [
+          list(s)
+          for s in {tuple(canonicalize_shape(s)) for s in variants}
+      ]
       all_variants.append(variants)
     return all_variants
 
