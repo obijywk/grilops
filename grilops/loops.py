@@ -10,12 +10,12 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
 """
 
 import sys
-from typing import Any, List
+from typing import Any, Dict
 from z3 import (  # type: ignore
     And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
 )
 
-from .grids import SymbolGrid
+from .grids import Point, SymbolGrid, Vector
 from .symbols import SymbolSet
 from .sightlines import reduce_cells
 
@@ -78,8 +78,8 @@ class LoopConstrainer:
     LoopConstrainer._instance_index += 1
 
     self.__symbol_grid = symbol_grid
-    self.__inside_outside_grid: List[List[ArithRef]] = []
-    self.__loop_order_grid: List[List[ArithRef]] = []
+    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
+    self.__loop_order_grid: Dict[Point, ArithRef] = {}
 
     self.__add_loop_edge_constraints()
     self.__make_inside_outside_grid()
@@ -91,134 +91,120 @@ class LoopConstrainer:
     solver = self.__symbol_grid.solver
     sym: Any = self.__symbol_grid.symbol_set
 
-    for y in range(len(grid)):
-      for x in range(len(grid[0])):
-        cell = grid[y][x]
+    for p in grid:
+      cell = grid[p]
 
-        if y > 0:
-          n = grid[y - 1][x]
-          solver.add(Implies(
-              Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
-              Or(n == sym.NS, n == sym.SE, n == sym.SW)
-          ))
-        else:
-          solver.add(cell != sym.NS)
-          solver.add(cell != sym.NE)
-          solver.add(cell != sym.NW)
+      np = p.translate(Vector(-1, 0))
+      n = grid.get(np, None)
+      if n is not None:
+        solver.add(Implies(
+            Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
+            Or(n == sym.NS, n == sym.SE, n == sym.SW)
+        ))
+      else:
+        solver.add(cell != sym.NS)
+        solver.add(cell != sym.NE)
+        solver.add(cell != sym.NW)
 
-        if y < len(grid) - 1:
-          s = grid[y + 1][x]
-          solver.add(Implies(
-              Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
-              Or(s == sym.NS, s == sym.NE, s == sym.NW)
-          ))
-        else:
-          solver.add(cell != sym.NS)
-          solver.add(cell != sym.SE)
-          solver.add(cell != sym.SW)
+      sp = p.translate(Vector(1, 0))
+      s = grid.get(sp, None)
+      if s is not None:
+        solver.add(Implies(
+            Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
+            Or(s == sym.NS, s == sym.NE, s == sym.NW)
+        ))
+      else:
+        solver.add(cell != sym.NS)
+        solver.add(cell != sym.SE)
+        solver.add(cell != sym.SW)
 
-        if x > 0:
-          w = grid[y][x - 1]
-          solver.add(Implies(
-              Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
-              Or(w == sym.EW, w == sym.NE, w == sym.SE)
-          ))
-        else:
-          solver.add(cell != sym.EW)
-          solver.add(cell != sym.SW)
-          solver.add(cell != sym.NW)
+      wp = p.translate(Vector(0, -1))
+      w = grid.get(wp, None)
+      if w is not None:
+        solver.add(Implies(
+            Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
+            Or(w == sym.EW, w == sym.NE, w == sym.SE)
+        ))
+      else:
+        solver.add(cell != sym.EW)
+        solver.add(cell != sym.SW)
+        solver.add(cell != sym.NW)
 
-        if x < len(grid[0]) - 1:
-          e = grid[y][x + 1]
-          solver.add(Implies(
-              Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
-              Or(e == sym.EW, e == sym.SW, e == sym.NW)
-          ))
-        else:
-          solver.add(cell != sym.EW)
-          solver.add(cell != sym.NE)
-          solver.add(cell != sym.SE)
+      ep = p.translate(Vector(0, 1))
+      e = grid.get(ep, None)
+      if e is not None:
+        solver.add(Implies(
+            Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
+            Or(e == sym.EW, e == sym.SW, e == sym.NW)
+        ))
+      else:
+        solver.add(cell != sym.EW)
+        solver.add(cell != sym.NE)
+        solver.add(cell != sym.SE)
 
   def __add_single_loop_constraints(self):
     grid = self.__symbol_grid.grid
     solver = self.__symbol_grid.solver
     sym: Any = self.__symbol_grid.symbol_set
 
-    cell_count = len(grid) * len(grid[0])
+    cell_count = len(grid)
 
     loop_order_grid = self.__loop_order_grid
 
-    for y in range(len(grid)):
-      row: List[ArithRef] = []
-      for x in range(len(grid[0])):
-        v = Int(f"log-{LoopConstrainer._instance_index}-{y}-{x}")
-        solver.add(v >= -cell_count)
-        solver.add(v < cell_count)
-        row.append(v)
-      loop_order_grid.append(row)
+    for p in grid:
+      v = Int(f"log-{LoopConstrainer._instance_index}-{p.y}-{p.x}")
+      solver.add(v >= -cell_count)
+      solver.add(v < cell_count)
+      loop_order_grid[p] = v
 
-    solver.add(Distinct(*[v for row in loop_order_grid for v in row]))
+    solver.add(Distinct(*loop_order_grid.values()))
 
-    for y in range(len(grid)):
-      for x in range(len(grid[0])):
-        cell = grid[y][x]
-        li = loop_order_grid[y][x]
+    for p in grid:
+      cell = grid[p]
+      li = loop_order_grid[p]
 
-        solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
+      solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
-        if 0 < y < len(grid) - 1:
-          solver.add(Implies(
-              And(cell == sym.NS, li > 0),
-              Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y + 1][x] == li - 1
-              )
-          ))
+      n = loop_order_grid.get(p.translate(Vector(-1, 0)), None)
+      s = loop_order_grid.get(p.translate(Vector(1, 0)), None)
+      w = loop_order_grid.get(p.translate(Vector(0, -1)), None)
+      e = loop_order_grid.get(p.translate(Vector(0, 1)), None)
 
-        if 0 < x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.EW, li > 0),
-              Or(
-                  loop_order_grid[y][x - 1] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
-              )
-          ))
+      if n is not None and s is not None:
+        solver.add(Implies(
+            And(cell == sym.NS, li > 0),
+            Or(n == li - 1, s == li - 1)
+        ))
 
-        if y > 0 and x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.NE, li > 0),
-              Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
-              )
-          ))
+      if e is not None and w is not None:
+        solver.add(Implies(
+            And(cell == sym.EW, li > 0),
+            Or(e == li - 1, w == li - 1)
+        ))
 
-        if y < len(grid) - 1 and x < len(grid[0]) - 1:
-          solver.add(Implies(
-              And(cell == sym.SE, li > 0),
-              Or(
-                  loop_order_grid[y + 1][x] == li - 1,
-                  loop_order_grid[y][x + 1] == li - 1
-              )
-          ))
+      if n is not None and e is not None:
+        solver.add(Implies(
+            And(cell == sym.NE, li > 0),
+            Or(n == li - 1, e == li - 1)
+        ))
 
-        if y < len(grid) - 1 and x > 0:
-          solver.add(Implies(
-              And(cell == sym.SW, li > 0),
-              Or(
-                  loop_order_grid[y + 1][x] == li - 1,
-                  loop_order_grid[y][x - 1] == li - 1
-              )
-          ))
+      if s is not None and e is not None:
+        solver.add(Implies(
+            And(cell == sym.SE, li > 0),
+            Or(s == li - 1, e == li - 1)
+        ))
 
-        if y > 0 and x > 0:
-          solver.add(Implies(
-              And(cell == sym.NW, li > 0),
-              Or(
-                  loop_order_grid[y - 1][x] == li - 1,
-                  loop_order_grid[y][x - 1] == li - 1
-              )
-          ))
+      if s is not None and w is not None:
+        solver.add(Implies(
+            And(cell == sym.SW, li > 0),
+            Or(s == li - 1, w == li - 1)
+        ))
+
+      if n is not None and w is not None:
+        solver.add(Implies(
+            And(cell == sym.NW, li > 0),
+            Or(n == li - 1, w == li - 1)
+        ))
 
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
@@ -227,33 +213,27 @@ class LoopConstrainer:
     def accumulate(a, c):
       return Xor(a, Or(c == sym.EW, c == sym.NW, c == sym.SW))
 
-    for y in range(len(grid)):
-      row: List[ArithRef] = []
-      for x in range(len(grid[0])):
-        a = reduce_cells(
-            self.__symbol_grid, (y, x), (-1, 0),
-            False, accumulate
-        )
-        row.append(
-            If(
-                sym.is_loop(grid[y][x]),
-                L,
-                If(a, I, O)
-            )
-        )
-      self.__inside_outside_grid.append(row)
+    for p, v in grid.items():
+      a = reduce_cells(
+          self.__symbol_grid, p, Vector(-1, 0),
+          False, accumulate
+      )
+      self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
 
   @property
-  def loop_order_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of constants of a loop traversal order.
+  def loop_order_grid(self) -> Dict[Point, ArithRef]:
+    """(Dict[Point, ArithRef]): Constants of a loop traversal order.
 
     Only populated if single_loop was true.
     """
     return self.__loop_order_grid
 
   @property
-  def inside_outside_grid(self) -> List[List[ArithRef]]:
-    """(List[List[ArithRef]]): A grid of which cells are contained by loops."""
+  def inside_outside_grid(self) -> Dict[Point, ArithRef]:
+    """(Dict[Point, ArithRef]): Whether cells are contained by loops.
+
+    Values are the L, I, and O attributes of this module.
+    """
     return self.__inside_outside_grid
 
   def print_inside_outside_grid(self):
@@ -264,7 +244,16 @@ class LoopConstrainer:
         O: "O",
     }
     model = self.__symbol_grid.solver.model()
-    for row in self.__inside_outside_grid:
-      for v in row:
-        sys.stdout.write(labels[model.eval(v).as_long()])
+    min_y = min(p.y for p in self.__inside_outside_grid)
+    min_x = min(p.x for p in self.__inside_outside_grid)
+    max_y = max(p.y for p in self.__inside_outside_grid)
+    max_x = max(p.x for p in self.__inside_outside_grid)
+    for y in range(min_y, max_y + 1):
+      for x in range(min_x, max_x + 1):
+        p = Point(y, x)
+        if p in self.__inside_outside_grid:
+          v = self.__inside_outside_grid[p]
+          sys.stdout.write(labels[model.eval(v).as_long()])
+        else:
+          sys.stdout.write(" ")
       print()

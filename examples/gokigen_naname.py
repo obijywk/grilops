@@ -7,6 +7,7 @@ from functools import reduce
 from z3 import And, BitVec, BitVecVal, If, PbEq
 
 import grilops
+from grilops import Point
 
 
 HEIGHT = 10
@@ -97,31 +98,31 @@ def add_loop_constraints(sym, sg):
       or_terms = []
       if y - 1 >= 0 and x - 1 >= 0:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.B), sg.cell_is(y - 1, x - 1, sym.B)),
+            And(sg.cell_is(Point(y, x), sym.B), sg.cell_is(Point(y - 1, x - 1), sym.B)),
             north_net_grid[y - 1][x - 1] | location_to_bitvec(y - 1, x - 1),
             0
         ))
       if y - 1 >= 0:
         or_terms.append(If(
-            sg.grid[y][x] != sg.grid[y - 1][x],
+            sg.grid[Point(y, x)] != sg.grid[Point(y - 1, x)],
             north_net_grid[y - 1][x] | location_to_bitvec(y - 1, x),
             0
         ))
       if y - 1 >= 0 and x + 1 < WIDTH:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.F), sg.cell_is(y - 1, x + 1, sym.F)),
+            And(sg.cell_is(Point(y, x), sym.F), sg.cell_is(Point(y - 1, x + 1), sym.F)),
             north_net_grid[y - 1][x + 1] | location_to_bitvec(y - 1, x + 1),
             0
         ))
       if x - 1 >= 0:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.B), sg.cell_is(y, x - 1, sym.F)),
+            And(sg.cell_is(Point(y, x), sym.B), sg.cell_is(Point(y, x - 1), sym.F)),
             south_net_grid[y][x - 1] | location_to_bitvec(y, x - 1),
             0
         ))
       if x + 1 < WIDTH:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.F), sg.cell_is(y, x + 1, sym.B)),
+            And(sg.cell_is(Point(y, x), sym.F), sg.cell_is(Point(y, x + 1), sym.B)),
             south_net_grid[y][x + 1] | location_to_bitvec(y, x + 1),
             0
         ))
@@ -132,31 +133,31 @@ def add_loop_constraints(sym, sg):
       or_terms = []
       if x - 1 >= 0:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.F), sg.cell_is(y, x - 1, sym.B)),
+            And(sg.cell_is(Point(y, x), sym.F), sg.cell_is(Point(y, x - 1), sym.B)),
             north_net_grid[y][x - 1] | location_to_bitvec(y, x - 1),
             0
         ))
       if x + 1 < WIDTH:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.B), sg.cell_is(y, x + 1, sym.F)),
+            And(sg.cell_is(Point(y, x), sym.B), sg.cell_is(Point(y, x + 1), sym.F)),
             north_net_grid[y][x + 1] | location_to_bitvec(y, x + 1),
             0
         ))
       if y + 1 < HEIGHT and x - 1 >= 0:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.F), sg.cell_is(y + 1, x - 1, sym.F)),
+            And(sg.cell_is(Point(y, x), sym.F), sg.cell_is(Point(y + 1, x - 1), sym.F)),
             south_net_grid[y + 1][x - 1] | location_to_bitvec(y + 1, x - 1),
             0
         ))
       if y + 1 < HEIGHT:
         or_terms.append(If(
-            sg.grid[y][x] != sg.grid[y + 1][x],
+            sg.grid[Point(y, x)] != sg.grid[Point(y + 1, x)],
             south_net_grid[y + 1][x] | location_to_bitvec(y + 1, x),
             0
         ))
       if y + 1 < HEIGHT and x + 1 < WIDTH:
         or_terms.append(If(
-            And(sg.cell_is(y, x, sym.B), sg.cell_is(y + 1, x + 1, sym.B)),
+            And(sg.cell_is(Point(y, x), sym.B), sg.cell_is(Point(y + 1, x + 1), sym.B)),
             south_net_grid[y + 1][x + 1] | location_to_bitvec(y + 1, x + 1),
             0
         ))
@@ -166,21 +167,22 @@ def add_loop_constraints(sym, sg):
 def main():
   """Gokigen Naname solver example."""
   sym = grilops.SymbolSet([("F", chr(0x2571)), ("B", chr(0x2572))])
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
 
   # Ensure the given number of line segment constraints are met.
   for (y, x), v in GIVENS.items():
     terms = []
     if y > 0:
       if x > 0:
-        terms.append(sg.cell_is(y - 1, x - 1, sym.B))
+        terms.append(sg.cell_is(Point(y - 1, x - 1), sym.B))
       if x < WIDTH:
-        terms.append(sg.cell_is(y - 1, x, sym.F))
+        terms.append(sg.cell_is(Point(y - 1, x), sym.F))
     if y < HEIGHT:
       if x > 0:
-        terms.append(sg.cell_is(y, x - 1, sym.F))
+        terms.append(sg.cell_is(Point(y, x - 1), sym.F))
       if x < WIDTH:
-        terms.append(sg.cell_is(y, x, sym.B))
+        terms.append(sg.cell_is(Point(y, x), sym.B))
     sg.solver.add(PbEq([(term, 1) for term in terms], v))
 
   add_loop_constraints(sym, sg)

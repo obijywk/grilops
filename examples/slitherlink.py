@@ -8,6 +8,7 @@ from z3 import And, If, Implies, Int, Or, PbEq
 import grilops
 import grilops.loops
 import grilops.regions
+from grilops import Point
 
 
 HEIGHT, WIDTH = 6, 6
@@ -35,7 +36,8 @@ def loop_solve():
   # We'll place symbols at the intersections of the grid lines, rather than in
   # the spaces between the grid lines where the givens are written. This
   # requires increasing each dimension by one.
-  sg = grilops.SymbolGrid(HEIGHT + 1, WIDTH + 1, sym)
+  locations = grilops.get_rectangle_locations(HEIGHT + 1, WIDTH + 1)
+  sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for (y, x), c in GIVENS.items():
@@ -44,16 +46,16 @@ def loop_solve():
     # symbols in the north-west and south-east corners of this given location.
     terms = [
         # Check for east edge of north-west corner (given's north edge).
-        sg.cell_is_one_of(y, x, [sym.EW, sym.NE, sym.SE]),
+        sg.cell_is_one_of(Point(y, x), [sym.EW, sym.NE, sym.SE]),
 
         # Check for north edge of south-east corner (given's east edge).
-        sg.cell_is_one_of(y + 1, x + 1, [sym.NS, sym.NE, sym.NW]),
+        sg.cell_is_one_of(Point(y + 1, x + 1), [sym.NS, sym.NE, sym.NW]),
 
         # Check for west edge of south-east corner (given's south edge).
-        sg.cell_is_one_of(y + 1, x + 1, [sym.EW, sym.SW, sym.NW]),
+        sg.cell_is_one_of(Point(y + 1, x + 1), [sym.EW, sym.SW, sym.NW]),
 
         # Check for south edge of north-west corner (given's west edge).
-        sg.cell_is_one_of(y, x, [sym.NS, sym.SE, sym.SW]),
+        sg.cell_is_one_of(Point(y, x), [sym.NS, sym.SE, sym.SW]),
     ]
     sg.solver.add(PbEq([(term, 1) for term in terms], c))
 
@@ -72,39 +74,41 @@ def loop_solve():
 def region_solve():
   """Slitherlink solver example using regions."""
   sym = grilops.SymbolSet([("I", chr(0x2588)), ("O", " ")])
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      locations, solver=sg.solver, complete=False)
 
   region_id = Int("region_id")
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       # Each cell must be either "inside" (part of a single region) or
       # "outside" (not part of any region).
       sg.solver.add(
           Or(
-              rc.region_id_grid[y][x] == region_id,
-              rc.region_id_grid[y][x] == -1
+              rc.region_id_grid[p] == region_id,
+              rc.region_id_grid[p] == -1
           )
       )
       sg.solver.add(
-          (sg.grid[y][x] == sym.I) == (rc.region_id_grid[y][x] == region_id))
+          (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == region_id))
 
       if (y, x) not in GIVENS:
         continue
       given = GIVENS[(y, x)]
-      neighbors = sg.adjacent_cells(y, x)
+      neighbors = sg.adjacent_cells(p)
       # The number of grid edge border segments adjacent to this cell.
       num_grid_borders = 4 - len(neighbors)
       # The number of adjacent cells on the opposite side of the loop line.
       num_different_neighbors_terms = [
-          (n.symbol != sg.grid[y][x], 1) for n in neighbors
+          (n.symbol != sg.grid[p], 1) for n in neighbors
       ]
       # If this is an "inside" cell, we should count grid edge borders as loop
       # segments, but if this is an "outside" cell, we should not.
       sg.solver.add(
           If(
-              sg.grid[y][x] == sym.I,
+              sg.grid[p] == sym.I,
               PbEq(num_different_neighbors_terms, given - num_grid_borders),
               PbEq(num_different_neighbors_terms, given)
           )
@@ -114,10 +118,10 @@ def region_solve():
   # an adjacent cell.
   for y in range(HEIGHT - 1):
     for x in range(WIDTH - 1):
-      nw = sg.grid[y][x]
-      ne = sg.grid[y][x + 1]
-      sw = sg.grid[y + 1][x]
-      se = sg.grid[y + 1][x + 1]
+      nw = sg.grid[Point(y, x)]
+      ne = sg.grid[Point(y, x + 1)]
+      sw = sg.grid[Point(y + 1, x)]
+      se = sg.grid[Point(y + 1, x + 1)]
       sg.solver.add(
           Implies(
               And(nw == sym.I, se == sym.I),

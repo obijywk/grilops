@@ -6,16 +6,16 @@ satisfied, results in no further symbols along the line being counted. It may
 also have a custom counting or accumulation function.
 """
 
-from typing import Callable, Tuple, TypeVar
+from typing import Callable, TypeVar
 from z3 import ArithRef, BoolRef, If  # type: ignore
 
-from .grids import SymbolGrid
+from .grids import Point, SymbolGrid, Vector
 
 
 def count_cells(
     symbol_grid: SymbolGrid,
-    start: Tuple[int, int],
-    direction: Tuple[int, int],
+    start: Point,
+    direction: Vector,
     count: Callable[[int], ArithRef] = lambda c: 1,
     stop: Callable[[int], BoolRef] = lambda c: False
 ):
@@ -23,10 +23,10 @@ def count_cells(
 
   # Arguments
   symbol_grid (SymbolGrid): The SymbolGrid to check against.
-  start (Tuple[int, int]): The (y, x) coordinate of the cell where the sightline
-      should begin. This is the first cell checked.
-  direction (Tuple[int, int]): The (delta-y, delta-x) distance to advance to
-      reach the next cell in the sightline.
+  start (Point): The location of the cell where the sightline should begin.
+      This is the first cell checked.
+  direction (Vector): The direction to advance to reach the next cell in the
+      sightline.
   count (Callable[[int], ArithRef]): A function that accepts a symbol as
       an argument and returns the integer value to add to the count when this
       symbol is encountered. By default, each symbol will count with a value of
@@ -51,8 +51,8 @@ Accumulator = TypeVar("Accumulator")
 
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
-    start: Tuple[int, int],
-    direction: Tuple[int, int],
+    start: Point,
+    direction: Vector,
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, int], Accumulator],
     stop: Callable[[Accumulator, int], BoolRef] = lambda a, c: False,
@@ -61,10 +61,10 @@ def reduce_cells(  # pylint: disable=R0913
 
   # Arguments
   symbol_grid (SymbolGrid): The SymbolGrid to check against.
-  start (Tuple[int, int]): The (y, x) coordinate of the cell where the sightline
-      should begin. This is the first cell checked.
-  direction (Tuple[int, int]): The (delta-y, delta-x) distance to advance to
-      reach the next cell in the sightline.
+  start (Point): The location of the cell where the sightline should begin.
+      This is the first cell checked.
+  direction (Vector): The direction to advance to reach the next cell in the
+      sightline.
   initializer (Accumulator): The initial value for the accumulator.
   accumulate (Callable[[Accumulator, int], Accumulator]): A function that
       accepts an accumulated value and a symbol as arguments, and returns a new
@@ -79,16 +79,13 @@ def reduce_cells(  # pylint: disable=R0913
   """
   stop_terms = []
   acc_terms = [initializer]
-  y, x = start
-  while (
-      0 <= y < len(symbol_grid.grid) and 0 <= x < len(symbol_grid.grid[0])
-  ):
-    cell = symbol_grid.grid[y][x]
+  p = start
+  while p in symbol_grid.grid:
+    cell = symbol_grid.grid[p]
     acc_term = accumulate(acc_terms[-1], cell)
     acc_terms.append(acc_term)
     stop_terms.append(stop(acc_term, cell))
-    y += direction[0]
-    x += direction[1]
+    p = p.translate(direction)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
     expr = If(stop_term, acc_term, expr)

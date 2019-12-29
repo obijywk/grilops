@@ -9,6 +9,7 @@ from z3 import Implies, Int  # type: ignore
 import grilops
 import grilops.regions
 import grilops.sightlines
+from grilops import Point
 
 
 SYM = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
@@ -29,8 +30,9 @@ GIVENS = [
 
 def main():
   """Cave solver example."""
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, SYM)
+  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
 
   # The cave must be a single connected group. We'll define a variable to keep
   # track of its region ID.
@@ -38,10 +40,11 @@ def main():
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       # Ensure that every cave cell has the same region ID.
       sg.solver.add(
-          sg.cell_is(y, x, SYM.W) ==
-          (rc.region_id_grid[y][x] == cave_region_id)
+          sg.cell_is(p, SYM.W) ==
+          (rc.region_id_grid[p] == cave_region_id)
       )
 
       # Every shaded region must connect to an edge of the grid. We'll enforce
@@ -50,8 +53,8 @@ def main():
       if 0 < y < HEIGHT - 1 and 0 < x < WIDTH - 1:
         sg.solver.add(
             Implies(
-                sg.cell_is(y, x, SYM.B),
-                rc.parent_grid[y][x] != grilops.regions.R
+                sg.cell_is(p, SYM.B),
+                rc.parent_grid[p] != grilops.regions.R
             )
         )
 
@@ -59,17 +62,18 @@ def main():
     for x in range(WIDTH):
       if GIVENS[y][x] == 0:
         continue
-      sg.solver.add(sg.cell_is(y, x, SYM.W))
+      p = Point(y, x)
+      sg.solver.add(sg.cell_is(p, SYM.W))
       # Count the cells visible along sightlines from the given cell.
       visible_cell_count = 1 + sum(
           grilops.sightlines.count_cells(
               sg, n.location, n.direction, stop=lambda c: c == SYM.B
-          ) for n in sg.adjacent_cells(y, x)
+          ) for n in sg.adjacent_cells(p)
       )
       sg.solver.add(visible_cell_count == GIVENS[y][x])
 
   def print_grid():
-    sg.print(lambda y, x, _: str(GIVENS[y][x]) if GIVENS[y][x] != 0 else None)
+    sg.print(lambda p, _: str(GIVENS[p.y][p.x]) if GIVENS[p.y][p.x] != 0 else None)
 
   if sg.solve():
     print_grid()

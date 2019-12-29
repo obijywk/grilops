@@ -8,6 +8,7 @@ from z3 import And, Implies, If  # type: ignore
 import grilops
 import grilops.regions
 import grilops.sightlines
+from grilops import Point
 
 
 HEIGHT, WIDTH = 11, 11
@@ -36,13 +37,15 @@ GIVENS = {
 def main():
   """Kuromasu solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      locations, solver=sg.solver, complete=False)
 
   for (y, x), c in GIVENS.items():
+    p = Point(y, x)
     # Numbered cells may not be black.
-    sg.solver.add(sg.cell_is(y, x, sym.W))
+    sg.solver.add(sg.cell_is(p, sym.W))
 
     # Each number on the board represents the number of white cells that can be
     # seen from that cell, including itself. A cell can be seen from another
@@ -51,7 +54,7 @@ def main():
     visible_cell_count = 1 + sum(
         grilops.sightlines.count_cells(
             sg, n.location, n.direction, stop=lambda c: c == sym.B
-        ) for n in sg.adjacent_cells(y, x)
+        ) for n in sg.adjacent_cells(p)
     )
     sg.solver.add(visible_cell_count == c)
 
@@ -64,11 +67,13 @@ def main():
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
+
       # No two black cells may be horizontally or vertically adjacent.
       sg.solver.add(
           Implies(
-              sg.cell_is(y, x, sym.B),
-              And(*[n.symbol == sym.W for n in sg.adjacent_cells(y, x)])
+              sg.cell_is(p, sym.B),
+              And(*[n.symbol == sym.W for n in sg.adjacent_cells(p)])
           )
       )
 
@@ -76,15 +81,15 @@ def main():
       # be part of a region.
       sg.solver.add(
           If(
-              sg.cell_is(y, x, sym.W),
-              rc.region_id_grid[y][x] == white_region_id,
-              rc.region_id_grid[y][x] == -1
+              sg.cell_is(p, sym.W),
+              rc.region_id_grid[p] == white_region_id,
+              rc.region_id_grid[p] == -1
           )
       )
 
   def print_grid():
     sg.print(
-        lambda y, x, _: f"{GIVENS[(y, x)]:02}" if (y, x) in GIVENS else None)
+        lambda p, _: f"{GIVENS[(p.y, p.x)]:02}" if (p.y, p.x) in GIVENS else None)
 
   if sg.solve():
     print_grid()

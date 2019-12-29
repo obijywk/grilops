@@ -8,6 +8,7 @@ from z3 import And, Distinct, Int, Or  # type: ignore
 import grilops
 import grilops.loops
 import grilops.regions
+from grilops import Point
 
 
 HEIGHT, WIDTH = 7, 7
@@ -34,8 +35,9 @@ W_SYMS = [SYM.EW, SYM.SW, SYM.NW, SYM.TERMINAL]
 
 def main():
   """Numberlink solver example."""
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.solver)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, SYM)
+  rc = grilops.regions.RegionConstrainer(locations, sg.solver)
 
   numbers = sorted(list(set(GIVENS.values())))
   number_regions = {n: Int(f"nr-{n}") for n in numbers}
@@ -43,37 +45,38 @@ def main():
 
   def append_or_term(sym, a, a_syms, b, b_syms):
     or_terms.append(And(
-        sg.cell_is(y, x, sym),
-        sg.cell_is_one_of(a[0], a[1], a_syms),
-        sg.cell_is_one_of(b[0], b[1], b_syms),
-        rc.region_id_grid[y][x] == rc.region_id_grid[a[0]][a[1]],
-        rc.region_id_grid[y][x] == rc.region_id_grid[b[0]][b[1]],
+        sg.cell_is(p, sym),
+        sg.cell_is_one_of(a, a_syms),
+        sg.cell_is_one_of(b, b_syms),
+        rc.region_id_grid[p] == rc.region_id_grid[a],
+        rc.region_id_grid[p] == rc.region_id_grid[b],
     ))
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       if (y, x) in GIVENS:
         n = GIVENS[(y, x)]
-        sg.solver.add(sg.cell_is(y, x, SYM.TERMINAL))
-        sg.solver.add(rc.region_id_grid[y][x] == number_regions[n])
+        sg.solver.add(sg.cell_is(p, SYM.TERMINAL))
+        sg.solver.add(rc.region_id_grid[p] == number_regions[n])
         continue
       or_terms = []
       if 0 < y < HEIGHT - 1:
-        append_or_term(SYM.NS, (y - 1, x), S_SYMS, (y + 1, x), N_SYMS)
+        append_or_term(SYM.NS, Point(y - 1, x), S_SYMS, Point(y + 1, x), N_SYMS)
       if 0 < x < WIDTH - 1:
-        append_or_term(SYM.EW, (y, x - 1), E_SYMS, (y, x + 1), W_SYMS)
+        append_or_term(SYM.EW, Point(y, x - 1), E_SYMS, Point(y, x + 1), W_SYMS)
       if y > 0 and x < WIDTH - 1:
-        append_or_term(SYM.NE, (y - 1, x), S_SYMS, (y, x + 1), W_SYMS)
+        append_or_term(SYM.NE, Point(y - 1, x), S_SYMS, Point(y, x + 1), W_SYMS)
       if y < HEIGHT - 1 and x < WIDTH - 1:
-        append_or_term(SYM.SE, (y + 1, x), N_SYMS, (y, x + 1), W_SYMS)
+        append_or_term(SYM.SE, Point(y + 1, x), N_SYMS, Point(y, x + 1), W_SYMS)
       if y < HEIGHT - 1 and x > 0:
-        append_or_term(SYM.SW, (y + 1, x), N_SYMS, (y, x - 1), E_SYMS)
+        append_or_term(SYM.SW, Point(y + 1, x), N_SYMS, Point(y, x - 1), E_SYMS)
       if y > 0 and x > 0:
-        append_or_term(SYM.NW, (y - 1, x), S_SYMS, (y, x - 1), E_SYMS)
+        append_or_term(SYM.NW, Point(y - 1, x), S_SYMS, Point(y, x - 1), E_SYMS)
       sg.solver.add(Or(*or_terms))
 
   def print_grid():
-    sg.print(lambda y, x, _: str(GIVENS[(y, x)]) if (y, x) in GIVENS else None)
+    sg.print(lambda p, _: str(GIVENS[(p.y, p.x)]) if (p.y, p.x) in GIVENS else None)
 
   if sg.solve():
     print_grid()

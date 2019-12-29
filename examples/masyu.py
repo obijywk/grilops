@@ -8,6 +8,7 @@ from z3 import Implies, Or
 
 import grilops
 import grilops.loops
+from grilops import Point
 
 
 def main():
@@ -33,7 +34,8 @@ def main():
 
   sym = grilops.loops.LoopSymbolSet()
   sym.append("EMPTY", " ")
-  sg = grilops.SymbolGrid(10, 10, sym)
+  locations = grilops.get_rectangle_locations(len(givens), len(givens[0]))
+  sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   straights = [sym.NS, sym.EW]
@@ -41,51 +43,52 @@ def main():
 
   for y in range(len(givens)):
     for x in range(len(givens[0])):
+      p = Point(y, x)
       if givens[y][x] == b:
         # The loop must turn at a black circle.
-        sg.solver.add(sg.cell_is_one_of(y, x, turns))
+        sg.solver.add(sg.cell_is_one_of(p, turns))
 
         # All connected adjacent cells must contain straight loop segments.
         if y > 0:
           sg.solver.add(Implies(
-              sg.cell_is_one_of(y, x, [sym.NE, sym.NW]),
-              sg.cell_is(y - 1, x, sym.NS)
+              sg.cell_is_one_of(p, [sym.NE, sym.NW]),
+              sg.cell_is(Point(y - 1, x), sym.NS)
           ))
-        if y < len(sg.grid) - 1:
+        if y < len(givens) - 1:
           sg.solver.add(Implies(
-              sg.cell_is_one_of(y, x, [sym.SE, sym.SW]),
-              sg.cell_is(y + 1, x, sym.NS)
+              sg.cell_is_one_of(p, [sym.SE, sym.SW]),
+              sg.cell_is(Point(y + 1, x), sym.NS)
           ))
         if x > 0:
           sg.solver.add(Implies(
-              sg.cell_is_one_of(y, x, [sym.SW, sym.NW]),
-              sg.cell_is(y, x - 1, sym.EW)
+              sg.cell_is_one_of(p, [sym.SW, sym.NW]),
+              sg.cell_is(Point(y, x - 1), sym.EW)
           ))
-        if x < len(sg.grid[0]) - 1:
+        if x < len(givens[0]) - 1:
           sg.solver.add(Implies(
-              sg.cell_is_one_of(y, x, [sym.NE, sym.SE]),
-              sg.cell_is(y, x + 1, sym.EW)
+              sg.cell_is_one_of(p, [sym.NE, sym.SE]),
+              sg.cell_is(Point(y, x + 1), sym.EW)
           ))
 
       elif givens[y][x] == w:
         # The loop must go straight through a white circle.
-        sg.solver.add(sg.cell_is_one_of(y, x, straights))
+        sg.solver.add(sg.cell_is_one_of(p, straights))
 
         # At least one connected adjacent cell must turn.
-        if 0 < y < len(sg.grid) - 1:
+        if 0 < y < len(givens) - 1:
           sg.solver.add(Implies(
-              sg.cell_is(y, x, sym.NS),
+              sg.cell_is(p, sym.NS),
               Or(
-                  sg.cell_is_one_of(y - 1, x, turns),
-                  sg.cell_is_one_of(y + 1, x, turns)
+                  sg.cell_is_one_of(Point(y - 1, x), turns),
+                  sg.cell_is_one_of(Point(y + 1, x), turns)
               )
           ))
-        if 0 < x < len(sg.grid[0]) - 1:
+        if 0 < x < len(givens[0]) - 1:
           sg.solver.add(Implies(
-              sg.cell_is(y, x, sym.EW),
+              sg.cell_is(p, sym.EW),
               Or(
-                  sg.cell_is_one_of(y, x - 1, turns),
-                  sg.cell_is_one_of(y, x + 1, turns)
+                  sg.cell_is_one_of(Point(y, x - 1), turns),
+                  sg.cell_is_one_of(Point(y, x + 1), turns)
               )
           ))
 

@@ -4,6 +4,7 @@ from z3 import And, Not, Implies, Or, PbEq  # type: ignore
 
 import grilops
 import grilops.shapes
+from grilops import Point, Vector
 
 
 SYM = grilops.SymbolSet([
@@ -26,20 +27,20 @@ GIVENS = {
 
 def main():
   """Battleship solver example."""
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, SYM)
   sc = grilops.shapes.ShapeConstrainer(
-      HEIGHT,
-      WIDTH,
+      locations,
       [
-          [(0, i) for i in range(4)],
-          [(0, i) for i in range(3)],
-          [(0, i) for i in range(3)],
-          [(0, i) for i in range(2)],
-          [(0, i) for i in range(2)],
-          [(0, i) for i in range(2)],
-          [(0, i) for i in range(1)],
-          [(0, i) for i in range(1)],
-          [(0, i) for i in range(1)],
+          [Vector(0, i) for i in range(4)],
+          [Vector(0, i) for i in range(3)],
+          [Vector(0, i) for i in range(3)],
+          [Vector(0, i) for i in range(2)],
+          [Vector(0, i) for i in range(2)],
+          [Vector(0, i) for i in range(2)],
+          [Vector(0, i) for i in range(1)],
+          [Vector(0, i) for i in range(1)],
+          [Vector(0, i) for i in range(1)],
       ],
       solver=sg.solver,
       allow_rotations=True
@@ -48,29 +49,30 @@ def main():
   # Constrain the given ship segment counts and ship segments.
   for y, count in enumerate(GIVENS_Y):
     sg.solver.add(
-        PbEq([(Not(sg.cell_is(y, x, SYM.X)), 1) for x in range(WIDTH)], count)
+        PbEq([(Not(sg.cell_is(Point(y, x), SYM.X)), 1) for x in range(WIDTH)], count)
     )
   for x, count in enumerate(GIVENS_X):
     sg.solver.add(
-        PbEq([(Not(sg.cell_is(y, x, SYM.X)), 1) for y in range(HEIGHT)], count)
+        PbEq([(Not(sg.cell_is(Point(y, x), SYM.X)), 1) for y in range(HEIGHT)], count)
     )
   for (y, x), s in GIVENS.items():
-    sg.solver.add(sg.cell_is(y, x, s))
+    sg.solver.add(sg.cell_is(Point(y, x), s))
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      shape_type = sc.shape_type_grid[y][x]
-      shape_id = sc.shape_instance_grid[y][x]
+      p = Point(y, x)
+      shape_type = sc.shape_type_grid[p]
+      shape_id = sc.shape_instance_grid[p]
       touching_types = [
-          n.symbol for n in grilops.touching_cells(sc.shape_type_grid, y, x)
+          n.symbol for n in grilops.touching_cells(sc.shape_type_grid, p)
       ]
       touching_ids = [
-          n.symbol for n in grilops.touching_cells(sc.shape_instance_grid, y, x)
+          n.symbol for n in grilops.touching_cells(sc.shape_instance_grid, p)
       ]
 
       # Link the X symbol to the absence of a ship segment.
       sg.solver.add(
-          (sc.shape_type_grid[y][x] == -1) == sg.cell_is(y, x, SYM.X))
+          (sc.shape_type_grid[p] == -1) == sg.cell_is(p, SYM.X))
 
       # Ship segments of different ships may not touch.
       and_terms = []
@@ -88,13 +90,13 @@ def main():
       sg.solver.add(
           Implies(
               And(shape_type >= 0, PbEq(touching_count_terms, 2)),
-              sg.cell_is(y, x, SYM.B)
+              sg.cell_is(p, SYM.B)
           )
       )
       sg.solver.add(
           Implies(
               And(shape_type >= 0, PbEq(touching_count_terms, 0)),
-              sg.cell_is(y, x, SYM.O)
+              sg.cell_is(p, SYM.O)
           )
       )
       if y > 0:
@@ -103,9 +105,9 @@ def main():
                 And(
                     shape_type >= 0,
                     PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[y - 1][x] == shape_type
+                    sc.shape_type_grid[Point(y - 1, x)] == shape_type
                 ),
-                sg.cell_is(y, x, SYM.S)
+                sg.cell_is(p, SYM.S)
             )
         )
       if y < HEIGHT - 1:
@@ -114,9 +116,9 @@ def main():
                 And(
                     shape_type >= 0,
                     PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[y + 1][x] == shape_type
+                    sc.shape_type_grid[Point(y + 1, x)] == shape_type
                 ),
-                sg.cell_is(y, x, SYM.N)
+                sg.cell_is(p, SYM.N)
             )
         )
       if x > 0:
@@ -125,9 +127,9 @@ def main():
                 And(
                     shape_type >= 0,
                     PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[y][x - 1] == shape_type
+                    sc.shape_type_grid[Point(y, x - 1)] == shape_type
                 ),
-                sg.cell_is(y, x, SYM.E)
+                sg.cell_is(p, SYM.E)
             )
         )
       if x < WIDTH - 1:
@@ -136,9 +138,9 @@ def main():
                 And(
                     shape_type >= 0,
                     PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[y][x + 1] == shape_type
+                    sc.shape_type_grid[Point(y, x + 1)] == shape_type
                 ),
-                sg.cell_is(y, x, SYM.W)
+                sg.cell_is(p, SYM.W)
             )
         )
 

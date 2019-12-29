@@ -8,18 +8,19 @@ from collections import defaultdict
 from z3 import Distinct, Sum
 
 import grilops
+from grilops import Point
 
 
 def add_sudoku_constraints(sg):
   """Add constraints for the normal Sudoku rules."""
   for y in range(9):
-    sg.solver.add(Distinct(*sg.grid[y]))
+    sg.solver.add(Distinct(*[sg.grid[Point(y, x)] for x in range(9)]))
   for x in range(9):
-    sg.solver.add(Distinct(*[r[x] for r in sg.grid]))
+    sg.solver.add(Distinct(*[sg.grid[Point(y, x)] for y in range(9)]))
   for z in range(9):
     top = (z // 3) * 3
     left = (z % 3) * 3
-    cells = [r[x] for r in sg.grid[top:top + 3] for x in range(left, left + 3)]
+    cells = [sg.grid[Point(y, x)] for y in range(top, top + 3) for x in range(left, left + 3)]
     sg.solver.add(Distinct(*cells))
 
 
@@ -61,7 +62,8 @@ def main():
   }
 
   sym = grilops.make_number_range_symbol_set(1, 9)
-  sg = grilops.SymbolGrid(9, 9, sym)
+  locations = grilops.get_square_locations(9)
+  sg = grilops.SymbolGrid(locations, sym)
 
   add_sudoku_constraints(sg)
 
@@ -69,7 +71,7 @@ def main():
   cage_cells = defaultdict(list)
   for y in range(9):
     for x in range(9):
-      cage_cells[cages[y][x]].append(sg.grid[y][x])
+      cage_cells[cages[y][x]].append(sg.grid[Point(y, x)])
 
   # The digits used in each cage must be unique.
   for cells_in_cage in cage_cells.values():
