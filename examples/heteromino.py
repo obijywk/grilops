@@ -11,103 +11,99 @@ import grilops.regions
 from grilops import Point
 
 
+SIZE = 4
+BLACK_CELLS = set([
+    Point(0, 0),
+    Point(1, 0),
+    Point(3, 1),
+    Point(3, 2),
+])
+SYM = grilops.SymbolSet([
+    ("BL", chr(0x2588)),
+    ("NS", chr(0x25AF)),
+    ("EW", chr(0x25AD)),
+    ("NE", chr(0x25F9)),
+    ("SE", chr(0x25FF)),
+    ("SW", chr(0x25FA)),
+    ("NW", chr(0x25F8)),
+])
+
+
 def main():
   """Heteromino solver example."""
-  size = 4
-  black_cells = set([
-      (0, 0),
-      (1, 0),
-      (3, 1),
-      (3, 2),
-  ])
-
-  sym = grilops.SymbolSet([
-      ("BL", chr(0x2588)),
-      ("NS", chr(0x25AF)),
-      ("EW", chr(0x25AD)),
-      ("NE", chr(0x25F9)),
-      ("SE", chr(0x25FF)),
-      ("SW", chr(0x25FA)),
-      ("NW", chr(0x25F8)),
-  ])
-  locations = grilops.get_square_locations(size)
-  sg = grilops.SymbolGrid(locations, sym)
+  locations = grilops.get_square_locations(SIZE)
+  sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
 
-  for y in range(size):
-    for x in range(size):
-      p = Point(y, x)
-      if (y, x) in black_cells:
-        sg.solver.add(sg.cell_is(p, sym.BL))
+  def constrain_neighbor(p, np, is_root, shape, has_neighbor):
+    sg.solver.add(Implies(
+        And(is_root, has_neighbor),
+        sg.grid[np] == shape
+    ))
+    sg.solver.add(Implies(
+        rc.region_id_grid[p] != rc.region_id_grid[np],
+        sg.grid[np] != shape
+    ))
 
-        # Black cells are not part of a region.
-        sg.solver.add(rc.region_id_grid[p] == -1)
-      else:
-        sg.solver.add(Not(sg.cell_is(p, sym.BL)))
+  for p in locations:
+    if p in BLACK_CELLS:
+      sg.solver.add(sg.cell_is(p, SYM.BL))
+      sg.solver.add(rc.region_id_grid[p] == -1)
+      continue
 
-        # All regions have size 3.
-        sg.solver.add(rc.region_size_grid[p] == 3)
+    sg.solver.add(Not(sg.cell_is(p, SYM.BL)))
 
-        # Force the root of each region subtree to be in the middle of the
-        # region, by not allowing non-root cells to have children.
-        sg.solver.add(Implies(
-            rc.parent_grid[p] != grilops.regions.R,
-            rc.subtree_size_grid[p] == 1
-        ))
+    # All regions have size 3.
+    sg.solver.add(rc.region_size_grid[p] == 3)
 
-        # All cells in the same region must have the same shape symbol. Cells in
-        # different regions must not have the same shape symbol.
+    # Force the root of each region subtree to be in the middle of the
+    # region, by not allowing non-root cells to have children.
+    sg.solver.add(Implies(
+        rc.parent_grid[p] != grilops.regions.R,
+        rc.subtree_size_grid[p] == 1
+    ))
 
-        shape = sg.grid[p]
-        is_root = rc.parent_grid[p] == grilops.regions.R
+    # All cells in the same region must have the same shape symbol. Cells in
+    # different regions must not have the same shape symbol.
 
-        has_north = False
-        if y > 0:
-          has_north = rc.parent_grid[Point(y - 1, x)] == grilops.regions.S
-          sg.solver.add(Implies(And(is_root, has_north), sg.grid[Point(y - 1, x)] == shape))
-          sg.solver.add(Implies(
-              rc.region_id_grid[Point(y, x)] != rc.region_id_grid[Point(y - 1, x)],
-              sg.grid[Point(y - 1, x)] != shape
-          ))
+    shape = sg.grid[p]
+    is_root = rc.parent_grid[p] == grilops.regions.R
 
-        has_south = False
-        if y < size - 1:
-          has_south = rc.parent_grid[Point(y + 1, x)] == grilops.regions.N
-          sg.solver.add(Implies(And(is_root, has_south), sg.grid[Point(y + 1, x)] == shape))
-          sg.solver.add(Implies(
-              rc.region_id_grid[Point(y, x)] != rc.region_id_grid[Point(y + 1, x)],
-              sg.grid[Point(y + 1, x)] != shape
-          ))
+    has_north = False
+    if p.y > 0:
+      np = Point(p.y - 1, p.x)
+      has_north = rc.parent_grid[np] == grilops.regions.S
+      constrain_neighbor(p, np, is_root, shape, has_north)
 
-        has_west = False
-        if x > 0:
-          has_west = rc.parent_grid[Point(y, x - 1)] == grilops.regions.E
-          sg.solver.add(Implies(And(is_root, has_west), sg.grid[Point(y, x - 1)] == shape))
-          sg.solver.add(Implies(
-              rc.region_id_grid[Point(y, x)] != rc.region_id_grid[Point(y, x - 1)],
-              sg.grid[Point(y, x - 1)] != shape
-          ))
+    has_south = False
+    if p.y < SIZE - 1:
+      np = Point(p.y + 1, p.x)
+      has_south = rc.parent_grid[np] == grilops.regions.N
+      constrain_neighbor(p, np, is_root, shape, has_south)
 
-        has_east = False
-        if x < size - 1:
-          has_east = rc.parent_grid[Point(y, x + 1)] == grilops.regions.W
-          sg.solver.add(Implies(And(is_root, has_east), sg.grid[Point(y, x + 1)] == shape))
-          sg.solver.add(Implies(
-              rc.region_id_grid[Point(y, x)] != rc.region_id_grid[Point(y, x + 1)],
-              sg.grid[Point(y, x + 1)] != shape
-          ))
+    has_west = False
+    if p.x > 0:
+      np = Point(p.y, p.x - 1)
+      has_west = rc.parent_grid[np] == grilops.regions.E
+      constrain_neighbor(p, np, is_root, shape, has_west)
 
-        # Constrain the shape symbol based on adjacent cell relationships.
-        for shape_symbol, region_presence in [
-            (sym.NS, (has_north, has_south)),
-            (sym.EW, (has_east, has_west)),
-            (sym.NE, (has_north, has_east)),
-            (sym.SE, (has_south, has_east)),
-            (sym.SW, (has_south, has_west)),
-            (sym.NW, (has_north, has_west)),
-        ]:
-          sg.solver.add(Implies(And(*region_presence), shape == shape_symbol))
+    has_east = False
+    if p.x < SIZE - 1:
+      np = Point(p.y, p.x + 1)
+      has_east = rc.parent_grid[np] == grilops.regions.W
+      constrain_neighbor(p, np, is_root, shape, has_east)
+
+    # Constrain the shape symbol based on adjacent cell relationships.
+    for shape_symbol, region_presence in [
+        (SYM.NS, (has_north, has_south)),
+        (SYM.EW, (has_east, has_west)),
+        (SYM.NE, (has_north, has_east)),
+        (SYM.SE, (has_south, has_east)),
+        (SYM.SW, (has_south, has_west)),
+        (SYM.NW, (has_north, has_west)),
+    ]:
+      sg.solver.add(Implies(And(*region_presence), shape == shape_symbol))
 
   if sg.solve():
     sg.print()
