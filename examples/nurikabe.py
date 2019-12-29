@@ -35,8 +35,8 @@ def constrain_sea(sym, sg, rc):
   sea_id = Int("sea-id")
   sg.solver.add(sea_id >= 0)
   sg.solver.add(sea_id < HEIGHT * WIDTH)
-  for (y, x) in GIVENS:
-    sg.solver.add(sea_id != rc.location_to_region_id((y, x)))
+  for p in GIVENS:
+    sg.solver.add(sea_id != rc.location_to_region_id(p))
   for y in range(HEIGHT):
     for x in range(WIDTH):
       sg.solver.add(Implies(
@@ -71,8 +71,8 @@ def constrain_islands(sym, sg, rc):
         sg.solver.add(rc.region_size_grid[y][x] == GIVENS[(y, x)])
       else:
         # Ensure that cells that are part of island regions are colored white.
-        for (gy, gx) in GIVENS:
-          island_id = rc.location_to_region_id((gy, gx))
+        for gp in GIVENS:
+          island_id = rc.location_to_region_id(gp)
           sg.solver.add(Implies(
               rc.region_id_grid[y][x] == island_id,
               sg.cell_is(y, x, sym.W)

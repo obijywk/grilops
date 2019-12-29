@@ -149,7 +149,7 @@ def main():
       sg.solver.add(Not(And(*[cell == SYM.B for cell in pool_cells])))
 
   # Add constraints for the given clues.
-  for (y, x) in GIVENS:
+  for y, x in GIVENS.keys():
     add_neighbor_constraints(sg, y, x)
 
   def show_cell(y, x, _):

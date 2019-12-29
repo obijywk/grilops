@@ -65,7 +65,7 @@ def main():
         )
       sg.solver.add(Or(*or_terms))
 
-  def show_cell(y, x, region_id):
+  def show_cell(unused_y, unused_x, region_id):
     ry, rx = rc.region_id_to_location(region_id)
     for i, (gy, gx) in enumerate(GIVENS):
       if int(math.floor(gy)) == ry and int(math.floor(gx)) == rx:
