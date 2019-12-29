@@ -79,61 +79,67 @@ def region_solve():
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
 
-  region_id = Int("region_id")
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      # Each cell must be either "inside" (part of a single region) or
-      # "outside" (not part of any region).
-      sg.solver.add(
-          Or(
-              rc.region_id_grid[p] == region_id,
-              rc.region_id_grid[p] == -1
-          )
-      )
-      sg.solver.add(
-          (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == region_id))
+  def constrain_no_inside_diagonal(y, x):
+    """Add constraints for diagonally touching cells.
 
-      if (y, x) not in GIVENS:
-        continue
-      given = GIVENS[(y, x)]
-      neighbors = sg.adjacent_cells(p)
-      # The number of grid edge border segments adjacent to this cell.
-      num_grid_borders = 4 - len(neighbors)
-      # The number of adjacent cells on the opposite side of the loop line.
-      num_different_neighbors_terms = [
-          (n.symbol != sg.grid[p], 1) for n in neighbors
-      ]
-      # If this is an "inside" cell, we should count grid edge borders as loop
-      # segments, but if this is an "outside" cell, we should not.
-      sg.solver.add(
-          If(
-              sg.grid[p] == sym.I,
-              PbEq(num_different_neighbors_terms, given - num_grid_borders),
-              PbEq(num_different_neighbors_terms, given)
-          )
-      )
+    "Inside" cells may not diagonally touch each other unless they also share
+    an adjacent cell.
+    """
+    nw = sg.grid[Point(y, x)]
+    ne = sg.grid[Point(y, x + 1)]
+    sw = sg.grid[Point(y + 1, x)]
+    se = sg.grid[Point(y + 1, x + 1)]
+    sg.solver.add(
+        Implies(
+            And(nw == sym.I, se == sym.I),
+            Or(ne == sym.I, sw == sym.I)
+        )
+    )
+    sg.solver.add(
+        Implies(
+            And(ne == sym.I, sw == sym.I),
+            Or(nw == sym.I, se == sym.I)
+        )
+    )
+
+  region_id = Int("region_id")
+  for p in locations:
+    # Each cell must be either "inside" (part of a single region) or
+    # "outside" (not part of any region).
+    sg.solver.add(
+        Or(
+            rc.region_id_grid[p] == region_id,
+            rc.region_id_grid[p] == -1
+        )
+    )
+    sg.solver.add(
+        (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == region_id))
+
+    if p not in GIVENS:
+      continue
+    given = GIVENS[p]
+    neighbors = sg.adjacent_cells(p)
+    # The number of grid edge border segments adjacent to this cell.
+    num_grid_borders = 4 - len(neighbors)
+    # The number of adjacent cells on the opposite side of the loop line.
+    num_different_neighbors_terms = [
+        (n.symbol != sg.grid[p], 1) for n in neighbors
+    ]
+    # If this is an "inside" cell, we should count grid edge borders as loop
+    # segments, but if this is an "outside" cell, we should not.
+    sg.solver.add(
+        If(
+            sg.grid[p] == sym.I,
+            PbEq(num_different_neighbors_terms, given - num_grid_borders),
+            PbEq(num_different_neighbors_terms, given)
+        )
+    )
 
   # "Inside" cells may not diagonally touch each other unless they also share
   # an adjacent cell.
   for y in range(HEIGHT - 1):
     for x in range(WIDTH - 1):
-      nw = sg.grid[Point(y, x)]
-      ne = sg.grid[Point(y, x + 1)]
-      sw = sg.grid[Point(y + 1, x)]
-      se = sg.grid[Point(y + 1, x + 1)]
-      sg.solver.add(
-          Implies(
-              And(nw == sym.I, se == sym.I),
-              Or(ne == sym.I, sw == sym.I)
-          )
-      )
-      sg.solver.add(
-          Implies(
-              And(ne == sym.I, sw == sym.I),
-              Or(nw == sym.I, se == sym.I)
-          )
-      )
+      constrain_no_inside_diagonal(y, x)
 
   if sg.solve():
     sg.print()
