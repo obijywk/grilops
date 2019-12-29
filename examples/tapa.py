@@ -8,6 +8,7 @@ from z3 import And, Int, Not, Or
 
 import grilops
 import grilops.regions
+from grilops import Point
 
 HEIGHT, WIDTH = 10, 10
 GIVENS = {
@@ -116,16 +117,17 @@ def add_neighbor_constraints(sg, y, x):
   for pattern in neighbor_patterns:
     and_terms = []
     for (ny, nx), symbol in zip(neighbor_locations, pattern):
-      and_terms.append(sg.cell_is(ny, nx, symbol))
+      and_terms.append(sg.cell_is(Point(ny, nx), symbol))
     or_terms.append(And(*and_terms))
   sg.solver.add(Or(*or_terms))
 
 
 def main():
   """Tapa solver example."""
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      locations, solver=sg.solver, complete=False)
 
   # Ensure the wall consists of a single region and is made up of shaded
   # symbols.
@@ -134,17 +136,18 @@ def main():
   sg.solver.add(wall_id < HEIGHT * WIDTH)
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       sg.solver.add(
-          sg.cell_is(y, x, SYM.B) == (rc.region_id_grid[y][x] == wall_id))
+          sg.cell_is(p, SYM.B) == (rc.region_id_grid[p] == wall_id))
       # Ensure that given clue cells are not part of the wall.
       if (y, x) in GIVENS:
-        sg.solver.add(sg.cell_is(y, x, SYM.W))
+        sg.solver.add(sg.cell_is(p, SYM.W))
 
   # Shaded cells may not form a 2x2 square anywhere in the grid.
   for sy in range(HEIGHT - 1):
     for sx in range(WIDTH - 1):
       pool_cells = [
-          sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
+          sg.grid[Point(y, x)] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
       sg.solver.add(Not(And(*[cell == SYM.B for cell in pool_cells])))
 
@@ -152,8 +155,8 @@ def main():
   for y, x in GIVENS.keys():
     add_neighbor_constraints(sg, y, x)
 
-  def show_cell(y, x, _):
-    given = GIVENS.get((y, x))
+  def show_cell(p, _):
+    given = GIVENS.get((p.y, p.x))
     if given is None:
       return None
     if len(given) > 1:

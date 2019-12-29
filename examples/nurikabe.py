@@ -7,7 +7,7 @@ from z3 import And, Implies, Int, Not  # type: ignore
 
 import grilops
 import grilops.regions
-
+from grilops import Point
 
 HEIGHT, WIDTH = 9, 10
 GIVENS = {
@@ -36,23 +36,24 @@ def constrain_sea(sym, sg, rc):
   sg.solver.add(sea_id >= 0)
   sg.solver.add(sea_id < HEIGHT * WIDTH)
   for p in GIVENS:
-    sg.solver.add(sea_id != rc.location_to_region_id(p))
+    sg.solver.add(sea_id != rc.location_to_region_id(Point(p[0], p[1])))
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.B),
-          rc.region_id_grid[y][x] == sea_id
+          sg.cell_is(p, sym.B),
+          rc.region_id_grid[p] == sea_id
       ))
       sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.W),
-          rc.region_id_grid[y][x] != sea_id
+          sg.cell_is(p, sym.W),
+          rc.region_id_grid[p] != sea_id
       ))
 
   # The sea is not allowed to contain 2x2 areas of black cells.
   for sy in range(HEIGHT - 1):
     for sx in range(WIDTH - 1):
       pool_cells = [
-          sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
+          sg.grid[Point(y, x)] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
       sg.solver.add(Not(And(*[cell == sym.B for cell in pool_cells])))
 
@@ -63,25 +64,26 @@ def constrain_islands(sym, sg, rc):
   # cells in that island. Each island must contain exactly one numbered cell.
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       if (y, x) in GIVENS:
-        sg.solver.add(sg.cell_is(y, x, sym.W))
+        sg.solver.add(sg.cell_is(p, sym.W))
         # Might as well force the given cell to be the root of the region's tree,
         # to reduce the number of possibilities.
-        sg.solver.add(rc.parent_grid[y][x] == grilops.regions.R)
-        sg.solver.add(rc.region_size_grid[y][x] == GIVENS[(y, x)])
+        sg.solver.add(rc.parent_grid[p] == grilops.regions.R)
+        sg.solver.add(rc.region_size_grid[p] == GIVENS[(y, x)])
       else:
         # Ensure that cells that are part of island regions are colored white.
         for gp in GIVENS:
-          island_id = rc.location_to_region_id(gp)
+          island_id = rc.location_to_region_id(Point(gp[0], gp[1]))
           sg.solver.add(Implies(
-              rc.region_id_grid[y][x] == island_id,
-              sg.cell_is(y, x, sym.W)
+              rc.region_id_grid[p] == island_id,
+              sg.cell_is(p, sym.W)
           ))
         # Force a non-given white cell to not be the root of the region's tree,
         # to reduce the number of possibilities.
         sg.solver.add(Implies(
-            sg.cell_is(y, x, sym.W),
-            rc.parent_grid[y][x] != grilops.regions.R
+            sg.cell_is(p, sym.W),
+            rc.parent_grid[p] != grilops.regions.R
         ))
 
 
@@ -89,15 +91,16 @@ def constrain_adjacent_cells(sg, rc):
   """Different regions of the same color may not be orthogonally adjacent."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      adjacent_cells = [n.symbol for n in sg.adjacent_cells(y, x)]
+      p = Point(y, x)
+      adjacent_cells = [n.symbol for n in sg.adjacent_cells(p)]
       adjacent_region_ids = [
-          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, y, x)
+          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, p)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
         sg.solver.add(
             Implies(
-                sg.grid[y][x] == cell,
-                rc.region_id_grid[y][x] == region_id
+                sg.grid[p] == cell,
+                rc.region_id_grid[p] == region_id
             )
         )
 
@@ -105,15 +108,16 @@ def constrain_adjacent_cells(sg, rc):
 def main():
   """Nurikabe solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
+  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
 
   constrain_sea(sym, sg, rc)
   constrain_islands(sym, sg, rc)
   constrain_adjacent_cells(sg, rc)
 
   def print_grid():
-    sg.print(lambda y, x, _: str(GIVENS[(y, x)]) if (y, x) in GIVENS else None)
+    sg.print(lambda p, _: str(GIVENS[(p.y, p.x)]) if (p.y, p.x) in GIVENS else None)
 
   if sg.solve():
     print_grid()

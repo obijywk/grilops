@@ -9,6 +9,7 @@ from z3 import And, If, Implies, Or, Sum
 
 import grilops
 import grilops.regions
+from grilops import Point
 
 
 HEIGHT, WIDTH = 8, 8
@@ -38,24 +39,26 @@ SYM.append("EMPTY", " ")
 
 def main():
   """Nanro solver example."""
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, SYM)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
-      HEIGHT, WIDTH, solver=sg.solver, complete=False)
+      locations, solver=sg.solver, complete=False)
 
   # Constrain the symbol grid to contain the given labels.
   for (y, x), l in GIVEN_LABELS.items():
-    sg.solver.add(sg.cell_is(y, x, l))
+    sg.solver.add(sg.cell_is(Point(y, x), l))
 
   # Use the RegionConstrainer to require a single connected group made up of
   # only labeled cells.
   label_region_id = rc.location_to_region_id(min(GIVEN_LABELS.keys()))
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       sg.solver.add(
           If(
-              sg.cell_is(y, x, SYM.EMPTY),
-              rc.region_id_grid[y][x] == -1,
-              rc.region_id_grid[y][x] == label_region_id
+              sg.cell_is(p, SYM.EMPTY),
+              rc.region_id_grid[p] == -1,
+              rc.region_id_grid[p] == label_region_id
           )
       )
 
@@ -63,14 +66,14 @@ def main():
   for sy in range(HEIGHT - 1):
     for sx in range(WIDTH - 1):
       pool_cells = [
-          sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
+          sg.grid[Point(y, x)] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
       sg.solver.add(Or(*[c == SYM.EMPTY for c in pool_cells]))
 
   region_cells = defaultdict(list)
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      region_cells[REGIONS[y][x]].append(sg.grid[y][x])
+      region_cells[REGIONS[y][x]].append(sg.grid[Point(y, x)])
 
   # Each bold region must contain at least one labeled cell.
   for cells in region_cells.values():
@@ -87,13 +90,14 @@ def main():
   # numbers must be different.
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      for n in sg.adjacent_cells(y, x):
-        ny, nx = n.location
-        if REGIONS[y][x] != REGIONS[ny][nx]:
+      p = Point(y, x)
+      for n in sg.adjacent_cells(p):
+        np = n.location
+        if REGIONS[y][x] != REGIONS[np.y][np.x]:
           sg.solver.add(
               Implies(
-                  And(sg.grid[y][x] != SYM.EMPTY, sg.grid[ny][nx] != SYM.EMPTY),
-                  sg.grid[y][x] != sg.grid[ny][nx]
+                  And(sg.grid[p] != SYM.EMPTY, sg.grid[np] != SYM.EMPTY),
+                  sg.grid[p] != sg.grid[np]
               )
           )
 

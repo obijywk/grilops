@@ -8,6 +8,7 @@ from z3 import And, If, Implies, Int, Not, Or, PbEq  # type: ignore
 import grilops
 import grilops.regions
 import grilops.shapes
+from grilops import Point, Vector
 
 
 HEIGHT, WIDTH = 10, 10
@@ -29,11 +30,12 @@ def link_symbols_to_shapes(sym, sg, sc):
   """Add constraints to ensure the symbols match the shapes."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       sg.solver.add(
           If(
-              sc.shape_type_grid[y][x] != -1,
-              sg.cell_is(y, x, sc.shape_type_grid[y][x]),
-              sg.cell_is(y, x, sym.W)
+              sc.shape_type_grid[p] != -1,
+              sg.cell_is(p, sc.shape_type_grid[p]),
+              sg.cell_is(p, sym.W)
           )
       )
 
@@ -46,8 +48,9 @@ def add_area_constraints(sc):
     for y in range(HEIGHT):
       for x in range(WIDTH):
         if AREAS[y][x] == area_label:
-          area_type_cells.append(sc.shape_type_grid[y][x])
-          area_instance_cells.append(sc.shape_instance_grid[y][x])
+          p = Point(y, x)
+          area_type_cells.append(sc.shape_type_grid[p])
+          area_instance_cells.append(sc.shape_instance_grid[p])
 
     area_type = Int(f"at-{area_label}")
     sc.solver.add(area_type >= 0)
@@ -71,20 +74,21 @@ def add_nurikabe_constraints(sym, sg, rc):
   sg.solver.add(sea_id < HEIGHT * WIDTH)
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       sg.solver.add(Implies(
-          Not(sg.cell_is(y, x, sym.W)),
-          rc.region_id_grid[y][x] == sea_id
+          Not(sg.cell_is(p, sym.W)),
+          rc.region_id_grid[p] == sea_id
       ))
       sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.W),
-          rc.region_id_grid[y][x] != sea_id
+          sg.cell_is(p, sym.W),
+          rc.region_id_grid[p] != sea_id
       ))
 
   # The sea is not allowed to contain 2x2 areas of black cells.
   for sy in range(HEIGHT - 1):
     for sx in range(WIDTH - 1):
       pool_cells = [
-          sg.grid[y][x] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
+          sg.grid[Point(y, x)] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
       sg.solver.add(Not(And(*[Not(cell == sym.W) for cell in pool_cells])))
 
@@ -93,13 +97,14 @@ def add_adjacent_tetronimo_constraints(sc):
   """Ensure that no two matching tetrominoes are orthogonally adjacent."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
-      shape_type = sc.shape_type_grid[y][x]
-      shape_id = sc.shape_instance_grid[y][x]
+      p = Point(y, x)
+      shape_type = sc.shape_type_grid[p]
+      shape_id = sc.shape_instance_grid[p]
       adjacent_types = [
-          n.symbol for n in grilops.adjacent_cells(sc.shape_type_grid, y, x)
+          n.symbol for n in grilops.adjacent_cells(sc.shape_type_grid, p)
       ]
       adjacent_ids = [
-          n.symbol for n in grilops.adjacent_cells(sc.shape_instance_grid, y, x)
+          n.symbol for n in grilops.adjacent_cells(sc.shape_instance_grid, p)
       ]
       for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
         sc.solver.add(
@@ -117,16 +122,16 @@ def add_adjacent_tetronimo_constraints(sc):
 def main():
   """LITS solver example."""
   sym = grilops.SymbolSet(["L", "I", "T", "S", ("W", " ")])
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, solver=sg.solver)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
+  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
   sc = grilops.shapes.ShapeConstrainer(
-      HEIGHT,
-      WIDTH,
+      locations,
       [
-          [(0, 0), (1, 0), (2, 0), (2, 1)],  # L
-          [(0, 0), (1, 0), (2, 0), (3, 0)],  # I
-          [(0, 0), (0, 1), (0, 2), (1, 1)],  # T
-          [(0, 0), (1, 0), (1, 1), (2, 1)],  # S
+          [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)],  # L
+          [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)],  # I
+          [Vector(0, 0), Vector(0, 1), Vector(0, 2), Vector(1, 1)],  # T
+          [Vector(0, 0), Vector(1, 0), Vector(1, 1), Vector(2, 1)],  # S
       ],
       solver=sg.solver,
       allow_rotations=True,

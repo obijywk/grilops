@@ -8,6 +8,7 @@ from z3 import If, Sum
 
 import grilops
 import grilops.loops
+from grilops import Point
 
 
 ANSWERS = [
@@ -30,35 +31,37 @@ def extract_answer(sg, loop_order_grid):
   loop_order_to_yx = {}
   for y in range(8):
     for x in range(8):
-      loop_order_to_yx[model.eval(loop_order_grid[y][x]).as_long()] = (y, x)
+      loop_order_to_yx[model.eval(loop_order_grid[Point(y, x)]).as_long()] = (y, x)
   ordered_yx = sorted(list(loop_order_to_yx.items()))
   solved_grid = sg.solved_grid()
   answer = ""
   for _, (y, x) in ordered_yx:
-    if solved_grid[y][x] in TURN_SYMBOLS and ANSWERS[y][x] != "O":
+    if solved_grid[Point(y, x)] in TURN_SYMBOLS and ANSWERS[y][x] != "O":
       answer += ANSWERS[y][x]
   return answer
 
 
 def main():
   """Halloween Town / Valentine's Day Town solver."""
-  sg = grilops.SymbolGrid(8, 8, SYM)
+  locations = grilops.get_square_locations(8)
+  sg = grilops.SymbolGrid(locations, SYM)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   # Cheat a little bit and force the loop order to start such that the answer
   # extraction starts at the correct place and proceeds in the correct order.
-  sg.solver.add(lc.loop_order_grid[5][6] == 0)
-  sg.solver.add(lc.loop_order_grid[5][5] == 1)
+  sg.solver.add(lc.loop_order_grid[Point(5, 6)] == 0)
+  sg.solver.add(lc.loop_order_grid[Point(5, 5)] == 1)
 
   turn_count_terms = []
   o_count = 0
   for y in range(8):
     for x in range(8):
-      turn_count_terms.append(If(sg.cell_is_one_of(y, x, TURN_SYMBOLS), 1, 0))
+      p = Point(y, x)
+      turn_count_terms.append(If(sg.cell_is_one_of(p, TURN_SYMBOLS), 1, 0))
       if ANSWERS[y][x] == "O":
         o_count += 1
         # Every O must be a turn.
-        sg.solver.add(sg.cell_is_one_of(y, x, TURN_SYMBOLS))
+        sg.solver.add(sg.cell_is_one_of(p, TURN_SYMBOLS))
   # There will be exactly twice as many turns as Os.
   sg.solver.add(Sum(*turn_count_terms) == o_count * 2)
 

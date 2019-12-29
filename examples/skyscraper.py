@@ -7,6 +7,7 @@ from z3 import Datatype, Distinct, If, IntSort
 
 import grilops
 import grilops.sightlines
+from grilops import Point, Vector
 
 
 SIZE = 5
@@ -19,13 +20,14 @@ GIVEN_BOTTOM = [1, 4, 3, 2, 2]
 
 def main():
   """Skyscraper solver example."""
-  sg = grilops.SymbolGrid(SIZE, SIZE, SYM)
+  locations = grilops.get_square_locations(SIZE)
+  sg = grilops.SymbolGrid(locations, SYM)
 
   # Each row and each column contains each building height exactly once.
   for y in range(SIZE):
-    sg.solver.add(Distinct(*sg.grid[y]))
+    sg.solver.add(Distinct(*[sg.grid[Point(y, x)] for x in range(SIZE)]))
   for x in range(SIZE):
-    sg.solver.add(Distinct(*[sg.grid[y][x] for y in range(SIZE)]))
+    sg.solver.add(Distinct(*[sg.grid[Point(y, x)] for y in range(SIZE)]))
 
   # We'll use the sightlines accumulator to keep track of a tuple storing:
   #   the tallest building we've seen so far
@@ -41,16 +43,16 @@ def main():
 
   for x, c in enumerate(GIVEN_TOP):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (0, x), (1, 0), Acc.acc(0, 0), accumulate)))
+        sg, Point(0, x), Vector(1, 0), Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_LEFT):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (y, 0), (0, 1), Acc.acc(0, 0), accumulate)))
+        sg, Point(y, 0), Vector(0, 1), Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_RIGHT):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (y, SIZE - 1), (0, -1), Acc.acc(0, 0), accumulate)))
+        sg, Point(y, SIZE - 1), Vector(0, -1), Acc.acc(0, 0), accumulate)))
   for x, c in enumerate(GIVEN_BOTTOM):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, (SIZE - 1, x), (-1, 0), Acc.acc(0, 0), accumulate)))
+        sg, Point(SIZE - 1, x), Vector(-1, 0), Acc.acc(0, 0), accumulate)))
 
   if sg.solve():
     sg.print()

@@ -9,6 +9,7 @@ from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.loops
+from grilops import Point
 
 
 U, R, D, L = chr(0x25B4), chr(0x25B8), chr(0x25BE), chr(0x25C2)
@@ -57,40 +58,42 @@ def main():
   sym.append("BLACK", chr(0x25AE))
   sym.append("GRAY", chr(0x25AF))
   sym.append("INDICATIVE", " ")
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for y in range(HEIGHT):
     for x in range(WIDTH):
+      p = Point(y, x)
       if (y, x) in GIVENS:
-        sg.solver.add(sg.cell_is(y, x, sym.INDICATIVE))
+        sg.solver.add(sg.cell_is(p, sym.INDICATIVE))
       elif (y, x) in GRAYS:
-        sg.solver.add(sg.cell_is(y, x, sym.GRAY))
+        sg.solver.add(sg.cell_is(p, sym.GRAY))
       else:
-        sg.solver.add(Not(sg.cell_is_one_of(y, x, [sym.INDICATIVE, sym.GRAY])))
+        sg.solver.add(Not(sg.cell_is_one_of(p, [sym.INDICATIVE, sym.GRAY])))
       sg.solver.add(Implies(
-          sg.cell_is(y, x, sym.BLACK),
-          And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(y, x)])
+          sg.cell_is(p, sym.BLACK),
+          And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(p)])
       ))
 
   for (sy, sx), (direction, count) in GIVENS.items():
     if direction == U:
       cells = [(y, sx) for y in range(sy)]
     elif direction == R:
-      cells = [(sy, x) for x in range(sx + 1, len(sg.grid[0]))]
+      cells = [(sy, x) for x in range(sx + 1, WIDTH)]
     elif direction == D:
-      cells = [(y, sx) for y in range(sy + 1, len(sg.grid))]
+      cells = [(y, sx) for y in range(sy + 1, HEIGHT)]
     elif direction == L:
       cells = [(sy, x) for x in range(sx)]
     sg.solver.add(
         PbEq(
-            [(sg.cell_is(y, x, sym.BLACK), 1) for (y, x) in cells],
+            [(sg.cell_is(Point(y, x), sym.BLACK), 1) for (y, x) in cells],
             count
         )
     )
 
   def print_grid():
-    sg.print(lambda y, x, _: GIVENS[(y, x)][0] if (y, x) in GIVENS else None)
+    sg.print(lambda p, _: GIVENS[(p.y, p.x)][0] if (p.y, p.x) in GIVENS else None)
 
   if sg.solve():
     print_grid()

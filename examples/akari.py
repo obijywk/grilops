@@ -8,6 +8,7 @@ from z3 import If, PbEq
 
 import grilops
 import grilops.sightlines
+from grilops import Point
 
 
 def main():
@@ -58,21 +59,23 @@ def main():
       ("EMPTY", " "),
       ("LIGHT", "*"),
   ])
-  sg = grilops.SymbolGrid(size, size, sym)
+  locations = grilops.get_square_locations(size)
+  sg = grilops.SymbolGrid(locations, sym)
 
   for y in range(size):
     for x in range(size):
+      p = Point(y, x)
       if (y, x) in black_cells:
-        sg.solver.add(sg.cell_is(y, x, sym.BLACK))
-        light_count = black_cells[(y, x)]
+        sg.solver.add(sg.cell_is(p, sym.BLACK))
+        light_count = black_cells[p]
         if light_count is not None:
           sg.solver.add(PbEq(
-              [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(y, x)],
+              [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(p)],
               light_count
           ))
       else:
         # All black cells are given; don't allow this cell to be black.
-        sg.solver.add(sg.cell_is_one_of(y, x, [sym.EMPTY, sym.LIGHT]))
+        sg.solver.add(sg.cell_is_one_of(p, [sym.EMPTY, sym.LIGHT]))
 
   def is_black(c):
     return c == sym.BLACK
@@ -83,16 +86,17 @@ def main():
     for x in range(size):
       if (y, x) in black_cells:
         continue
+      p = Point(y, x)
       visible_light_count = sum(
           grilops.sightlines.count_cells(
               sg, n.location, n.direction, count=count_light, stop=is_black
-          ) for n in sg.adjacent_cells(y, x)
+          ) for n in sg.adjacent_cells(p)
       )
       # Ensure that each light cannot see any other lights, and that each cell
       # is lit by at least one light.
       sg.solver.add(
           If(
-              sg.cell_is(y, x, sym.LIGHT),
+              sg.cell_is(p, sym.LIGHT),
               visible_light_count == 0,
               visible_light_count > 0
           )

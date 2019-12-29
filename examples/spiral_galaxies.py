@@ -9,6 +9,7 @@ from z3 import And, Or
 
 import grilops
 import grilops.regions
+from grilops import Point
 
 
 HEIGHT, WIDTH = 7, 7
@@ -31,19 +32,19 @@ def main():
   """Spiral Galaxies solver example."""
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  sg = grilops.SymbolGrid(HEIGHT, WIDTH, sym)
-  rc = grilops.regions.RegionConstrainer(HEIGHT, WIDTH, sg.solver)
+  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(locations, sym)
+  rc = grilops.regions.RegionConstrainer(locations, sg.solver)
 
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      sg.solver.add(sg.cell_is(y, x, rc.region_id_grid[y][x]))
+  for p in sg.grid:
+    sg.solver.add(sg.cell_is(p, rc.region_id_grid[p]))
 
   # Make the upper-left-most cell covered by a circle the root of its region.
   roots = {(int(math.floor(y)), int(math.floor(x))) for (y, x) in GIVENS}
   for y in range(HEIGHT):
     for x in range(WIDTH):
       sg.solver.add(
-          (rc.parent_grid[y][x] == grilops.regions.R) == ((y, x) in roots))
+          (rc.parent_grid[Point(y, x)] == grilops.regions.R) == ((y, x) in roots))
 
   # Ensure that each cell has a "partner" within the same region that is
   # rotationally symmetric with respect to that region's circle.
@@ -59,16 +60,16 @@ def main():
           continue
         or_terms.append(
             And(
-                rc.region_id_grid[y][x] == region_id,
-                rc.region_id_grid[py][px] == region_id,
+                rc.region_id_grid[Point(y, x)] == region_id,
+                rc.region_id_grid[Point(py, px)] == region_id,
             )
         )
       sg.solver.add(Or(*or_terms))
 
-  def show_cell(unused_y, unused_x, region_id):
-    ry, rx = rc.region_id_to_location(region_id)
+  def show_cell(unused_p, region_id):
+    rp = rc.region_id_to_location(region_id)
     for i, (gy, gx) in enumerate(GIVENS):
-      if int(math.floor(gy)) == ry and int(math.floor(gx)) == rx:
+      if int(math.floor(gy)) == rp.y and int(math.floor(gx)) == rp.x:
         return chr(65 + i)
     raise Exception("unexpected region id")
 
