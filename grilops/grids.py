@@ -8,22 +8,22 @@ from .symbols import SymbolSet
 
 
 class Vector(NamedTuple):
-  """Properties of a vector representing an offset in two dimensions
+  """A vector representing an offset in two dimensions.
 
   # Attributes
-  dy (int): The relative distance in the y dimension
-  dx (int): The relative distance in the x dimension
+  dy (int): The relative distance in the y dimension.
+  dx (int): The relative distance in the x dimension.
   """
   dy: int
   dx: int
 
 
 class Point(NamedTuple):
-  """Properties of a point, generally corresponding to the center of a grid cell.
+  """A point, generally corresponding to the center of a grid cell.
 
   # Attributes
-  y (int): The location in the y dimension
-  x (int): The location in the x dimension
+  y (int): The location in the y dimension.
+  x (int): The location in the x dimension.
   """
   y: int
   x: int
@@ -58,11 +58,7 @@ def get_adjacency_offsets() -> List[Vector]:
 
 def get_touching_offsets() -> List[Vector]:
   """Returns a list of offsets corresponding to touching cells."""
-  return [
-      Vector(-1, 0),   # N
-      Vector(1, 0),    # S
-      Vector(0, 1),    # E
-      Vector(0, -1),   # W
+  return get_adjacency_offsets() + [
       Vector(-1, 1),   # NE
       Vector(-1, -1),  # NW
       Vector(1, 1),    # SE
@@ -112,20 +108,20 @@ def get_rectangle_locations(height: int, width: int) -> List[Point]:
   """Returns a list of locations corresponding to a rectangular grid.
 
   # Arguments
-  height (int): Height of the grid
-  width (int): Width of the grid
+  height (int): Height of the grid.
+  width (int): Width of the grid.
 
   # Returns
   (List[Point]): The list of cell locations.
   """
-  return [Point(y, x) for x in range(width) for y in range(height)]
+  return [Point(y, x) for y in range(height) for x in range(width)]
 
 
 def get_square_locations(height: int) -> List[Point]:
   """Returns a list of locations corresponding to a square grid.
 
   # Arguments
-  height (int): Height of the grid
+  height (int): Height of the grid.
 
   # Returns
   (List[Point]): The list of cell locations.
@@ -253,7 +249,7 @@ class SymbolGrid:
     successfully.
     """
     model = self.__solver.model()
-    return dict((p, model.eval(self.__grid[p]).as_long()) for p in self.__grid)
+    return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}
 
   def print(self, hook_function=None):
     """Prints the solved grid using symbol labels.
@@ -265,7 +261,7 @@ class SymbolGrid:
     hook_function (function, None): A function implementing custom
         symbol display behavior, or None. If this function is provided, it
         will be called for each cell in the grid, with the arguments
-        c (Point) and the symbol index for that cell (int). It may return a
+        p (Point) and the symbol index for that cell (int). It may return a
         string to print for that cell, or None to keep the default behavior.
     """
     model = self.__solver.model()

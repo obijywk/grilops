@@ -1,8 +1,8 @@
 """Shape solver example.
 
 Example puzzle can be found at
-https://www.gmpuzzles.com/blog/category/regiondivision/otherregdiv/
-in the instructions for the SSS (Sundoku Snake Shape) puzzle
+https://www.gmpuzzles.com/blog/2019/02/sss-sundoko-snake-shape-by-yuki-kawabe/
+in the Shape instructions.
 """
 
 from z3 import And, Implies

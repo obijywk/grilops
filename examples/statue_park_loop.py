@@ -1,6 +1,7 @@
 """Statue Park (Loop) solver example.
 
-Example puzzle can be found at https://www.gmpuzzles.com/blog/category/loop/loop2/
+Example puzzle can be found at
+https://www.gmpuzzles.com/blog/2018/07/statue-park-loop-by-serkan-yurekli/.
 """
 
 import sys
@@ -25,16 +26,16 @@ GIVENS = [
 ]
 
 SHAPES = [
-    [(0, 0), (1, 0), (2, 0), (3, 0), (3, 1)], # L
-    [(0, 1), (0, 2), (1, 0), (1, 1), (2, 0)], # W
-    [(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)], # X
-    [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2)], # P
-    [(0, 2), (1, 2), (2, 0), (2, 1), (2, 2)], # V
+    [(0, 0), (1, 0), (2, 0), (3, 0), (3, 1)],  # L
+    [(0, 1), (0, 2), (1, 0), (1, 1), (2, 0)],  # W
+    [(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)],  # X
+    [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2)],  # P
+    [(0, 2), (1, 2), (2, 0), (2, 1), (2, 2)],  # V
 ]
 
 
 def main():
-  """Masyu solver example."""
+  """Status Park (Loop) solver example."""
   for row in GIVENS:
     for cell in row:
       sys.stdout.write(cell)
@@ -62,20 +63,20 @@ def main():
 
   for p in locations:
     if GIVENS[p.y][p.x] == W:
-      # White circles must be part of the loop
+      # White circles must be part of the loop.
       sg.solver.add(lc.inside_outside_grid[p] == grilops.loops.L)
     elif GIVENS[p.y][p.x] == B:
-      # Black circles must be part of a shape
+      # Black circles must be part of a shape.
       sg.solver.add(sc.shape_type_grid[p] != -1)
 
     # A cell is part of the loop if and only if it is not part of
-    # any shape
+    # any shape.
     sg.solver.add(
         (lc.inside_outside_grid[p] == grilops.loops.L) ==
         (sc.shape_type_grid[p] == -1)
     )
 
-    # Orthogonally-adjacent cells can't be part of the same shape.
+    # Orthogonally-adjacent cells must be part of the same shape.
     for n in sg.adjacent_cells(p):
       np = n.location
       sg.solver.add(

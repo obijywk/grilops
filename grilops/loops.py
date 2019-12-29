@@ -94,44 +94,48 @@ class LoopConstrainer:
     for p in grid:
       cell = grid[p]
 
-      n = p.translate(Vector(-1, 0))
-      if n in grid:
+      np = p.translate(Vector(-1, 0))
+      n = grid.get(np, None)
+      if n is not None:
         solver.add(Implies(
             Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
-            Or(grid[n] == sym.NS, grid[n] == sym.SE, grid[n] == sym.SW)
+            Or(n == sym.NS, n == sym.SE, n == sym.SW)
         ))
       else:
         solver.add(cell != sym.NS)
         solver.add(cell != sym.NE)
         solver.add(cell != sym.NW)
 
-      s = p.translate(Vector(1, 0))
-      if s in grid:
+      sp = p.translate(Vector(1, 0))
+      s = grid.get(sp, None)
+      if s is not None:
         solver.add(Implies(
             Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
-            Or(grid[s] == sym.NS, grid[s] == sym.NE, grid[s] == sym.NW)
+            Or(s == sym.NS, s == sym.NE, s == sym.NW)
         ))
       else:
         solver.add(cell != sym.NS)
         solver.add(cell != sym.SE)
         solver.add(cell != sym.SW)
 
-      w = p.translate(Vector(0, -1))
-      if w in grid:
+      wp = p.translate(Vector(0, -1))
+      w = grid.get(wp, None)
+      if w is not None:
         solver.add(Implies(
             Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
-            Or(grid[w] == sym.EW, grid[w] == sym.NE, grid[w] == sym.SE)
+            Or(w == sym.EW, w == sym.NE, w == sym.SE)
         ))
       else:
         solver.add(cell != sym.EW)
         solver.add(cell != sym.SW)
         solver.add(cell != sym.NW)
 
-      e = p.translate(Vector(0, 1))
-      if e in grid:
+      ep = p.translate(Vector(0, 1))
+      e = grid.get(ep, None)
+      if e is not None:
         solver.add(Implies(
             Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
-            Or(grid[e] == sym.EW, grid[e] == sym.SW, grid[e] == sym.NW)
+            Or(e == sym.EW, e == sym.SW, e == sym.NW)
         ))
       else:
         solver.add(cell != sym.EW)
@@ -143,7 +147,7 @@ class LoopConstrainer:
     solver = self.__symbol_grid.solver
     sym: Any = self.__symbol_grid.symbol_set
 
-    cell_count = len(grid.keys())
+    cell_count = len(grid)
 
     loop_order_grid = self.__loop_order_grid
 
@@ -161,63 +165,45 @@ class LoopConstrainer:
 
       solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
-      n = p.translate(Vector(-1, 0))
-      s = p.translate(Vector(1, 0))
-      w = p.translate(Vector(0, -1))
-      e = p.translate(Vector(0, 1))
+      n = loop_order_grid.get(p.translate(Vector(-1, 0)), None)
+      s = loop_order_grid.get(p.translate(Vector(1, 0)), None)
+      w = loop_order_grid.get(p.translate(Vector(0, -1)), None)
+      e = loop_order_grid.get(p.translate(Vector(0, 1)), None)
 
-      if n in grid and s in grid:
+      if n is not None and s is not None:
         solver.add(Implies(
             And(cell == sym.NS, li > 0),
-            Or(
-                loop_order_grid[n] == li - 1,
-                loop_order_grid[s] == li - 1
-            )
+            Or(n == li - 1, s == li - 1)
         ))
 
-      if e in grid and w in grid:
+      if e is not None and w is not None:
         solver.add(Implies(
             And(cell == sym.EW, li > 0),
-            Or(
-                loop_order_grid[e] == li - 1,
-                loop_order_grid[w] == li - 1
-            )
+            Or(e == li - 1, w == li - 1)
         ))
 
-      if n in grid and e in grid:
+      if n is not None and e is not None:
         solver.add(Implies(
             And(cell == sym.NE, li > 0),
-            Or(
-                loop_order_grid[n] == li - 1,
-                loop_order_grid[e] == li - 1
-            )
+            Or(n == li - 1, e == li - 1)
         ))
 
-      if s in grid and e in grid:
+      if s is not None and e is not None:
         solver.add(Implies(
             And(cell == sym.SE, li > 0),
-            Or(
-                loop_order_grid[s] == li - 1,
-                loop_order_grid[e] == li - 1
-            )
+            Or(s == li - 1, e == li - 1)
         ))
 
-      if s in grid and w in grid:
+      if s is not None and w is not None:
         solver.add(Implies(
             And(cell == sym.SW, li > 0),
-            Or(
-                loop_order_grid[s] == li - 1,
-                loop_order_grid[w] == li - 1
-            )
+            Or(s == li - 1, w == li - 1)
         ))
 
-      if n in grid and w in grid:
+      if n is not None and w is not None:
         solver.add(Implies(
             And(cell == sym.NW, li > 0),
-            Or(
-                loop_order_grid[n] == li - 1,
-                loop_order_grid[w] == li - 1
-            )
+            Or(n == li - 1, w == li - 1)
         ))
 
   def __make_inside_outside_grid(self):
@@ -227,16 +213,16 @@ class LoopConstrainer:
     def accumulate(a, c):
       return Xor(a, Or(c == sym.EW, c == sym.NW, c == sym.SW))
 
-    for p in grid:
+    for p, v in grid.items():
       a = reduce_cells(
           self.__symbol_grid, p, Vector(-1, 0),
           False, accumulate
       )
-      self.__inside_outside_grid[p] = If(sym.is_loop(grid[p]), L, If(a, I, O))
+      self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
 
   @property
   def loop_order_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of constants of a loop traversal order.
+    """(Dict[Point, ArithRef]): Constants of a loop traversal order.
 
     Only populated if single_loop was true.
     """
@@ -244,7 +230,10 @@ class LoopConstrainer:
 
   @property
   def inside_outside_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of which cells are contained by loops."""
+    """(Dict[Point, ArithRef]): Whether cells are contained by loops.
+
+    Values are the L, I, and O attributes of this module.
+    """
     return self.__inside_outside_grid
 
   def print_inside_outside_grid(self):

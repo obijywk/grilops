@@ -52,7 +52,9 @@ class RegionConstrainer:  # pylint: disable=R0902
   ):
     RegionConstrainer._instance_index += 1
     self.__locations = sorted(locations)
-    self.__location_to_region_id = dict((c, i) for i, c in enumerate(self.__locations))
+    self.__location_to_region_id = {
+        c: i for i, c in enumerate(self.__locations)
+    }
     if solver:
       self.__solver = solver
     else:
@@ -183,7 +185,7 @@ class RegionConstrainer:  # pylint: disable=R0902
     """Returns the region root ID for a grid location.
 
     # Arguments
-    location (Tuple[int, int]): The grid location.
+    location (Point): The grid location.
 
     # Returns
     (int): The region ID.
@@ -197,7 +199,7 @@ class RegionConstrainer:  # pylint: disable=R0902
     region_id (int): The region ID.
 
     # Returns
-    (Tuple[int, int]): The (y, x) grid location.
+    (Point): The (y, x) grid location.
     """
     return self.__locations[region_id]
 

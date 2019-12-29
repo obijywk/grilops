@@ -47,17 +47,19 @@ def reflect_shape_x(shape: List[Vector]) -> List[Vector]:
 
 
 def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
-  """Returns a new shape that's canonicalized, i.e., it's in sorted order
-  and its first offset is Vector(0, 0).  This helps with deduplication,
-  since equivalent shapes will be canonicalized identically.
+  """Returns a new shape that's canonicalized.
+
+  A canonicalized shape is in sorted order and its first offset is Vector(0, 0).
+  This helps with deduplication, since equivalent shapes will be canonicalized
+  identically.
 
   # Arguments:
   shape (List[Vector]): A list of offsets defining a shape.
 
   # Returns:
   (List[Vector]): A list of offsets defining the canonicalized version
-     of the shape, i.e., in sorted order and with first offset equal
-     to Vector(0, 0).
+      of the shape, i.e., in sorted order and with first offset equal
+      to Vector(0, 0).
   """
   shape = sorted(shape)
   ulv = shape[0]
@@ -104,7 +106,9 @@ class ShapeConstrainer:
       self.__solver = Solver()
 
     self.__locations = sorted(locations)
-    self.__location_to_instance_id = dict((c, i) for i, c in enumerate(self.__locations))
+    self.__location_to_instance_id = {
+        c: i for i, c in enumerate(self.__locations)
+    }
     self.__complete = complete
     self.__allow_copies = allow_copies
 
@@ -199,11 +203,10 @@ class ShapeConstrainer:
       self, gp, shape_index, variant, instance_size):
     or_terms = []
     for srv in variant:
-      # Find the instance ID when srv offsets to gp.  Since
-      # the instance ID is the ID of the point corresponding
-      # to that first-defined offset, and the variant's
-      # first-defined offset is always Vector(0, 0),
-      # we can compute the point as gp - srv.
+      # Find the instance ID when srv offsets to gp. Since the instance ID is
+      # the ID of the point corresponding to that first-defined offset, and the
+      # variant's first-defined offset is always Vector(0, 0), we can compute
+      # the point as gp - srv.
       gidp = Point(gp.y - srv.dy, gp.x - srv.dx)
       if gidp not in self.__location_to_instance_id:
         continue
@@ -254,7 +257,7 @@ class ShapeConstrainer:
 
   @property
   def shape_instance_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of z3 constants of shape instance IDs.
+    """(Dict[Point, ArithRef]): z3 constants of shape instance IDs.
 
     Each cell contains a number shared among all cells containing the same
     instance of the shape, or -1 if no shape is placed within that cell.
