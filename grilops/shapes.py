@@ -15,7 +15,7 @@ def rotate_shape_clockwise(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the 90-degree
       clockwise rotation of the input shape.
   """
-  return [(x, -y) for (y, x) in shape]
+  return [(x, -y) for y, x in shape]
 
 
 def reflect_shape_y(shape):
@@ -28,7 +28,7 @@ def reflect_shape_y(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the vertical
       reflection of the input shape.
   """
-  return [(-y, x) for (y, x) in shape]
+  return [(-y, x) for y, x in shape]
 
 
 def reflect_shape_x(shape):
@@ -41,25 +41,27 @@ def reflect_shape_x(shape):
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the horizontal
       reflection of the input shape.
   """
-  return [(y, -x) for (y, x) in shape]
+  return [(y, -x) for y, x in shape]
 
 
 def canonicalize_shape(shape):
-  """Returns a new shape that's canonicalized, i.e., it's in sorted order
-  and its first point is (0, 0).  This helps with deduplication, since
-  equivalent shapes will be canonicalized identically.
+  """Returns a new shape that's canonicalized.
+
+  A canonicalized shape is in sorted order and its first point is (0, 0). This
+  helps with deduplication, since equivalent shapes will be canonicalized
+  identically.
 
   # Arguments:
   shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.
 
-  # Returns.
+  # Returns:
   (List[Tuple[int, int]]): A list of (y, x) coordinates defining the
-     canonicalized version of the shape, i.e., in sorted order and
-     with first point (0, 0).
+      canonicalized version of the shape, i.e., in sorted order and
+      with first point (0, 0).
   """
   shape = sorted(shape)
-  ulp = shape[0]
-  return [(p[0] - ulp[0], p[1] - ulp[1]) for p in shape]
+  uly, ulx = shape[0]
+  return [(py - uly, px - ulx) for py, px in shape]
 
 
 class ShapeConstrainer:
