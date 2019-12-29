@@ -26,11 +26,11 @@ REGIONS = [
 ]
 
 GIVEN_LABELS = {
-    (0, 0): 6,
-    (0, 7): 3,
-    (4, 6): 3,
-    (6, 5): 3,
-    (7, 4): 2,
+    Point(0, 0): 6,
+    Point(0, 7): 3,
+    Point(4, 6): 3,
+    Point(6, 5): 3,
+    Point(7, 4): 2,
 }
 
 SYM = grilops.make_number_range_symbol_set(1, 6)
@@ -45,35 +45,33 @@ def main():
       locations, solver=sg.solver, complete=False)
 
   # Constrain the symbol grid to contain the given labels.
-  for (y, x), l in GIVEN_LABELS.items():
-    sg.solver.add(sg.cell_is(Point(y, x), l))
+  for p, l in GIVEN_LABELS.items():
+    sg.solver.add(sg.cell_is(p, l))
 
   # Use the RegionConstrainer to require a single connected group made up of
   # only labeled cells.
   label_region_id = rc.location_to_region_id(min(GIVEN_LABELS.keys()))
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      sg.solver.add(
-          If(
-              sg.cell_is(p, SYM.EMPTY),
-              rc.region_id_grid[p] == -1,
-              rc.region_id_grid[p] == label_region_id
-          )
-      )
+  for p in locations:
+    sg.solver.add(
+        If(
+            sg.cell_is(p, SYM.EMPTY),
+            rc.region_id_grid[p] == -1,
+            rc.region_id_grid[p] == label_region_id
+        )
+    )
 
   # No 2x2 group of cells may be fully labeled.
   for sy in range(HEIGHT - 1):
     for sx in range(WIDTH - 1):
       pool_cells = [
-          sg.grid[Point(y, x)] for y in range(sy, sy + 2) for x in range(sx, sx + 2)
+          sg.grid[Point(y, x)]
+          for y in range(sy, sy + 2) for x in range(sx, sx + 2)
       ]
       sg.solver.add(Or(*[c == SYM.EMPTY for c in pool_cells]))
 
   region_cells = defaultdict(list)
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      region_cells[REGIONS[y][x]].append(sg.grid[Point(y, x)])
+  for p in locations:
+    region_cells[REGIONS[p.y][p.x]].append(sg.grid[p])
 
   # Each bold region must contain at least one labeled cell.
   for cells in region_cells.values():
@@ -88,18 +86,16 @@ def main():
 
   # When two numbers are orthogonally adjacent across a region boundary, the
   # numbers must be different.
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      for n in sg.adjacent_cells(p):
-        np = n.location
-        if REGIONS[y][x] != REGIONS[np.y][np.x]:
-          sg.solver.add(
-              Implies(
-                  And(sg.grid[p] != SYM.EMPTY, sg.grid[np] != SYM.EMPTY),
-                  sg.grid[p] != sg.grid[np]
-              )
-          )
+  for p in locations:
+    for n in sg.adjacent_cells(p):
+      np = n.location
+      if REGIONS[p.y][p.x] != REGIONS[np.y][np.x]:
+        sg.solver.add(
+            Implies(
+                And(sg.grid[p] != SYM.EMPTY, sg.grid[np] != SYM.EMPTY),
+                sg.grid[p] != sg.grid[np]
+            )
+        )
 
   if sg.solve():
     sg.print()
