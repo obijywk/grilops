@@ -9,45 +9,47 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
     is outside of a loop.
 """
 
-import sys
-from typing import Any, Dict
+from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Tuple
 from z3 import (  # type: ignore
     And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
 )
 
-from .grids import Point, SymbolGrid, Vector
+from .geometry import Lattice, Point, Vector
+from .grids import SymbolGrid
 from .symbols import SymbolSet
 from .sightlines import reduce_cells
 
 
 L, I, O = range(3)
 
-
 class LoopSymbolSet(SymbolSet):
   """A #SymbolSet consisting of symbols that may form loops.
 
   Additional symbols (e.g. a #Symbol representing an empty space) may be added
   to this #SymbolSet by calling #SymbolSet.append() after it's constructed.
-
-  # Attributes
-  NS: The #Symbol connecting the cells above and below.
-  EW: The #Symbol connecting the cells to the left and to the right.
-  NE: The #Symbol connecting the cells above and to the right.
-  SE: The #Symbol connecting the cells below and to the right.
-  SW: The #Symbol connecting the cells below and to the left.
-  NW: The #Symbol connecting the cells above and to the left.
   """
 
-  def __init__(self):
-    super().__init__([
-        ("NS", chr(0x2502)),
-        ("EW", chr(0x2500)),
-        ("NE", chr(0x2514)),
-        ("SE", chr(0x250C)),
-        ("SW", chr(0x2510)),
-        ("NW", chr(0x2518)),
-    ])
-    self.__max_loop_symbol_index = self.max_index()
+  def __init__(self, locations: Lattice):
+    super().__init__([])
+
+    self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
+
+    dirs = locations.adjacency_directions()
+    dir_names = locations.adjacency_direction_names()
+    index_for_direction_pair = 0
+    for i, (di, namei) in enumerate(zip(dirs, dir_names)):
+      for j in range(i+1, len(dirs)):
+        dj = dirs[j]
+        lbl = locations.label_for_direction_pair(namei, dir_names[j])
+        self.append(namei + dir_names[j], lbl)
+        self.__symbols_for_direction[di].append(index_for_direction_pair)
+        self.__symbols_for_direction[dj].append(index_for_direction_pair)
+        self.__symbol_for_direction_pair[(di, dj)] = index_for_direction_pair
+        self.__symbol_for_direction_pair[(dj, di)] = index_for_direction_pair
+        index_for_direction_pair += 1
+    self.__max_loop_symbol_index = index_for_direction_pair - 1
 
   def is_loop(self, symbol: ArithRef) -> BoolRef:
     """Returns true if #symbol represents part of the loop.
@@ -59,6 +61,33 @@ class LoopSymbolSet(SymbolSet):
     (z3.BoolRef): true if the symbol represents part of the loop.
     """
     return symbol < self.__max_loop_symbol_index + 1
+
+  def symbols_for_direction(self, d: Vector) -> List[int]:
+    """Returns the list of symbols that have one arm going in the
+    given direction.
+
+    # Arguments:
+    d (Vector): The given direction.
+
+    # Returns:
+    (List[int]): A list of symbol indices corresponding to symbols
+        with one arm going in the given direction.
+    """
+    return self.__symbols_for_direction[d]
+
+  def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -> int:
+    """Returns the symbol with one arm going in each of the two
+    given directions.
+
+    # Arguments:
+    d1 (Vector): The first given direction.
+    d2 (Vector): The second given direction.
+
+    # Returns:
+    (int): The symbol index for the symbol with one arm going in
+        each of the two given directions.
+    """
+    return self.__symbol_for_direction_pair[(d1, d2)]
 
 
 class LoopConstrainer:
@@ -89,58 +118,32 @@ class LoopConstrainer:
   def __add_loop_edge_constraints(self):
     grid = self.__symbol_grid.grid
     solver = self.__symbol_grid.solver
-    sym: Any = self.__symbol_grid.symbol_set
+    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
+    locations: Lattice = self.__symbol_grid.locations
 
     for p in grid:
       cell = grid[p]
 
-      np = p.translate(Vector(-1, 0))
-      n = grid.get(np, None)
-      if n is not None:
-        solver.add(Implies(
-            Or(cell == sym.NS, cell == sym.NE, cell == sym.NW),
-            Or(n == sym.NS, n == sym.SE, n == sym.SW)
-        ))
-      else:
-        solver.add(cell != sym.NS)
-        solver.add(cell != sym.NE)
-        solver.add(cell != sym.NW)
+      for d in locations.adjacency_directions():
+        np = p.translate(d)
+        dir_syms = sym.symbols_for_direction(d)
+        if np in grid:
+          ncell = grid[np]
+          opposite_syms = sym.symbols_for_direction(d.negate())
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
+          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
+        else:
+          for s in dir_syms:
+            solver.add(cell != s)
 
-      sp = p.translate(Vector(1, 0))
-      s = grid.get(sp, None)
-      if s is not None:
-        solver.add(Implies(
-            Or(cell == sym.NS, cell == sym.SE, cell == sym.SW),
-            Or(s == sym.NS, s == sym.NE, s == sym.NW)
-        ))
-      else:
-        solver.add(cell != sym.NS)
-        solver.add(cell != sym.SE)
-        solver.add(cell != sym.SW)
-
-      wp = p.translate(Vector(0, -1))
-      w = grid.get(wp, None)
-      if w is not None:
-        solver.add(Implies(
-            Or(cell == sym.EW, cell == sym.SW, cell == sym.NW),
-            Or(w == sym.EW, w == sym.NE, w == sym.SE)
-        ))
-      else:
-        solver.add(cell != sym.EW)
-        solver.add(cell != sym.SW)
-        solver.add(cell != sym.NW)
-
-      ep = p.translate(Vector(0, 1))
-      e = grid.get(ep, None)
-      if e is not None:
-        solver.add(Implies(
-            Or(cell == sym.EW, cell == sym.NE, cell == sym.SE),
-            Or(e == sym.EW, e == sym.SW, e == sym.NW)
-        ))
-      else:
-        solver.add(cell != sym.EW)
-        solver.add(cell != sym.NE)
-        solver.add(cell != sym.SE)
+  def __all_direction_pairs(self) -> Iterable[Tuple[int, Vector, Vector]]:
+    dirs = self.__symbol_grid.locations.adjacency_directions()
+    index_for_direction_pair = 0
+    for i in range(len(dirs)):
+      for j in range(i+1, len(dirs)):
+        yield (index_for_direction_pair, dirs[i], dirs[j])
+        index_for_direction_pair += 1
 
   def __add_single_loop_constraints(self):
     grid = self.__symbol_grid.grid
@@ -165,57 +168,33 @@ class LoopConstrainer:
 
       solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
-      n = loop_order_grid.get(p.translate(Vector(-1, 0)), None)
-      s = loop_order_grid.get(p.translate(Vector(1, 0)), None)
-      w = loop_order_grid.get(p.translate(Vector(0, -1)), None)
-      e = loop_order_grid.get(p.translate(Vector(0, 1)), None)
-
-      if n is not None and s is not None:
-        solver.add(Implies(
-            And(cell == sym.NS, li > 0),
-            Or(n == li - 1, s == li - 1)
-        ))
-
-      if e is not None and w is not None:
-        solver.add(Implies(
-            And(cell == sym.EW, li > 0),
-            Or(e == li - 1, w == li - 1)
-        ))
-
-      if n is not None and e is not None:
-        solver.add(Implies(
-            And(cell == sym.NE, li > 0),
-            Or(n == li - 1, e == li - 1)
-        ))
-
-      if s is not None and e is not None:
-        solver.add(Implies(
-            And(cell == sym.SE, li > 0),
-            Or(s == li - 1, e == li - 1)
-        ))
-
-      if s is not None and w is not None:
-        solver.add(Implies(
-            And(cell == sym.SW, li > 0),
-            Or(s == li - 1, w == li - 1)
-        ))
-
-      if n is not None and w is not None:
-        solver.add(Implies(
-            And(cell == sym.NW, li > 0),
-            Or(n == li - 1, w == li - 1)
-        ))
+      for (index_for_direction_pair, d1, d2) in self.__all_direction_pairs():
+        pi = p.translate(d1)
+        pj = p.translate(d2)
+        if pi in loop_order_grid and pj in loop_order_grid:
+          solver.add(Implies(
+              And(cell == index_for_direction_pair, li > 0),
+              Or(
+                  loop_order_grid[pi] == li - 1,
+                  loop_order_grid[pj] == li - 1
+              )
+          ))
 
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
     sym: Any = self.__symbol_grid.symbol_set
+    locations: Lattice = self.__symbol_grid.locations
+
+    ds = locations.get_inside_outside_check_directions()
+    direction_to_look = ds[0]
+    crossings = [s for d in ds[1:] for s in sym.symbols_for_direction(d)]
 
     def accumulate(a, c):
-      return Xor(a, Or(c == sym.EW, c == sym.NW, c == sym.SW))
+      return Xor(a, Or(*[c == s for s in crossings]))
 
     for p, v in grid.items():
       a = reduce_cells(
-          self.__symbol_grid, p, Vector(-1, 0),
+          self.__symbol_grid, p, direction_to_look,
           False, accumulate
       )
       self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
@@ -244,16 +223,9 @@ class LoopConstrainer:
         O: "O",
     }
     model = self.__symbol_grid.solver.model()
-    min_y = min(p.y for p in self.__inside_outside_grid)
-    min_x = min(p.x for p in self.__inside_outside_grid)
-    max_y = max(p.y for p in self.__inside_outside_grid)
-    max_x = max(p.x for p in self.__inside_outside_grid)
-    for y in range(min_y, max_y + 1):
-      for x in range(min_x, max_x + 1):
-        p = Point(y, x)
-        if p in self.__inside_outside_grid:
-          v = self.__inside_outside_grid[p]
-          sys.stdout.write(labels[model.eval(v).as_long()])
-        else:
-          sys.stdout.write(" ")
-      print()
+
+    def print_function(p: Point) -> str:
+      cell = self.__inside_outside_grid[p]
+      return labels[model.eval(cell).as_long()]
+
+    self.__symbol_grid.locations.print(print_function)

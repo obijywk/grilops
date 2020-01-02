@@ -9,7 +9,7 @@ from z3 import Implies, Int  # type: ignore
 import grilops
 import grilops.regions
 import grilops.sightlines
-from grilops import Point
+from grilops.geometry import Point
 
 
 SYM = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
@@ -30,7 +30,7 @@ GIVENS = [
 
 def main():
   """Cave solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
 
@@ -54,7 +54,7 @@ def main():
         sg.solver.add(
             Implies(
                 sg.cell_is(p, SYM.B),
-                rc.parent_grid[p] != grilops.regions.R
+                rc.parent_grid[p] != rc.parent_type_to_index("R")
             )
         )
 

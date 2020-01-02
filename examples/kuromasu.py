@@ -8,7 +8,7 @@ from z3 import And, Implies, If  # type: ignore
 import grilops
 import grilops.regions
 import grilops.sightlines
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 11, 11
@@ -37,7 +37,7 @@ GIVENS = {
 def main():
   """Kuromasu solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)

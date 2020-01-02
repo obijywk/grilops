@@ -8,7 +8,7 @@ from collections import defaultdict
 from z3 import Distinct, Sum
 
 import grilops
-from grilops import Point
+from grilops.geometry import Point
 
 
 def add_sudoku_constraints(sg):
@@ -62,7 +62,7 @@ def main():
   }
 
   sym = grilops.make_number_range_symbol_set(1, 9)
-  locations = grilops.get_square_locations(9)
+  locations = grilops.geometry.get_square_locations(9)
   sg = grilops.SymbolGrid(locations, sym)
 
   add_sudoku_constraints(sg)

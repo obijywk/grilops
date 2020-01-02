@@ -9,7 +9,7 @@ from z3 import And, Implies
 
 import grilops
 import grilops.shapes
-from grilops import Point, Vector
+from grilops.geometry import Point, RectangularLattice, Vector
 
 GRID = [
     "OOOO",
@@ -21,11 +21,12 @@ GRID = [
 
 def main():
   """Shape solver example."""
-  locations = []
+  points = []
   for y, row in enumerate(GRID):
     for x, c in enumerate(row):
       if c == "O":
-        locations.append(Point(y, x))
+        points.append(Point(y, x))
+  locations = RectangularLattice(points)
 
   shapes = [
       [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)], # I
@@ -42,7 +43,7 @@ def main():
       allow_reflections=True,
       allow_copies=False
   )
-  for p in locations:
+  for p in points:
     sg.solver.add(sg.cell_is(p, sym.W) == (sc.shape_type_grid[p] == -1))
     for n in sg.touching_cells(p):
       np = n.location

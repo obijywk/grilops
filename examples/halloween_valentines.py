@@ -8,7 +8,7 @@ from z3 import If, Sum
 
 import grilops
 import grilops.loops
-from grilops import Point
+from grilops.geometry import Point
 
 
 ANSWERS = [
@@ -21,7 +21,8 @@ ANSWERS = [
     "NURSEJOY",
     "OMOPLATE",
 ]
-SYM = grilops.loops.LoopSymbolSet()
+LOCATIONS = grilops.geometry.get_square_locations(8)
+SYM = grilops.loops.LoopSymbolSet(LOCATIONS)
 TURN_SYMBOLS = [SYM.NE, SYM.SE, SYM.SW, SYM.NW]
 
 
@@ -43,8 +44,7 @@ def extract_answer(sg, loop_order_grid):
 
 def main():
   """Halloween Town / Valentine's Day Town solver."""
-  locations = grilops.get_square_locations(8)
-  sg = grilops.SymbolGrid(locations, SYM)
+  sg = grilops.SymbolGrid(LOCATIONS, SYM)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   # Cheat a little bit and force the loop order to start such that the answer

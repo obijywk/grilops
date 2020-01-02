@@ -8,7 +8,7 @@ from z3 import And, Int, Not, Or
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 HEIGHT, WIDTH = 10, 10
 GIVENS = {
@@ -124,7 +124,7 @@ def add_neighbor_constraints(sg, y, x):
 
 def main():
   """Tapa solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)

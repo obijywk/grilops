@@ -9,7 +9,7 @@ from z3 import And, Or
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 7, 7
@@ -32,7 +32,7 @@ def main():
   """Spiral Galaxies solver example."""
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(locations, sg.solver)
 
@@ -41,30 +41,29 @@ def main():
 
   # Make the upper-left-most cell covered by a circle the root of its region.
   roots = {(int(math.floor(y)), int(math.floor(x))) for (y, x) in GIVENS}
+  r = rc.parent_type_to_index("R")
   for y in range(HEIGHT):
     for x in range(WIDTH):
       sg.solver.add(
-          (rc.parent_grid[Point(y, x)] == grilops.regions.R) == ((y, x) in roots))
+          (rc.parent_grid[Point(y, x)] == r) == ((y, x) in roots))
 
   # Ensure that each cell has a "partner" within the same region that is
   # rotationally symmetric with respect to that region's circle.
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      or_terms = []
-      for (gy, gx) in GIVENS:
-        region_id = rc.location_to_region_id(
-            (int(math.floor(gy)), int(math.floor(gx))))
-        py = int(2 * gy - y)
-        px = int(2 * gx - x)
-        if py < 0 or py >= HEIGHT or px < 0 or px >= WIDTH:
-          continue
-        or_terms.append(
-            And(
-                rc.region_id_grid[Point(y, x)] == region_id,
-                rc.region_id_grid[Point(py, px)] == region_id,
-            )
-        )
-      sg.solver.add(Or(*or_terms))
+  for p in locations.points:
+    or_terms = []
+    for (gy, gx) in GIVENS:
+      region_id = rc.location_to_region_id(
+          Point(int(math.floor(gy)), int(math.floor(gx))))
+      partner = Point(int(2 * gy - p.y), int(2 * gx - p.x))
+      if locations.point_to_index(partner) is None:
+        continue
+      or_terms.append(
+          And(
+              rc.region_id_grid[p] == region_id,
+              rc.region_id_grid[partner] == region_id,
+          )
+      )
+    sg.solver.add(Or(*or_terms))
 
   def show_cell(unused_p, region_id):
     rp = rc.region_id_to_location(region_id)

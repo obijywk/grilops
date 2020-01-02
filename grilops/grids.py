@@ -1,139 +1,17 @@
 """This module supports constructing and working with grids of cells."""
 
-import sys
-from typing import Dict, List, NamedTuple
+from typing import Dict, List
 from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
-
-
-class Vector(NamedTuple):
-  """A vector representing an offset in two dimensions.
-
-  # Attributes
-  dy (int): The relative distance in the y dimension.
-  dx (int): The relative distance in the x dimension.
-  """
-  dy: int
-  dx: int
-
-
-class Point(NamedTuple):
-  """A point, generally corresponding to the center of a grid cell.
-
-  # Attributes
-  y (int): The location in the y dimension.
-  x (int): The location in the x dimension.
-  """
-  y: int
-  x: int
-
-  def translate(self, d: Vector) -> "Point":
-    """Translates this point in the given direction."""
-    return Point(self.y + d.dy, self.x + d.dx)
-
-
-class Neighbor(NamedTuple):
-  """Properties of a cell that is a neighbor of another.
-
-  # Attributes
-  location (Point): The (y, x) coordinate of the location of the cell.
-  direction (Vector): The direction from the original cell.
-  symbol (z3.ArithRef): The symbol constant of the cell.
-  """
-  location: Point
-  direction: Vector
-  symbol: ArithRef
-
-
-def get_adjacency_offsets() -> List[Vector]:
-  """Returns a list of offsets corresponding to adjacent cells."""
-  return [
-      Vector(-1, 0), # N
-      Vector(1, 0),  # S
-      Vector(0, 1),  # E
-      Vector(0, -1), # W
-  ]
-
-
-def get_touching_offsets() -> List[Vector]:
-  """Returns a list of offsets corresponding to touching cells."""
-  return get_adjacency_offsets() + [
-      Vector(-1, 1),   # NE
-      Vector(-1, -1),  # NW
-      Vector(1, 1),    # SE
-      Vector(1, -1),   # SW
-  ]
-
-
-def adjacent_cells(
-    grid: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
-  """Returns a list of cells orthogonally adjacent to the given cell.
-
-  # Arguments
-  grid (Dict[Point, ArithRef]): A dictionary of z3 constants.
-  p (Point): Location of the given cell.
-
-  # Returns
-  (List[Neighbor]): The cells orthogonally adjacent to the given cell.
-  """
-  cells = []
-  for d in get_adjacency_offsets():
-    translated_p = p.translate(d)
-    if translated_p in grid:
-      cells.append(Neighbor(translated_p, d, grid[translated_p]))
-  return cells
-
-
-def touching_cells(
-    grid: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
-  """Returns the cells touching the given cell (orthogonally and diagonally).
-
-  # Arguments
-  grid (Dict[Point, ArithRef]): A dictionary of z3 constants.
-  p (Point): Location of the given cell.
-
-  # Returns
-  (List[Neighbor]): The cells touching the given cell.
-  """
-  cells = []
-  for d in get_touching_offsets():
-    translated_p = p.translate(d)
-    if translated_p in grid:
-      cells.append(Neighbor(translated_p, d, grid[translated_p]))
-  return cells
-
-
-def get_rectangle_locations(height: int, width: int) -> List[Point]:
-  """Returns a list of locations corresponding to a rectangular grid.
-
-  # Arguments
-  height (int): Height of the grid.
-  width (int): Width of the grid.
-
-  # Returns
-  (List[Point]): The list of cell locations.
-  """
-  return [Point(y, x) for y in range(height) for x in range(width)]
-
-
-def get_square_locations(height: int) -> List[Point]:
-  """Returns a list of locations corresponding to a square grid.
-
-  # Arguments
-  height (int): Height of the grid.
-
-  # Returns
-  (List[Point]): The list of cell locations.
-  """
-  return get_rectangle_locations(height, height)
+from .geometry import Lattice, Neighbor, Point
 
 
 class SymbolGrid:
   """A grid of cells that can be solved to contain specific symbols.
 
   # Arguments
-  locations (List[Point]): The locations of grid cells.
+  locations (Lattice): The locations of grid cells.
   symbol_set (SymbolSet): The set of symbols to be filled into the grid.
   solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
       constructed.
@@ -142,7 +20,7 @@ class SymbolGrid:
 
   def __init__(
       self,
-      locations: List[Point],
+      locations: Lattice,
       symbol_set: SymbolSet,
       solver: Solver = None
   ):
@@ -151,9 +29,10 @@ class SymbolGrid:
       self.__solver = solver
     else:
       self.__solver = Solver()
+    self.__lattice = locations
     self.__symbol_set = symbol_set
     self.__grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in locations.points:
       v = Int(f"sg-{SymbolGrid._instance_index}-{p.y}-{p.x}")
       self.__solver.add(v >= symbol_set.min_index())
       self.__solver.add(v <= symbol_set.max_index())
@@ -174,6 +53,11 @@ class SymbolGrid:
     """(Dict[Point, ArithRef]): The grid of cells."""
     return self.__grid
 
+  @property
+  def locations(self) -> Lattice:
+    """(Lattice) The lattice of points in the grid."""
+    return self.__lattice
+
   def adjacent_cells(self, p: Point) -> List[Neighbor]:
     """Returns a list of cells orthogonally adjacent to the given cell.
 
@@ -183,7 +67,7 @@ class SymbolGrid:
     # Returns
     (List[Neighbor]): The cells orthogonally adjacent to the given cell.
     """
-    return adjacent_cells(self.__grid, p)
+    return self.__lattice.adjacent_cells(self.__grid, p)
 
   def touching_cells(self, p: Point) -> List[Neighbor]:
     """Returns the cells touching the given cell (orthogonally and diagonally).
@@ -194,7 +78,7 @@ class SymbolGrid:
     # Returns
     (List[Neighbor]): The cells touching the given cell.
     """
-    return touching_cells(self.__grid, p)
+    return self.__lattice.touching_cells(self.__grid, p)
 
   def cell_is(self, p: Point, value: int) -> BoolRef:
     """Returns an expression for whether this cell contains this value.
@@ -266,22 +150,15 @@ class SymbolGrid:
     """
     model = self.__solver.model()
     label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
-    min_y = min(p.y for p in self.__grid)
-    min_x = min(p.x for p in self.__grid)
-    max_y = max(p.y for p in self.__grid)
-    max_x = max(p.x for p in self.__grid)
-    for y in range(min_y, max_y + 1):
-      for x in range(min_x, max_x + 1):
-        p = Point(y, x)
-        if p not in self.__grid:
-          sys.stdout.write(" " * label_width)
-          continue
-        cell = self.__grid[p]
-        i = model.eval(cell).as_long()
-        label = None
-        if hook_function:
-          label = hook_function(p, i)
-        if label is None:
-          label = f"{self.__symbol_set.symbols[i].label:{label_width}}"
-        sys.stdout.write(label)
-      sys.stdout.write("\n")
+
+    def print_function(p: Point) -> str:
+      cell = self.__grid[p]
+      i = model.eval(cell).as_long()
+      label = None
+      if hook_function:
+        label = hook_function(p, i)
+      if label is None:
+        label = f"{self.__symbol_set.symbols[i].label:{label_width}}"
+      return label
+
+    self.__lattice.print(print_function, " " * label_width)

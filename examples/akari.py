@@ -8,7 +8,7 @@ from z3 import If, PbEq
 
 import grilops
 import grilops.sightlines
-from grilops import Point
+from grilops.geometry import Point
 
 
 def main():
@@ -59,7 +59,7 @@ def main():
       ("EMPTY", " "),
       ("LIGHT", "*"),
   ])
-  locations = grilops.get_square_locations(size)
+  locations = grilops.geometry.get_square_locations(size)
   sg = grilops.SymbolGrid(locations, sym)
 
   for y in range(size):

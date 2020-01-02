@@ -9,7 +9,7 @@ from z3 import And, If, Implies, Or, Sum
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 8, 8
@@ -39,7 +39,7 @@ SYM.append("EMPTY", " ")
 
 def main():
   """Nanro solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
@@ -51,7 +51,7 @@ def main():
   # Use the RegionConstrainer to require a single connected group made up of
   # only labeled cells.
   label_region_id = rc.location_to_region_id(min(GIVEN_LABELS.keys()))
-  for p in locations:
+  for p in locations.points:
     sg.solver.add(
         If(
             sg.cell_is(p, SYM.EMPTY),
@@ -70,7 +70,7 @@ def main():
       sg.solver.add(Or(*[c == SYM.EMPTY for c in pool_cells]))
 
   region_cells = defaultdict(list)
-  for p in locations:
+  for p in locations.points:
     region_cells[REGIONS[p.y][p.x]].append(sg.grid[p])
 
   # Each bold region must contain at least one labeled cell.
@@ -86,7 +86,7 @@ def main():
 
   # When two numbers are orthogonally adjacent across a region boundary, the
   # numbers must be different.
-  for p in locations:
+  for p in locations.points:
     for n in sg.adjacent_cells(p):
       np = n.location
       if REGIONS[p.y][p.x] != REGIONS[np.y][np.x]:

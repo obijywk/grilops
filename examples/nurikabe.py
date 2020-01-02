@@ -7,7 +7,7 @@ from z3 import And, Implies, Int, Not  # type: ignore
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 HEIGHT, WIDTH = 9, 10
 GIVENS = {
@@ -69,7 +69,7 @@ def constrain_islands(sym, sg, rc):
         sg.solver.add(sg.cell_is(p, sym.W))
         # Might as well force the given cell to be the root of the region's tree,
         # to reduce the number of possibilities.
-        sg.solver.add(rc.parent_grid[p] == grilops.regions.R)
+        sg.solver.add(rc.parent_grid[p] == rc.parent_type_to_index("R"))
         sg.solver.add(rc.region_size_grid[p] == GIVENS[(y, x)])
       else:
         # Ensure that cells that are part of island regions are colored white.
@@ -83,7 +83,7 @@ def constrain_islands(sym, sg, rc):
         # to reduce the number of possibilities.
         sg.solver.add(Implies(
             sg.cell_is(p, sym.W),
-            rc.parent_grid[p] != grilops.regions.R
+            rc.parent_grid[p] != rc.parent_type_to_index("R")
         ))
 
 
@@ -94,7 +94,7 @@ def constrain_adjacent_cells(sg, rc):
       p = Point(y, x)
       adjacent_cells = [n.symbol for n in sg.adjacent_cells(p)]
       adjacent_region_ids = [
-          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, p)
+          n.symbol for n in sg.locations.adjacent_cells(rc.region_id_grid, p)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
         sg.solver.add(
@@ -108,7 +108,7 @@ def constrain_adjacent_cells(sg, rc):
 def main():
   """Nurikabe solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
 

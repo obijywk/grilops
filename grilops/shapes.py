@@ -4,46 +4,7 @@ import sys
 from typing import Dict, List
 from z3 import And, ArithRef, If, Int, Or, Solver, Sum, PbEq  # type: ignore
 
-from .grids import Point, Vector
-
-
-def rotate_shape_clockwise(shape: List[Vector]) -> List[Vector]:
-  """Returns a new shape offset list rotated 90 degrees clockwise.
-
-  # Arguments:
-  shape (List[Vector]): A list of offsets defining a shape.
-
-  # Returns:
-  (List[Vector]): A list of offsets defining the 90-degree
-      clockwise rotation of the input shape.
-  """
-  return [Vector(v.dx, -v.dy) for v in shape]
-
-
-def reflect_shape_y(shape: List[Vector]) -> List[Vector]:
-  """Returns a new shape offset list reflected vertically.
-
-  # Arguments:
-  shape (List[Vector]): A list of offsets defining a shape.
-
-  # Returns:
-  (List[Vector]): A list of offsets defining the vertical
-      reflection of the input shape.
-  """
-  return [Vector(-v.dy, v.dx) for v in shape]
-
-
-def reflect_shape_x(shape: List[Vector]) -> List[Vector]:
-  """Returns a new shape coordinate list reflected horizontally.
-
-  # Arguments:
-  shape (List[Vector]): A list of offsets defining a shape.
-
-  # Returns:
-  (List[Vector]): A list of offsets defining the horizontal
-      reflection of the input shape.
-  """
-  return [Vector(v.dy, -v.dx) for v in shape]
+from .geometry import Lattice, Point, Vector
 
 
 def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
@@ -62,15 +23,15 @@ def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
       to Vector(0, 0).
   """
   shape = sorted(shape)
-  ulv = shape[0]
-  return [Vector(v.dy - ulv.dy, v.dx - ulv.dx) for v in shape]
+  first_negated = shape[0].negate()
+  return [v.translate(first_negated) for v in shape]
 
 
 class ShapeConstrainer:
   """Creates constraints for placing fixed shape regions into the grid.
 
   # Arguments
-  locations (List[Point]): The locations in the grid.
+  locations (Lattice): The locations in the grid.
   shapes (List[List[Vector]]): A list of region shape definitions.
       Each region shape definition should be a list of offsets.
       The same region shape definition may be included multiple times to
@@ -91,7 +52,7 @@ class ShapeConstrainer:
 
   def __init__(  # pylint: disable=R0913
       self,
-      locations: List[Point],
+      locations: Lattice,
       shapes: List[List[Vector]],
       solver: Solver = None,
       complete: bool = False,
@@ -105,44 +66,34 @@ class ShapeConstrainer:
     else:
       self.__solver = Solver()
 
-    self.__locations = sorted(locations)
-    self.__location_to_instance_id = {
-        c: i for i, c in enumerate(self.__locations)
-    }
+    self.__lattice = locations
     self.__complete = complete
     self.__allow_copies = allow_copies
 
     self.__shapes = shapes
-    self.__variants = self.__make_variants(allow_rotations, allow_reflections)
+    self.__make_variants(allow_rotations, allow_reflections)
 
-    self.__create_grids(locations)
+    self.__create_grids()
     self.__add_constraints()
 
   def __make_variants(self, allow_rotations, allow_reflections):
-    all_variants = []
-    for shape in self.__shapes:
-      variants = [shape]
-      if allow_rotations:
-        for _ in range(3):
-          variants.append(rotate_shape_clockwise(variants[-1]))
-      if allow_reflections:
-        more_variants = []
-        for variant in variants:
-          more_variants.append(variant)
-          more_variants.append(reflect_shape_y(variant))
-          more_variants.append(reflect_shape_x(variant))
-        variants = more_variants
-      variants = [
-          list(s)
-          for s in {tuple(canonicalize_shape(s)) for s in variants}
-      ]
-      all_variants.append(variants)
-    return all_variants
+    fs = self.__lattice.transformation_functions(
+        allow_rotations, allow_reflections)
+    self.__variants = [
+        [
+            list(shape_tuple)
+            for shape_tuple in {
+                tuple(canonicalize_shape([f(v) for v in s]))
+                for f in fs
+            }
+        ]
+        for s in self.__shapes
+    ]
 
-  def __create_grids(self, locations: List[Point]):
+  def __create_grids(self):
     """Create the grids used to model shape region constraints."""
     self.__shape_type_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"scst-{ShapeConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= 0)
@@ -152,13 +103,13 @@ class ShapeConstrainer:
       self.__shape_type_grid[p] = v
 
     self.__shape_instance_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"scsi-{ShapeConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= 0)
       else:
         self.__solver.add(v >= -1)
-      self.__solver.add(v < len(locations))
+      self.__solver.add(v < len(self.__lattice.points))
       self.__shape_instance_grid[p] = v
 
   def __add_constraints(self):
@@ -185,7 +136,7 @@ class ShapeConstrainer:
 
   def __add_shape_instance_constraints(self):
     for gp in self.__shape_instance_grid:
-      instance_id = self.__location_to_instance_id[gp]
+      instance_id = self.__lattice.point_to_index(gp)
       instance_size = Sum(*[
           If(v == instance_id, 1, 0)
           for v in self.__shape_instance_grid.values()
@@ -208,9 +159,9 @@ class ShapeConstrainer:
       # variant's first-defined offset is always Vector(0, 0), we can compute
       # the point as gp - srv.
       gidp = Point(gp.y - srv.dy, gp.x - srv.dx)
-      if gidp not in self.__location_to_instance_id:
+      instance_id = self.__lattice.point_to_index(gidp)
+      if instance_id is None:
         continue
-      instance_id = self.__location_to_instance_id[gidp]
       constraint = self.__make_instance_constraint_for_variant_coordinate(
           gp, srv, shape_index, variant, instance_id)
       if gp == gidp:

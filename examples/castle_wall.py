@@ -9,7 +9,7 @@ from z3 import If, Or
 import grilops
 from grilops.loops import I, O, LoopSymbolSet, LoopConstrainer
 import grilops.sightlines
-from grilops import Point, Vector
+from grilops.geometry import Point, Vector
 
 
 HEIGHT, WIDTH = 7, 7
@@ -28,7 +28,8 @@ GIVENS = {
     (5, 1): (I, 3, (0, 1)),
 }
 
-SYM = LoopSymbolSet()
+LOCATIONS = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
+SYM = LoopSymbolSet(LOCATIONS)
 SYM.append("EMPTY", " ")
 
 # The set of symbols to count as loop segments when traveling in each direction.
@@ -42,8 +43,7 @@ DIRECTION_SEGMENT_SYMBOLS = {
 
 def main():
   """Castle Wall solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, SYM)
+  sg = grilops.SymbolGrid(LOCATIONS, SYM)
   lc = LoopConstrainer(sg, single_loop=True)
 
   for (y, x), (io, expected_count, direction) in GIVENS.items():

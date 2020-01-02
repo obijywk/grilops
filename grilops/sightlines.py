@@ -4,12 +4,18 @@ A sightline is a straight line through a symbol grid. It may have a stopping
 condition, determined based on the symbol encountered in the grid, which, when
 satisfied, results in no further symbols along the line being counted. It may
 also have a custom counting or accumulation function.
+
+A sightline always stops when it reaches a point not in the grid. So, if the
+grid is not convex, a sightline might stop at a hole in the middle of the
+grid. If it is desired that a sightline continues through such holes, the
+holes should be treated as part of the grid, e.g., as black cells.
 """
 
 from typing import Callable, TypeVar
 from z3 import ArithRef, BoolRef, If  # type: ignore
 
-from .grids import Point, SymbolGrid, Vector
+from .geometry import Point, Vector
+from .grids import SymbolGrid
 
 
 def count_cells(

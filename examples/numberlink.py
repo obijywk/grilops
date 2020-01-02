@@ -8,7 +8,7 @@ from z3 import And, Distinct, Int, Or  # type: ignore
 import grilops
 import grilops.loops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 7, 7
@@ -25,7 +25,8 @@ GIVENS = {
     (6, 4): 4,
 }
 
-SYM = grilops.loops.LoopSymbolSet()
+LOCATIONS = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
+SYM = grilops.loops.LoopSymbolSet(LOCATIONS)
 SYM.append("TERMINAL", "X")
 N_SYMS = [SYM.NS, SYM.NE, SYM.NW, SYM.TERMINAL]
 E_SYMS = [SYM.EW, SYM.NE, SYM.SE, SYM.TERMINAL]
@@ -35,9 +36,8 @@ W_SYMS = [SYM.EW, SYM.SW, SYM.NW, SYM.TERMINAL]
 
 def main():
   """Numberlink solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, SYM)
-  rc = grilops.regions.RegionConstrainer(locations, sg.solver)
+  sg = grilops.SymbolGrid(LOCATIONS, SYM)
+  rc = grilops.regions.RegionConstrainer(LOCATIONS, sg.solver)
 
   numbers = sorted(list(set(GIVENS.values())))
   number_regions = {n: Int(f"nr-{n}") for n in numbers}

@@ -8,7 +8,7 @@ from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 HEIGHT, WIDTH = 7, 7
 GIVENS = {
@@ -58,7 +58,7 @@ def add_given_pair_constraints(sg, rc):
       partner_terms.append(
           And(
               # The smaller given must not be a region root.
-              Not(rc.parent_grid[sp] == grilops.regions.R),
+              Not(rc.parent_grid[sp] == rc.parent_type_to_index("R")),
 
               # The givens must share a region, rooted at the larger given.
               rc.region_id_grid[sp] == rc.location_to_region_id(lp),
@@ -68,11 +68,11 @@ def add_given_pair_constraints(sg, rc):
           )
       )
     if not partner_terms:
-      sg.solver.add(rc.parent_grid[lp] != grilops.regions.R)
+      sg.solver.add(rc.parent_grid[lp] != rc.parent_type_to_index("R"))
     else:
       sg.solver.add(
           Implies(
-              rc.parent_grid[lp] == grilops.regions.R,
+              rc.parent_grid[lp] == rc.parent_type_to_index("R"),
               And(
                   rc.region_size_grid[lp] < lv,
                   PbEq([(term, 1) for term in partner_terms], 1)
@@ -88,7 +88,7 @@ def main():
 
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
       locations, sg.solver,
@@ -108,16 +108,16 @@ def main():
   for (y, x), v in GIVENS.items():
     p = Point(y, x)
     if v == min_given_value:
-      sg.solver.add(Not(rc.parent_grid[p] == grilops.regions.R))
+      sg.solver.add(Not(rc.parent_grid[p] == rc.parent_type_to_index("R")))
     elif v == max_given_value:
-      sg.solver.add(rc.parent_grid[p] == grilops.regions.R)
+      sg.solver.add(rc.parent_grid[p] == rc.parent_type_to_index("R"))
       num_undetermined_roots -= 1
     else:
       undetermined_given_locations.append(p)
   sg.solver.add(
       PbEq(
           [
-              (rc.parent_grid[p] == grilops.regions.R, 1)
+              (rc.parent_grid[p] == rc.parent_type_to_index("R"), 1)
               for p in undetermined_given_locations
           ],
           num_undetermined_roots
@@ -128,7 +128,9 @@ def main():
   for y in range(HEIGHT):
     for x in range(WIDTH):
       if (y, x) not in GIVENS:
-        sg.solver.add(Not(rc.parent_grid[Point(y, x)] == grilops.regions.R))
+        sg.solver.add(
+            Not(rc.parent_grid[Point(y, x)] == rc.parent_type_to_index("R"))
+        )
 
   add_given_pair_constraints(sg, rc)
 
