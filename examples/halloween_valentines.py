@@ -4,7 +4,7 @@ This puzzle was part of the 2019 MIT Mystery Hunt and can be found at
 http://web.mit.edu/puzzle/www/2019/problem/halloween_valentines_day.html.
 """
 
-from z3 import If, Sum
+from z3 import PbEq, Implies, Int, Or
 
 import grilops
 import grilops.loops
@@ -52,18 +52,39 @@ def main():
   sg.solver.add(lc.loop_order_grid[Point(5, 6)] == 0)
   sg.solver.add(lc.loop_order_grid[Point(5, 5)] == 1)
 
-  turn_count_terms = []
-  o_count = 0
-  for y in range(8):
-    for x in range(8):
-      p = Point(y, x)
-      turn_count_terms.append(If(sg.cell_is_one_of(p, TURN_SYMBOLS), 1, 0))
-      if ANSWERS[y][x] == "O":
-        o_count += 1
-        # Every O must be a turn.
-        sg.solver.add(sg.cell_is_one_of(p, TURN_SYMBOLS))
-  # There will be exactly twice as many turns as Os.
-  sg.solver.add(Sum(*turn_count_terms) == o_count * 2)
+  # Count the number of Os in the puzzle answers.
+  o_count = sum(c == "O" for row in ANSWERS for c in row)
+
+  # There will be exactly twice as many turns as Os. This constraint is not
+  # strictly necessary to add, but the solver runs faster when it is added.
+  sg.solver.add(PbEq(
+      [(sg.cell_is_one_of(p, TURN_SYMBOLS), 1) for p in locations],
+      o_count * 2
+  ))
+
+  # Find the loop order values for all of the turns.
+  turn_loop_orders = [Int(f"tlo-{i}") for i in range(o_count * 2)]
+  for tlo in turn_loop_orders:
+    sg.solver.add(tlo >= 0)
+    sg.solver.add(tlo < 8 * 8)
+  for i in range(len(turn_loop_orders) - 1):
+    sg.solver.add(turn_loop_orders[i] < turn_loop_orders[i + 1])
+  for p in locations:
+    # Figure out each turn's loop order value.
+    sg.solver.add(Implies(
+        sg.cell_is_one_of(p, TURN_SYMBOLS),
+        Or(*[tlo == lc.loop_order_grid[p] for tlo in turn_loop_orders])
+    ))
+
+    if ANSWERS[p.y][p.x] == "O":
+      # An O must be a turn.
+      sg.solver.add(sg.cell_is_one_of(p, TURN_SYMBOLS))
+
+      # An O must be in an odd position in the list of turn loop order values.
+      or_terms = []
+      for i in range(1, len(turn_loop_orders), 2):
+        or_terms.append(lc.loop_order_grid[p] == turn_loop_orders[i])
+      sg.solver.add(Or(*or_terms))
 
   if sg.solve():
     sg.print()
