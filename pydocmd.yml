@@ -4,9 +4,15 @@ generate:
   - symbols.md:
     - grilops.symbols++
   - grids.md:
+    - grilops.grids.Vector
+    - grilops.grids.Point
     - grilops.grids.Neighbor
+    - grilops.grids.get_adjacency_offsets+
+    - grilops.grids.get_touching_offsets+
     - grilops.grids.adjacent_cells+
     - grilops.grids.touching_cells+
+    - grilops.grids.get_rectangle_locations+
+    - grilops.grids.get_square_locations+
     - grilops.grids.SymbolGrid++
   - loops.md:
     - grilops.loops++
