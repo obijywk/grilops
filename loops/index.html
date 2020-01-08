@@ -177,9 +177,11 @@ to this <code>SymbolSet</code> by calling <code>SymbolSet.append()</code> after 
 </ul>
 <h3 id="grilops.loops.LoopConstrainer.inside_outside_grid">inside_outside_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of which cells are contained by loops.
-<h3 id="grilops.loops.LoopConstrainer.loop_order_grid">loop_order_grid</h3></p>
-<p>(List[List[ArithRef]]): A grid of constants of a loop traversal order.</p>
+<p>(Dict[Point, ArithRef]): Whether cells are contained by loops.</p>
+<p>Values are the L, I, and O attributes of this module.</p>
+<h3 id="grilops.loops.LoopConstrainer.loop_order_grid">loop_order_grid</h3>
+
+<p>(Dict[Point, ArithRef]): Constants of a loop traversal order.</p>
 <p>Only populated if single_loop was true.</p>
 <h3 id="grilops.loops.LoopConstrainer.print_inside_outside_grid">print_inside_outside_grid</h3>
 

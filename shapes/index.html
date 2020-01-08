@@ -127,49 +127,63 @@
 
 <p>This module supports puzzles that place fixed shape regions into the grid.
 <h2 id="grilops.shapes.rotate_shape_clockwise">rotate_shape_clockwise</h2></p>
-<pre><code class="python">rotate_shape_clockwise(shape)
+<pre><code class="python">rotate_shape_clockwise(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
 </code></pre>
 
-<p>Returns a new shape coordinate list rotated 90 degrees clockwise.</p>
+<p>Returns a new shape offset list rotated 90 degrees clockwise.</p>
 <p><strong>Arguments:</strong></p>
-<p>shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.</p>
+<p>shape (List[Vector]): A list of offsets defining a shape.</p>
 <p><strong>Returns:</strong></p>
-<p>(List[Tuple[int, int]]): A list of (y, x) coordinates defining the 90-degree
+<p>(List[Vector]): A list of offsets defining the 90-degree
     clockwise rotation of the input shape.</p>
 <h2 id="grilops.shapes.reflect_shape_y">reflect_shape_y</h2>
 
-<pre><code class="python">reflect_shape_y(shape)
+<pre><code class="python">reflect_shape_y(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
 </code></pre>
 
-<p>Returns a new shape coordinate list reflected vertically.</p>
+<p>Returns a new shape offset list reflected vertically.</p>
 <p><strong>Arguments:</strong></p>
-<p>shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.</p>
+<p>shape (List[Vector]): A list of offsets defining a shape.</p>
 <p><strong>Returns:</strong></p>
-<p>(List[Tuple[int, int]]): A list of (y, x) coordinates defining the vertical
+<p>(List[Vector]): A list of offsets defining the vertical
     reflection of the input shape.</p>
 <h2 id="grilops.shapes.reflect_shape_x">reflect_shape_x</h2>
 
-<pre><code class="python">reflect_shape_x(shape)
+<pre><code class="python">reflect_shape_x(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
 </code></pre>
 
 <p>Returns a new shape coordinate list reflected horizontally.</p>
 <p><strong>Arguments:</strong></p>
-<p>shape (List[Tuple[int, int]]): A list of (y, x) coordinates defining a shape.</p>
+<p>shape (List[Vector]): A list of offsets defining a shape.</p>
 <p><strong>Returns:</strong></p>
-<p>(List[Tuple[int, int]]): A list of (y, x) coordinates defining the horizontal
+<p>(List[Vector]): A list of offsets defining the horizontal
     reflection of the input shape.</p>
+<h2 id="grilops.shapes.canonicalize_shape">canonicalize_shape</h2>
+
+<pre><code class="python">canonicalize_shape(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
+</code></pre>
+
+<p>Returns a new shape that's canonicalized.</p>
+<p>A canonicalized shape is in sorted order and its first offset is Vector(0, 0).
+This helps with deduplication, since equivalent shapes will be canonicalized
+identically.</p>
+<p><strong>Arguments:</strong></p>
+<p>shape (List[Vector]): A list of offsets defining a shape.</p>
+<p><strong>Returns:</strong></p>
+<p>(List[Vector]): A list of offsets defining the canonicalized version
+    of the shape, i.e., in sorted order and with first offset equal
+    to Vector(0, 0).</p>
 <h2 id="grilops.shapes.ShapeConstrainer">ShapeConstrainer</h2>
 
-<pre><code class="python">ShapeConstrainer(self, height:int, width:int, shapes:List[List[Tuple[int, int]]], solver:z3.z3.Solver=None, complete:bool=False, allow_rotations:bool=False, allow_reflections:bool=False, allow_copies:bool=False)
+<pre><code class="python">ShapeConstrainer(self, locations:List[grilops.grids.Point], shapes:List[List[grilops.grids.Vector]], solver:z3.z3.Solver=None, complete:bool=False, allow_rotations:bool=False, allow_reflections:bool=False, allow_copies:bool=False)
 </code></pre>
 
 <p>Creates constraints for placing fixed shape regions into the grid.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>height (int)</strong>: The height of the grid.</li>
-<li><strong>width (int)</strong>: The width of the grid.</li>
-<li><strong>shapes (List[List[Tuple[int, int]]])</strong>: A list of region shape definitions.
-    Each region shape definition should be a list of (y, x) tuples.
+<li><strong>locations (List[Point])</strong>: The locations in the grid.</li>
+<li><strong>shapes (List[List[Vector]])</strong>: A list of region shape definitions.
+    Each region shape definition should be a list of offsets.
     The same region shape definition may be included multiple times to
     indicate the number of times that shape may appear (if allow_copies
     is false).</li>
@@ -186,12 +200,12 @@
 </ul>
 <h3 id="grilops.shapes.ShapeConstrainer.shape_instance_grid">shape_instance_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of z3 constants of shape instance IDs.</p>
+<p>(Dict[Point, ArithRef]): z3 constants of shape instance IDs.</p>
 <p>Each cell contains a number shared among all cells containing the same
 instance of the shape, or -1 if no shape is placed within that cell.</p>
 <h3 id="grilops.shapes.ShapeConstrainer.shape_type_grid">shape_type_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of z3 constants of shape types.</p>
+<p>(Dict[Point, ArithRef]): A dictionary of z3 constants of shape types.</p>
 <p>Each cell contains the index of the shape type placed in that cell (as
 indexed by the shapes list passed in to the <code>ShapeConstrainer</code> constructor),
 or -1 if no shape is placed within that cell.</p>

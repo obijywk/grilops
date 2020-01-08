@@ -146,14 +146,13 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
 </ul>
 <h2 id="grilops.regions.RegionConstrainer">RegionConstrainer</h2>
 
-<pre><code class="python">RegionConstrainer(self, height:int, width:int, solver:z3.z3.Solver=None, complete:bool=True, min_region_size:Union[int, NoneType]=None, max_region_size:Union[int, NoneType]=None)
+<pre><code class="python">RegionConstrainer(self, locations:List[grilops.grids.Point], solver:z3.z3.Solver=None, complete:bool=True, min_region_size:Union[int, NoneType]=None, max_region_size:Union[int, NoneType]=None)
 </code></pre>
 
 <p>Creates constraints for grouping cells into contiguous regions.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>height (int)</strong>: The height of the grid.</li>
-<li><strong>width (int)</strong>: The width of the grid.</li>
+<li><strong>locations (List[Point])</strong>: List of locations in the grid.</li>
 <li><strong>solver (z3.Solver, None)</strong>: A <code>Solver</code> object. If None, a <code>Solver</code> will be
     constructed.</li>
 <li><strong>complete (bool)</strong>: If true, every cell must be part of a region. Defaults to
@@ -163,38 +162,38 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
 </ul>
 <h3 id="grilops.regions.RegionConstrainer.parent_grid">parent_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of region subtree parent pointers.</p>
+<p>(Dict[Point, ArithRef]): A dictionary of region subtree parent pointers.</p>
 <p>The values that may be present in this grid are the module
 attributes <code>X</code>, <code>R</code>, <code>N</code>, <code>E</code>, <code>S</code>, and <code>W</code>.</p>
 <h3 id="grilops.regions.RegionConstrainer.region_id_grid">region_id_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of numbers identifying regions.</p>
+<p>(Dict[Point, ArithRef]): A dictionary of numbers identifying regions.</p>
 <p>A region's identifier is the position in the grid (going in order from left
 to right, top to bottom) of the root of that region's subtree.</p>
 <h3 id="grilops.regions.RegionConstrainer.region_size_grid">region_size_grid</h3>
 
-<p>(List[List[ArithRef]]): A grid of region sizes.
+<p>(Dict[Point, ArithRef]): A dictionary of region sizes.
 <h3 id="grilops.regions.RegionConstrainer.solver">solver</h3></p>
 <p>(z3.Solver): The <code>Solver</code> associated with this <code>RegionConstrainer</code>.
 <h3 id="grilops.regions.RegionConstrainer.subtree_size_grid">subtree_size_grid</h3></p>
-<p>(List[List[ArithRef]]): A grid of cell subtree sizes.</p>
+<p>(Dict[Point, ArithRef]): A dictionary of cell subtree sizes.</p>
 <p>A cell's subtree size is one plus the number of cells that are descendents
 of the cell in its region's subtree.</p>
 <h3 id="grilops.regions.RegionConstrainer.location_to_region_id">location_to_region_id</h3>
 
-<pre><code class="python">RegionConstrainer.location_to_region_id(self, location:Tuple[int, int]) -&gt; int
+<pre><code class="python">RegionConstrainer.location_to_region_id(self, location:grilops.grids.Point) -&gt; int
 </code></pre>
 
 <p>Returns the region root ID for a grid location.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>location (Tuple[int, int])</strong>: The (y, x) grid location.</li>
+<li><strong>location (Point)</strong>: The grid location.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>(int)</code>: The region ID.</p>
 <h3 id="grilops.regions.RegionConstrainer.region_id_to_location">region_id_to_location</h3>
 
-<pre><code class="python">RegionConstrainer.region_id_to_location(self, region_id:int) -&gt; Tuple[int, int]
+<pre><code class="python">RegionConstrainer.region_id_to_location(self, region_id:int) -&gt; grilops.grids.Point
 </code></pre>
 
 <p>Returns the grid location for a region root ID.</p>
@@ -203,7 +202,7 @@ of the cell in its region's subtree.</p>
 <li><strong>region_id (int)</strong>: The region ID.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(Tuple[int, int])</code>: The (y, x) grid location.</p>
+<p><code>(Point)</code>: The (y, x) grid location.</p>
 <h3 id="grilops.regions.RegionConstrainer.print_trees">print_trees</h3>
 
 <pre><code class="python">RegionConstrainer.print_trees(self)
