@@ -185,9 +185,21 @@ class LoopConstrainer:
     sym: Any = self.__symbol_grid.symbol_set
     locations: Lattice = self.__symbol_grid.locations
 
+    # Count the number of crossing directions.  If a direction
+    # pair consists of two crossing directions, they cancel out
+    # and so we don't need to count it.
+
     ds = locations.get_inside_outside_check_directions()
     direction_to_look = ds[0]
-    crossings = [s for d in ds[1:] for s in sym.symbols_for_direction(d)]
+    crossing_directions = ds[1:]
+    crossings = []
+    for (index_for_direction_pair, d1, d2) in self.__all_direction_pairs():
+      if d1 in crossing_directions:
+        if d2 not in crossing_directions:
+          crossings.append(index_for_direction_pair)
+      else:
+        if d2 in crossing_directions:
+          crossings.append(index_for_direction_pair)
 
     def accumulate(a, c):
       return Xor(a, Or(*[c == s for s in crossings]))

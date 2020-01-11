@@ -415,6 +415,321 @@ class RectangularLattice(Lattice):
     return [Vector(0, -1), Vector(-1, 0)]
 
 
+class FlatToppedHexagonalLattice(Lattice):
+  """A set of points corresponding to a hexagonal lattice where
+  each hexagon has a flat top. We use the doubled coordinates
+  scheme described at https://www.redblobgames.com/grids/hexagons/.
+  That is, y describes the row and x describes the column, so
+  hexagons that are vertically adjacent have their y coordinates
+  differ by 2."""
+  def __init__(self, points: List[Point]):
+    for p in points:
+      if (p.y + p.x) % 2 == 1:
+        raise ValueError("Hexagonal coordinates must have an even sum.")
+    self.__points = sorted(points)
+    self.__point_indices = dict(
+        (p, i) for i, p in enumerate(self.__points)
+    )
+
+  @property
+  def points(self) -> List[Point]:
+    """(List[Point]): The points in the lattice, sorted."""
+    return self.__points
+
+  def point_to_index(self, point: Point) -> Optional[int]:
+    """Returns the index of the given point in the ordered list
+    of points in the lattice.
+
+    # Arguments:
+    point (Point): The point to get the index of.
+
+    # Returns:
+    (Optional[int]): The index of the point in the ordered list.
+        None if the point is not in the list.
+    """
+    return self.__point_indices.get(point)
+
+  def adjacency_directions(self) -> List[Vector]:
+    """(List[Vector]) A list of directions to adjacent cells."""
+    return [
+        Vector(-2, 0),   # N
+        Vector(2, 0),    # S
+        Vector(-1, 1),   # NE
+        Vector(-1, -1),  # NW
+        Vector(1, 1),    # SE
+        Vector(1, -1),   # SW
+    ]
+
+  def adjacency_direction_names(self) -> List[str]:
+    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
+    the directions to adjacent cells."""
+    return ["N", "S", "NE", "NW", "SE", "SW"]
+
+  def touching_directions(self) -> List[Vector]:
+    """(List[Vector]) A list of directions to touching cells."""
+    return self.adjacency_directions()
+
+  def label_for_direction_pair(self, d1: str, d2: str) -> str:
+    """Returns the label corresponding to the given pair of
+    adjacency direction names.
+
+    Arguments:
+    d1 (str): The first direction (e.g., "N", "S", etc.)
+    d2 (str): The second direction.
+
+    Returns:
+    (str): The label representing both directions.
+    """
+    ds = {d1, d2}
+
+    def char_for_pos(dirs, chars):
+      for d, c in zip(dirs, chars):
+        if d in ds:
+          ds.remove(d)
+          return chr(c)
+      return " "
+
+    ul = char_for_pos(("NW", "N", "W"), (0x2572, 0x2595, 0x2581))
+    ur = char_for_pos(("NE", "N", "E"), (0x2571, 0x258F, 0x2581))
+    ll = char_for_pos(("SW", "S", "W"), (0x2571, 0x2595, 0x2594))
+    lr = char_for_pos(("SE", "S", "E"), (0x2572, 0x258F, 0x2594))
+    return ul + ur + "\n" + ll + lr
+
+  def transformation_functions(
+      self,
+      allow_rotations: bool,
+      allow_reflections: bool
+      ) -> List[Callable[[Vector], Vector]]:
+    """Returns a list of vector transformations satisfying the
+    given constraints. Each vector transformation is a function
+    that transforms a vector into a vector. The returned list
+    always includes the identity function.
+
+    # Arguments:
+    allow_rotations (bool): Whether rotation is an allowed
+        transformation.
+    allow_reflections (bool): Whether reflection is an allowed
+        transformation.
+
+    # Returns:
+    (List[Callable[[Vector], Vector]]): A list of vector
+        transformations.
+    """
+    if allow_rotations:
+      if allow_reflections:
+        return [
+            lambda v: v,                                                    # Identity
+            lambda v: Vector((v.dy + 3 * v.dx) // 2, (-v.dy + v.dx) // 2),  # Rotate 60 deg
+            lambda v: Vector((-v.dy + 3 * v.dx) // 2, (-v.dy - v.dx) // 2), # Rotate 120 deg
+            lambda v: Vector(-v.dy, -v.dx),                                 # Rotate 180 deg
+            lambda v: Vector((-v.dy - 3 * v.dx) // 2, (v.dy - v.dx) // 2),  # Rotate 240 deg
+            lambda v: Vector((v.dy - 3 * v.dx) // 2, (v.dy + v.dx) // 2),   # Rotate 300 deg
+            lambda v: Vector(-v.dy, v.dx),                                  # Reflect across 0 deg
+            lambda v: Vector((-v.dy - 3 * v.dx) // 2, (-v.dy + v.dx) // 2), # Reflect across 30 deg
+            lambda v: Vector((v.dy - 3 * v.dx) // 2, (-v.dy - v.dx) // 2),  # Reflect across 60 deg
+            lambda v: Vector(v.dy, -v.dx),                                  # Reflect across 90 deg
+            lambda v: Vector((v.dy + 3 * v.dx) // 2, (v.dy - v.dx) // 2),   # Reflect across 120 deg
+            lambda v: Vector((-v.dy + 3 * v.dx) // 2, (v.dy + v.dx) // 2),  # Reflect across 150 deg
+        ]
+      return [
+          lambda v: v,                                                      # Identity
+          lambda v: Vector((v.dy + 3 * v.dx) // 2, (-v.dy + v.dx) // 2),    # Rotate 60 deg
+          lambda v: Vector((-v.dy + 3 * v.dx) // 2, (-v.dy - v.dx) // 2),   # Rotate 120 deg
+          lambda v: Vector(-v.dy, -v.dx),                                   # Rotate 180 deg
+          lambda v: Vector((-v.dy - 3 * v.dx) // 2, (v.dy - v.dx) // 2),    # Rotate 240 deg
+          lambda v: Vector((v.dy - 3 * v.dx) // 2, (v.dy + v.dx) // 2),     # Rotate 300 deg
+      ]
+
+    if allow_reflections:
+      return [
+          lambda v: v,                                                      # Identity
+          lambda v: Vector(-v.dy, v.dx),                                    # Reflect across 0 deg
+          lambda v: Vector((-v.dy - 3 * v.dx) // 2, (-v.dy + v.dx) // 2),   # Reflect across 30 deg
+          lambda v: Vector((v.dy - 3 * v.dx) // 2, (-v.dy - v.dx) // 2),    # Reflect across 60 deg
+          lambda v: Vector(v.dy, -v.dx),                                    # Reflect across 90 deg
+          lambda v: Vector((v.dy + 3 * v.dx) // 2, (v.dy - v.dx) // 2),     # Reflect across 120 deg
+          lambda v: Vector((-v.dy + 3 * v.dx) // 2, (v.dy + v.dx) // 2),    # Reflect across 150 deg
+      ]
+
+    return [lambda v: v]
+
+  def get_inside_outside_check_directions(self) -> List[Vector]:
+    """Returns a list of adjacency directions for use in a
+    loop inside-outside check. The first direction is the direction
+    to look, and the remaining directions are the directions to
+    check for crossings.
+
+    Since this is a flat-topped hexagonal grid, we return
+    [Vector(-2, 0), Vector(-1, -1), Vector(1, -1)].  This means
+    that if you look north and count how many northwest-going
+    and/or southwest-going lines you cross, you can tell from
+    its parity if you're inside or outside the loop.
+
+    Returns:
+    (List[Vector]): A list of adjacency directions, the first of
+        which indicates the direction to look and the rest of
+        which indicate what types of crossing to count.
+    """
+    return [Vector(-2, 0), Vector(-1, -1), Vector(1, -1)]
+
+
+class PointyToppedHexagonalLattice(Lattice):
+  """A set of points corresponding to a hexagonal lattice where
+  each hexagon has a pointy top. We use the doubled coordinates
+  scheme described at https://www.redblobgames.com/grids/hexagons/.
+  That is, y describes the row and x describes the column, so
+  hexagons that are horizontally adjacent have their x coordinates
+  differ by 2."""
+  def __init__(self, points: List[Point]):
+    for p in points:
+      if (p.y + p.x) % 2 == 1:
+        raise ValueError("Hexagonal coordinates must have an even sum.")
+    self.__points = sorted(points)
+    self.__point_indices = dict(
+        (p, i) for i, p in enumerate(self.__points)
+    )
+
+  @property
+  def points(self) -> List[Point]:
+    """(List[Point]): The points in the lattice, sorted."""
+    return self.__points
+
+  def point_to_index(self, point: Point) -> Optional[int]:
+    """Returns the index of the given point in the ordered list
+    of points in the lattice.
+
+    # Arguments:
+    point (Point): The point to get the index of.
+
+    # Returns:
+    (Optional[int]): The index of the point in the ordered list.
+        None if the point is not in the list.
+    """
+    return self.__point_indices.get(point)
+
+  def adjacency_directions(self) -> List[Vector]:
+    """(List[Vector]) A list of directions to adjacent cells."""
+    return [
+        Vector(0, 2),    # E
+        Vector(0, -2),   # W
+        Vector(-1, 1),   # NE
+        Vector(-1, -1),  # NW
+        Vector(1, 1),    # SE
+        Vector(1, -1),   # SW
+    ]
+
+  def adjacency_direction_names(self) -> List[str]:
+    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
+    the directions to adjacent cells."""
+    return ["E", "W", "NE", "NW", "SE", "SW"]
+
+  def touching_directions(self) -> List[Vector]:
+    """(List[Vector]) A list of directions to touching cells."""
+    return self.adjacency_directions()
+
+  def label_for_direction_pair(self, d1: str, d2: str) -> str:
+    """Returns the label corresponding to the given pair of
+    adjacency direction names.
+
+    Arguments:
+    d1 (str): The first direction (e.g., "N", "S", etc.)
+    d2 (str): The second direction.
+
+    Returns:
+    (str): The label representing both directions.
+    """
+    ds = {d1, d2}
+
+    def char_for_pos(dirs, chars):
+      for d, c in zip(dirs, chars):
+        if d in ds:
+          ds.remove(d)
+          return chr(c)
+      return " "
+
+    ul = char_for_pos(("NW", "N", "W"), (0x2572, 0x2595, 0x2581))
+    ur = char_for_pos(("NE", "N", "E"), (0x2571, 0x258F, 0x2581))
+    ll = char_for_pos(("SW", "S", "W"), (0x2571, 0x2595, 0x2594))
+    lr = char_for_pos(("SE", "S", "E"), (0x2572, 0x258F, 0x2594))
+    return ul + ur + "\n" + ll + lr
+
+  def transformation_functions(
+      self,
+      allow_rotations: bool,
+      allow_reflections: bool
+      ) -> List[Callable[[Vector], Vector]]:
+    """Returns a list of vector transformations satisfying the
+    given constraints. Each vector transformation is a function
+    that transforms a vector into a vector. The returned list
+    always includes the identity function.
+
+    # Arguments:
+    allow_rotations (bool): Whether rotation is an allowed
+        transformation.
+    allow_reflections (bool): Whether reflection is an allowed
+        transformation.
+
+    # Returns:
+    (List[Callable[[Vector], Vector]]): A list of vector
+        transformations.
+    """
+    if allow_rotations:
+      if allow_reflections:
+        return [
+            lambda v: v,                                                    # Identity
+            lambda v: Vector((v.dy + v.dx) // 2, (-3 * v.dy + v.dx) // 2),  # Rotate 60 deg
+            lambda v: Vector((-v.dy + v.dx) // 2, (-3 * v.dy - v.dx) // 2), # Rotate 120 deg
+            lambda v: Vector(-v.dy, -v.dx),                                 # Rotate 180 deg
+            lambda v: Vector((-v.dy - v.dx) // 2, (3 * v.dy - v.dx) // 2),  # Rotate 240 deg
+            lambda v: Vector((v.dy - v.dx) // 2, (3 * v.dy + v.dx) // 2),   # Rotate 300 deg
+            lambda v: Vector(-v.dy, v.dx),                                  # Reflect across 0 deg
+            lambda v: Vector((-v.dy - v.dx) // 2, (-3 * v.dy + v.dx) // 2), # Reflect across 30 deg
+            lambda v: Vector((v.dy - v.dx) // 2, (-3 * v.dy - v.dx) // 2),  # Reflect across 60 deg
+            lambda v: Vector(v.dy, -v.dx),                                  # Reflect across 90 deg
+            lambda v: Vector((v.dy + v.dx) // 2, (3 * v.dy - v.dx) // 2),   # Reflect across 120 deg
+            lambda v: Vector((-v.dy + v.dx) // 2, (3 * v.dy + v.dx) // 2),  # Reflect across 150 deg
+        ]
+      return [
+          lambda v: v,                                                      # Identity
+          lambda v: Vector((v.dy + v.dx) // 2, (-3 * v.dy + v.dx) // 2),    # Rotate 60 deg
+          lambda v: Vector((-v.dy + v.dx) // 2, (-3 * v.dy - v.dx) // 2),   # Rotate 120 deg
+          lambda v: Vector(-v.dy, -v.dx),                                   # Rotate 180 deg
+          lambda v: Vector((-v.dy - v.dx) // 2, (3 * v.dy - v.dx) // 2),    # Rotate 240 deg
+          lambda v: Vector((v.dy - v.dx) // 2, (3 * v.dy + v.dx) // 2),     # Rotate 300 deg
+      ]
+
+    if allow_reflections:
+      return [
+          lambda v: Vector(-v.dy, v.dx),                                    # Reflect across 0 deg
+          lambda v: Vector((-v.dy - v.dx) // 2, (-3 * v.dy + v.dx) // 2),   # Reflect across 30 deg
+          lambda v: Vector((v.dy - v.dx) // 2, (-3 * v.dy - v.dx) // 2),    # Reflect across 60 deg
+          lambda v: Vector(v.dy, -v.dx),                                    # Reflect across 90 deg
+          lambda v: Vector((v.dy + v.dx) // 2, (3 * v.dy - v.dx) // 2),     # Reflect across 120 deg
+          lambda v: Vector((-v.dy + v.dx) // 2, (3 * v.dy + v.dx) // 2),    # Reflect across 150 deg
+      ]
+
+    return [lambda v: v]
+
+  def get_inside_outside_check_directions(self) -> List[Vector]:
+    """Returns a list of adjacency directions for use in a
+    loop inside-outside check. The first direction is the direction
+    to look, and the remaining directions are the directions to
+    check for crossings.
+
+    Since this is a pointy-topped hexagonal grid, we return
+    [Vector(0, 2), Vector(-1, -1), Vector(-1, 1)].  This means
+    that if you look east and count how many northwest-going
+    and/or northeast-going lines you cross, you can tell from
+    its parity if you're inside or outside the loop.
+
+    Returns:
+    (List[Vector]): A list of adjacency directions, the first of
+        which indicates the direction to look and the rest of
+        which indicate what types of crossing to count.
+    """
+    return [Vector(0, 2), Vector(-1, -1), Vector(-1, 1)]
+
+
 def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
   """Returns a lattice containing all points in a rectangle of the given
   height and width.

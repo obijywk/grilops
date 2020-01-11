@@ -1,6 +1,6 @@
 """This module supports constructing and working with grids of cells."""
 
-from typing import Dict, List
+from typing import Callable, Dict, List
 from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
 
 from .symbols import SymbolSet
@@ -135,7 +135,7 @@ class SymbolGrid:
     model = self.__solver.model()
     return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}
 
-  def print(self, hook_function=None):
+  def print(self, hook_function: Callable[[Point, int], str] = None):
     """Prints the solved grid using symbol labels.
 
     Should be called only after #SymbolGrid.solve() has already completed
@@ -155,7 +155,7 @@ class SymbolGrid:
       cell = self.__grid[p]
       i = model.eval(cell).as_long()
       label = None
-      if hook_function:
+      if hook_function is not None:
         label = hook_function(p, i)
       if label is None:
         label = f"{self.__symbol_set.symbols[i].label:{label_width}}"
