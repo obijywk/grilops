@@ -70,7 +70,7 @@ def main():
         light_count = black_cells[p]
         if light_count is not None:
           sg.solver.add(PbEq(
-              [(n.symbol == sym.LIGHT, 1) for n in sg.adjacent_cells(p)],
+              [(n.symbol == sym.LIGHT, 1) for n in sg.edge_sharing_neighbors(p)],
               light_count
           ))
       else:
@@ -90,7 +90,7 @@ def main():
       visible_light_count = sum(
           grilops.sightlines.count_cells(
               sg, n.location, n.direction, count=count_light, stop=is_black
-          ) for n in sg.adjacent_cells(p)
+          ) for n in sg.edge_sharing_neighbors(p)
       )
       # Ensure that each light cannot see any other lights, and that each cell
       # is lit by at least one light.

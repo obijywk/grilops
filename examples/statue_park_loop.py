@@ -78,7 +78,7 @@ def main():
     )
 
     # Orthogonally-adjacent cells must be part of the same shape.
-    for n in sg.adjacent_cells(p):
+    for n in sg.edge_sharing_neighbors(p):
       np = n.location
       sg.solver.add(
           Implies(

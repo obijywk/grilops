@@ -68,7 +68,7 @@ def main():
       visible_cell_count = 1 + sum(
           grilops.sightlines.count_cells(
               sg, n.location, n.direction, stop=lambda c: c == SYM.B
-          ) for n in sg.adjacent_cells(p)
+          ) for n in sg.edge_sharing_neighbors(p)
       )
       sg.solver.add(visible_cell_count == GIVENS[y][x])
 

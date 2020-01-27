@@ -73,7 +73,7 @@ def main():
         sg.solver.add(Not(sg.cell_is_one_of(p, [sym.INDICATIVE, sym.GRAY])))
       sg.solver.add(Implies(
           sg.cell_is(p, sym.BLACK),
-          And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(p)])
+          And(*[n.symbol != sym.BLACK for n in sg.edge_sharing_neighbors(p)])
       ))
 
   for (sy, sx), (direction, count) in GIVENS.items():

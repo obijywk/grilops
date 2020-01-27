@@ -58,15 +58,13 @@ class RegionConstrainer:  # pylint: disable=R0902
     Ccreates the mapping between adjacency directions and the parent
     indices corresponding to them.
     """
-    self.__adjacency_directions = self.__lattice.adjacency_directions()
-    self.__adjacency_to_index = dict(
-        (v, index + 2) for index, v in enumerate(self.__adjacency_directions)
-    )
-    self.__parent_type_to_index = {}
-    self.__parent_types = []
-    for name in ["X", "R"] + self.__lattice.adjacency_direction_names():
+    self.__adjacency_to_index = {}
+    self.__parent_type_to_index = {"X": 0, "R": 1}
+    self.__parent_types = ["X", "R"]
+    for name, d in self.__lattice.edge_sharing_directions():
       index = len(self.__parent_types)
       self.__parent_type_to_index[name] = index
+      self.__adjacency_to_index[d] = index
       self.__parent_types.append(name)
 
   def __create_grids(self):
@@ -79,7 +77,7 @@ class RegionConstrainer:  # pylint: disable=R0902
         self.__solver.add(v >= self.parent_type_to_index("R"))
       else:
         self.__solver.add(v >= self.parent_type_to_index("X"))
-      self.__solver.add(v <= len(self.__adjacency_directions) + 1)
+      self.__solver.add(v <= len(self.__lattice.edge_sharing_directions()) + 1)
       self.__parent_grid[p] = v
 
     self.__subtree_size_grid: Dict[Point, ArithRef] = {}
@@ -159,7 +157,7 @@ class RegionConstrainer:  # pylint: disable=R0902
           If(parent != self.parent_type_to_index("X"), 1, 0)
       ]
 
-      for d in self.__adjacency_directions:
+      for _, d in self.__lattice.edge_sharing_directions():
         sp = p.translate(d)
         if sp in self.__parent_grid:
           opposite_index = self.__adjacency_to_index[d.negate()]
@@ -197,6 +195,7 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def adjacency_to_index(self, direction: Vector) -> int:
     """Returns the parent_grid value corresponding to the given direction.
+
     For instance, if direction is (-1, 0), return the index for N.
 
     # Arguments:
@@ -264,10 +263,10 @@ class RegionConstrainer:  # pylint: disable=R0902
         "E": chr(0x25B8),
         "S": chr(0x25BE),
         "W": chr(0x25C2),
-        "NE" : chr(0x2B67),
-        "NW" : chr(0x2B66),
-        "SE" : chr(0x2B68),
-        "SW" : chr(0x2B69),
+        "NE": chr(0x2B67),
+        "NW": chr(0x2B66),
+        "SE": chr(0x2B68),
+        "SW": chr(0x2B69),
     }
 
     model = self.__solver.model()

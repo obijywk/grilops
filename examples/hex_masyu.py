@@ -63,7 +63,6 @@ def main():
   sg = grilops.SymbolGrid(locations, sym)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
-  straights = [sym.NESW, sym.EW, sym.NWSE]
   turns = [sym.NESE, sym.ESW, sym.WSE, sym.NWSW, sym.WNE, sym.ENW]
 
   for p in locations.points:
@@ -82,7 +81,7 @@ def main():
       sg.solver.add(sg.cell_is_one_of(p, turns))
 
       # All connected adjacent cells must contain straight loop segments.
-      for d in locations.adjacency_directions():
+      for _, d in locations.edge_sharing_directions():
         np = p.translate(d)
         if np in sg.grid:
           sg.solver.add(Implies(
@@ -92,7 +91,7 @@ def main():
 
     elif GIVENS[r][c] == W:
       # The loop must go straight through a white circle.
-      sg.solver.add(sg.cell_is_one_of(p, straights))
+      sg.solver.add(sg.cell_is_one_of(p, [sym.NESW, sym.EW, sym.NWSE]))
 
       # At least one connected adjacent cell must turn.
       for d in [Vector(-1, 1), Vector(0, 2), Vector(1, 1)]:

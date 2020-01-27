@@ -36,14 +36,13 @@ class LoopSymbolSet(SymbolSet):
     self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
     self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
 
-    dirs = locations.adjacency_directions()
-    dir_names = locations.adjacency_direction_names()
+    dirs = locations.edge_sharing_directions()
     index_for_direction_pair = 0
-    for i, (di, namei) in enumerate(zip(dirs, dir_names)):
+    for i, (namei, di) in enumerate(dirs):
       for j in range(i+1, len(dirs)):
-        dj = dirs[j]
-        lbl = locations.label_for_direction_pair(namei, dir_names[j])
-        self.append(namei + dir_names[j], lbl)
+        (namej, dj) = dirs[j]
+        lbl = locations.label_for_direction_pair(namei, namej)
+        self.append(namei + namej, lbl)
         self.__symbols_for_direction[di].append(index_for_direction_pair)
         self.__symbols_for_direction[dj].append(index_for_direction_pair)
         self.__symbol_for_direction_pair[(di, dj)] = index_for_direction_pair
@@ -117,12 +116,11 @@ class LoopConstrainer:
     grid = self.__symbol_grid.grid
     solver = self.__symbol_grid.solver
     sym: LoopSymbolSet = self.__symbol_grid.symbol_set
-    locations: Lattice = self.__symbol_grid.locations
 
     for p in grid:
       cell = grid[p]
 
-      for d in locations.adjacency_directions():
+      for _, d in self.__symbol_grid.locations.edge_sharing_directions():
         np = p.translate(d)
         dir_syms = sym.symbols_for_direction(d)
         if np in grid:
@@ -136,11 +134,12 @@ class LoopConstrainer:
             solver.add(cell != s)
 
   def __all_direction_pairs(self) -> Iterable[Tuple[int, Vector, Vector]]:
-    dirs = self.__symbol_grid.locations.adjacency_directions()
+    dirs = self.__symbol_grid.locations.edge_sharing_directions()
     index_for_direction_pair = 0
-    for i in range(len(dirs)):
+    for i, (_, di) in enumerate(dirs):
       for j in range(i+1, len(dirs)):
-        yield (index_for_direction_pair, dirs[i], dirs[j])
+        (_, dj) = dirs[j]
+        yield (index_for_direction_pair, di, dj)
         index_for_direction_pair += 1
 
   def __add_single_loop_constraints(self):

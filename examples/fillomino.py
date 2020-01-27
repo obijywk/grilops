@@ -46,10 +46,10 @@ def main():
 
       # Different regions of the same size may not be orthogonally adjacent.
       region_sizes = [
-          n.symbol for n in locations.adjacent_cells(rc.region_size_grid, p)
+          n.symbol for n in locations.edge_sharing_neighbors(rc.region_size_grid, p)
       ]
       region_ids = [
-          n.symbol for n in locations.adjacent_cells(rc.region_id_grid, p)
+          n.symbol for n in locations.edge_sharing_neighbors(rc.region_id_grid, p)
       ]
       for region_size, region_id in zip(region_sizes, region_ids):
         sg.solver.add(

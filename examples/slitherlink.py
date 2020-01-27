@@ -117,7 +117,7 @@ def region_solve():
     if p not in GIVENS:
       continue
     given = GIVENS[p]
-    neighbors = sg.adjacent_cells(p)
+    neighbors = sg.edge_sharing_neighbors(p)
     # The number of grid edge border segments adjacent to this cell.
     num_grid_borders = 4 - len(neighbors)
     # The number of adjacent cells on the opposite side of the loop line.

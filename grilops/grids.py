@@ -58,27 +58,30 @@ class SymbolGrid:
     """(Lattice) The lattice of points in the grid."""
     return self.__lattice
 
-  def adjacent_cells(self, p: Point) -> List[Neighbor]:
-    """Returns a list of cells orthogonally adjacent to the given cell.
+  def edge_sharing_neighbors(self, p: Point) -> List[Neighbor]:
+    """Returns a list of cells that share an edge with the given cell.
 
     # Arguments
     p: Location of the given cell.
 
     # Returns
-    (List[Neighbor]): The cells orthogonally adjacent to the given cell.
+    (List[Neighbor]): The cells sharing an edge with the given cell.
     """
-    return self.__lattice.adjacent_cells(self.__grid, p)
+    return self.__lattice.edge_sharing_neighbors(self.__grid, p)
 
-  def touching_cells(self, p: Point) -> List[Neighbor]:
-    """Returns the cells touching the given cell (orthogonally and diagonally).
+  def vertex_sharing_neighbors(self, p: Point) -> List[Neighbor]:
+    """Returns the cells that share a vertex with the given cell.
+
+    In other words, returns a list of cells orthogonally and diagonally
+    adjacent to the given cell.
 
     # Arguments
     p: Location of the given cell.
 
     # Returns
-    (List[Neighbor]): The cells touching the given cell.
+    (List[Neighbor]): The cells sharing a vertex with the given cell.
     """
-    return self.__lattice.touching_cells(self.__grid, p)
+    return self.__lattice.vertex_sharing_neighbors(self.__grid, p)
 
   def cell_is(self, p: Point, value: int) -> BoolRef:
     """Returns an expression for whether this cell contains this value.

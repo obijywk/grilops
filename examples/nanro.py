@@ -87,7 +87,7 @@ def main():
   # When two numbers are orthogonally adjacent across a region boundary, the
   # numbers must be different.
   for p in locations.points:
-    for n in sg.adjacent_cells(p):
+    for n in sg.edge_sharing_neighbors(p):
       np = n.location
       if REGIONS[p.y][p.x] != REGIONS[np.y][np.x]:
         sg.solver.add(

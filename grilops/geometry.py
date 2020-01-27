@@ -1,7 +1,7 @@
 """This module supports geometric objects useful in modeling grids of cells."""
 
 import sys
-from typing import Callable, Dict, IO, Iterable, List, NamedTuple, Optional
+from typing import Callable, Dict, IO, Iterable, List, NamedTuple, Optional, Tuple
 from z3 import ArithRef  # type: ignore
 
 
@@ -71,33 +71,41 @@ class Lattice:
     """
     raise NotImplementedError()
 
-  def adjacency_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to adjacent cells."""
+  def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+
+    Each entry in the returned list includes the name of an
+    edge-sharing adjacency direction and the vector representing that
+    direction.  Edge-sharing adjacency (also known as orthogonal
+    adjacency) means adjacency between grid cells that share an edge.
+    """
     raise NotImplementedError()
 
-  def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names for adjacency directions."""
+  def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
+
+    Each entry in the returned list includes the name of a
+    vertex-sharing adjacency direction and the vector representing
+    that direction.  Vertex-sharing adjacency (also known as touching
+    adjacency) means adjacency between grid cells that share a vertex.
+    """
     raise NotImplementedError()
 
-  def touching_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to touching cells."""
-    raise NotImplementedError()
-
-  def adjacent_points(self, point: Point) -> List[Point]:
-    """Returns the points adjacent to the given point.
+  def edge_sharing_cells(self, point: Point) -> List[Point]:
+    """Returns the cells that share an edge with the given cell.
 
     # Arguments:
-    point (Point): The given point.
+    point (Point): The point of the given cell.
 
     # Returns:
-    (List[Point]): A list of points in the lattice that are
-    adjacent to the given point.
+    (List[Point]): A list of points in the lattice that correspond
+        to cells that share an edge with the given cell.
     """
-    return [point.translate(v) for v in self.adjacency_directions()]
+    return [point.translate(v) for _, v in self.edge_sharing_directions()]
 
-  def adjacent_cells(
+  def edge_sharing_neighbors(
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
-    """Returns a list of neighbors adjacent to a given cell point.
+    """Returns a list of neighbors sharing an edge with the given cell.
 
     # Arguments
     cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
@@ -105,18 +113,19 @@ class Lattice:
     p (Point): Point of the given cell.
 
     # Returns
-    (List[Neighbor]): The cells orthogonally adjacent to the given cell.
+    (List[Neighbor]): The neighbor structures corresponding to the cells
+        that share an edge with the given cell.
     """
     cells = []
-    for d in self.adjacency_directions():
+    for _, d in self.edge_sharing_directions():
       np = p.translate(d)
       if np in cell_map:
         cells.append(Neighbor(np, d, cell_map[np]))
     return cells
 
-  def touching_cells(
+  def vertex_sharing_neighbors(
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
-    """Returns a list of neighbors touching to a given cell point.
+    """Returns a list of neighbors sharing a vertex with the given cell.
 
     # Arguments
     cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
@@ -124,26 +133,27 @@ class Lattice:
     p (Point): Point of the given cell.
 
     # Returns
-    (List[Neighbor]): The cells orthogonally touching the given cell.
+    (List[Neighbor]): The neighbor structures corresponding to the cells
+        that share a vertex with the given cell.
     """
     cells = []
-    for d in self.touching_directions():
+    for _, d in self.vertex_sharing_directions():
       np = p.translate(d)
       if np in cell_map:
         cells.append(Neighbor(np, d, cell_map[np]))
     return cells
 
-  def touching_points(self, point: Point) -> List[Point]:
-    """Returns a list of points touching the given point in the lattice.
+  def vertex_sharing_cells(self, point: Point) -> List[Point]:
+    """Returns a list of cells sharing a vertex with the given cell.
 
     # Arguments:
-    point (Point): The given point
+    point (Point): The point of the given cell.
 
     # Returns:
-    (List[Point]): A list of points in the lattice that touch
-       the given point.
+    (List[Point]): A list of points in the lattice corresponding to
+       cells that share a vertex with the given cell.
     """
-    return [point.translate(v) for v in self.adjacency_directions()]
+    return [point.translate(v) for _, v in self.vertex_sharing_directions()]
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
@@ -297,26 +307,38 @@ class RectangularLattice(Lattice):
     """
     return self.__point_indices.get(point)
 
-  def adjacency_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to adjacent cells."""
+  def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+
+    Each entry in the returned list includes the name of an
+    edge-sharing adjacency direction and the vector representing that
+    direction.  Edge-sharing adjacency (also known as orthogonal
+    adjacency) means adjacency between grid cells that share an edge.
+    """
     return [
-        Vector(-1, 0),  # N
-        Vector(1, 0),   # S
-        Vector(0, 1),   # E
-        Vector(0, -1),  # W
+        ("N", Vector(-1, 0)),
+        ("S", Vector(1, 0)),
+        ("E", Vector(0, 1)),
+        ("W", Vector(0, -1)),
     ]
 
-  def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names for adjacency directions."""
-    return ["N", "S", "E", "W"]
+  def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
 
-  def touching_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to touching cells."""
-    return self.adjacency_directions() + [
-        Vector(-1, 1),   # NE
-        Vector(-1, -1),  # NW
-        Vector(1, 1),    # SE
-        Vector(1, -1),   # SW
+    Each entry in the returned list includes the name of a
+    vertex-sharing adjacency direction and the vector representing
+    that direction.  Vertex-sharing adjacency (also known as touching
+    adjacency) means adjacency between grid cells that share a vertex.
+    """
+    return [
+        ("N", Vector(-1, 0)),
+        ("S", Vector(1, 0)),
+        ("E", Vector(0, 1)),
+        ("W", Vector(0, -1)),
+        ("NE", Vector(-1, 1)),
+        ("NW", Vector(-1, -1)),
+        ("SE", Vector(1, 1)),
+        ("SW", Vector(1, -1)),
     ]
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
@@ -447,24 +469,32 @@ class FlatToppedHexagonalLattice(Lattice):
     """
     return self.__point_indices.get(point)
 
-  def adjacency_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to adjacent cells."""
+  def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+
+    Each entry in the returned list includes the name of an
+    edge-sharing adjacency direction and the vector representing that
+    direction.  Edge-sharing adjacency (also known as orthogonal
+    adjacency) means adjacency between grid cells that share an edge.
+    """
     return [
-        Vector(-2, 0),   # N
-        Vector(2, 0),    # S
-        Vector(-1, 1),   # NE
-        Vector(-1, -1),  # NW
-        Vector(1, 1),    # SE
-        Vector(1, -1),   # SW
+        ("N", Vector(-2, 0)),
+        ("S", Vector(2, 0)),
+        ("NE", Vector(-1, 1)),
+        ("NW", Vector(-1, -1)),
+        ("SE", Vector(1, 1)),
+        ("SW", Vector(1, -1)),
     ]
 
-  def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names for adjacency directions."""
-    return ["N", "S", "NE", "NW", "SE", "SW"]
+  def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
 
-  def touching_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to touching cells."""
-    return self.adjacency_directions()
+    Each entry in the returned list includes the name of a
+    vertex-sharing adjacency direction and the vector representing
+    that direction.  Vertex-sharing adjacency (also known as touching
+    adjacency) means adjacency between grid cells that share a vertex.
+    """
+    return self.edge_sharing_directions()
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
@@ -606,24 +636,32 @@ class PointyToppedHexagonalLattice(Lattice):
     """
     return self.__point_indices.get(point)
 
-  def adjacency_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to adjacent cells."""
+  def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+
+    Each entry in the returned list includes the name of an
+    edge-sharing adjacency direction and the vector representing that
+    direction.  Edge-sharing adjacency (also known as orthogonal
+    adjacency) means adjacency between grid cells that share an edge.
+    """
     return [
-        Vector(0, 2),    # E
-        Vector(0, -2),   # W
-        Vector(-1, 1),   # NE
-        Vector(-1, -1),  # NW
-        Vector(1, 1),    # SE
-        Vector(1, -1),   # SW
+        ("E", Vector(0, 2)),
+        ("W", Vector(0, -2)),
+        ("NE", Vector(-1, 1)),
+        ("NW", Vector(-1, -1)),
+        ("SE", Vector(1, 1)),
+        ("SW", Vector(1, -1)),
     ]
 
-  def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names for adjacency directions."""
-    return ["E", "W", "NE", "NW", "SE", "SW"]
+  def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
 
-  def touching_directions(self) -> List[Vector]:
-    """(List[Vector]) A list of directions to touching cells."""
-    return self.adjacency_directions()
+    Each entry in the returned list includes the name of a
+    vertex-sharing adjacency direction and the vector representing
+    that direction.  Vertex-sharing adjacency (also known as touching
+    adjacency) means adjacency between grid cells that share a vertex.
+    """
+    return self.edge_sharing_directions()
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.

@@ -58,7 +58,7 @@ def main():
       p = Point(y, x)
       sg.solver.add(Implies(
           sg.cell_is(p, sym.STAR),
-          And(*[n.symbol == sym.EMPTY for n in sg.touching_cells(p)])
+          And(*[n.symbol == sym.EMPTY for n in sg.vertex_sharing_neighbors(p)])
       ))
 
   if sg.solve():

@@ -92,9 +92,9 @@ def constrain_adjacent_cells(sg, rc):
   for y in range(HEIGHT):
     for x in range(WIDTH):
       p = Point(y, x)
-      adjacent_cells = [n.symbol for n in sg.adjacent_cells(p)]
+      adjacent_cells = [n.symbol for n in sg.edge_sharing_neighbors(p)]
       adjacent_region_ids = [
-          n.symbol for n in sg.locations.adjacent_cells(rc.region_id_grid, p)
+          n.symbol for n in sg.locations.edge_sharing_neighbors(rc.region_id_grid, p)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
         sg.solver.add(

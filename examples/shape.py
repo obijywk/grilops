@@ -45,7 +45,7 @@ def main():
   )
   for p in points:
     sg.solver.add(sg.cell_is(p, sym.W) == (sc.shape_type_grid[p] == -1))
-    for n in sg.touching_cells(p):
+    for n in sg.vertex_sharing_neighbors(p):
       np = n.location
       sg.solver.add(
           Implies(

@@ -130,26 +130,31 @@ def print_loop(grid, model):
     sys.stdout.write("\n")
 
 
-def region_solve():
-  """Hex litherlink solver example using regions."""
+def get_lattice():
+  """Construct the lattice for solving.
 
-  # We use a set of points that extends two more in each direction than
-  # the given grid.  We treat those extended cells as definitely on the
-  # outside of the loop.  This ensures that all the cells outside the
-  # loop are connected.  This means we only have to deal with two
-  # connected regions:  one inside the loop and one outside the loop.
-
-  adjacency_directions = FlatToppedHexagonalLattice([]).adjacency_directions()
+  We use a set of points that extends two more in each direction than
+  the given grid.  We treat those extended cells as definitely on the
+  outside of the loop.  This ensures that all the cells outside the
+  loop are connected.  This means we only have to deal with two
+  connected regions:  one inside the loop and one outside the loop.
+  """
+  adjacency_directions = FlatToppedHexagonalLattice([]).edge_sharing_directions()
 
   points = set()
   for r in range(len(GIVENS)):
     for c in range(len(GIVENS[r])):
       p = givens_row_col_to_point(r, c)
       points.add(p)
-      for d in adjacency_directions:
+      for _, d in adjacency_directions:
         points.add(p.translate(d))
-  locations = FlatToppedHexagonalLattice(list(points))
+  return FlatToppedHexagonalLattice(list(points))
 
+
+def region_solve():
+  """Hex litherlink solver example using regions."""
+
+  locations = get_lattice()
   sym = grilops.SymbolSet(["I", "O"])
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
@@ -165,7 +170,8 @@ def region_solve():
   for p in locations.points:
     # A cell should have symbol I if and only if it's in the inside region
     sg.solver.add(
-        (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == inside_region_id))
+        (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == inside_region_id)
+    )
 
     # If this cell isn't in the givens array, it must be outside the loop.
 
@@ -186,7 +192,7 @@ def region_solve():
     # opposite side of the loop line.
 
     num_different_neighbors_terms = [
-        (n.symbol != sg.grid[p], 1) for n in sg.adjacent_cells(p)
+        (n.symbol != sg.grid[p], 1) for n in sg.edge_sharing_neighbors(p)
     ]
     sg.solver.add(PbEq(num_different_neighbors_terms, given))
 

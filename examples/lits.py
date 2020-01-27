@@ -101,10 +101,10 @@ def add_adjacent_tetronimo_constraints(locations, sc):
       shape_type = sc.shape_type_grid[p]
       shape_id = sc.shape_instance_grid[p]
       adjacent_types = [
-          n.symbol for n in locations.adjacent_cells(sc.shape_type_grid, p)
+          n.symbol for n in locations.edge_sharing_neighbors(sc.shape_type_grid, p)
       ]
       adjacent_ids = [
-          n.symbol for n in locations.adjacent_cells(sc.shape_instance_grid, p)
+          n.symbol for n in locations.edge_sharing_neighbors(sc.shape_instance_grid, p)
       ]
       for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
         sc.solver.add(
