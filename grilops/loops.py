@@ -63,8 +63,7 @@ class LoopSymbolSet(SymbolSet):
     return symbol < self.__max_loop_symbol_index + 1
 
   def symbols_for_direction(self, d: Vector) -> List[int]:
-    """Returns the list of symbols that have one arm going in the
-    given direction.
+    """Returns the symbols with one arm going in the given direction.
 
     # Arguments:
     d (Vector): The given direction.
@@ -76,8 +75,7 @@ class LoopSymbolSet(SymbolSet):
     return self.__symbols_for_direction[d]
 
   def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -> int:
-    """Returns the symbol with one arm going in each of the two
-    given directions.
+    """Returns the symbol with arms going in the two given directions.
 
     # Arguments:
     d1 (Vector): The first given direction.

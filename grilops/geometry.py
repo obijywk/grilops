@@ -16,7 +16,7 @@ class Vector(NamedTuple):
   dx: int
 
   def negate(self) -> "Vector":
-    """Return a vector each of whose components is the negation of this one."""
+    """Returns a vector that's the negation of this one."""
     return Vector(-self.dy, -self.dx)
 
   def translate(self, d: "Vector") -> "Vector":
@@ -60,8 +60,7 @@ class Lattice:
     raise NotImplementedError()
 
   def point_to_index(self, point: Point) -> Optional[int]:
-    """Returns the index of the given point in the ordered list
-    of points in the lattice.
+    """Returns the index of a point in the lattice's ordered list.
 
     # Arguments:
     point (Point): The point to get the index of.
@@ -77,8 +76,7 @@ class Lattice:
     raise NotImplementedError()
 
   def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
-    the directions to adjacent cells."""
+    """(List[str]) A list of names for adjacency directions."""
     raise NotImplementedError()
 
   def touching_directions(self) -> List[Vector]:
@@ -86,8 +84,7 @@ class Lattice:
     raise NotImplementedError()
 
   def adjacent_points(self, point: Point) -> List[Point]:
-    """Returns a list of points that are adjacent to the given
-    point in the lattice.
+    """Returns the points adjacent to the given point.
 
     # Arguments:
     point (Point): The given point.
@@ -137,8 +134,7 @@ class Lattice:
     return cells
 
   def touching_points(self, point: Point) -> List[Point]:
-    """Returns a list of points that are touching the given point
-    in the lattice.
+    """Returns a list of points touching the given point in the lattice.
 
     # Arguments:
     point (Point): The given point
@@ -150,8 +146,7 @@ class Lattice:
     return [point.translate(v) for v in self.adjacency_directions()]
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
-    """Returns the label corresponding to the given pair of
-    adjacency direction names.
+    """Returns the label for a pair of adjacency direction names.
 
     Arguments:
     d1 (str): The first direction (e.g., "N", "S", etc.)
@@ -167,11 +162,12 @@ class Lattice:
       allow_rotations: bool,
       allow_reflections: bool
       ) -> List[Callable[[Vector], Vector]]:
-    """Returns a list of vector transformations satisfying the
-    given constraints. Each vector transformation is a function
-    that transforms a vector into a vector. The returned list
-    always contains at least one transformation:  the identity
-    function.
+    """Returns a list of vector transformations.
+
+    Each returned transformation is a function that transforms a
+    vector into a vector. The returned list always contains at least
+    one transformation: the identity function.  The transformations
+    returned are all transformations satisfying the given constraints.
 
     # Arguments:
     allow_rotations (bool): Whether rotation is an allowed
@@ -185,14 +181,31 @@ class Lattice:
     """
     raise NotImplementedError()
 
+  def get_inside_outside_check_directions(self) -> List[Vector]:
+    """Returns directions for use in a loop inside-outside check.
+
+    The first direction returned is the direction to look, and the
+    remaining directions are the directions to check for crossings.
+
+    For instance, on a rectangular grid, a valid return value would
+    be [Vector(0, -1), Vector(-1, 0)].  This means that if you look
+    north and count how many west-going lines you cross, you can
+    tell from its parity if you're inside or outside the loop.
+
+    Returns:
+    (List[Vector]): A list of adjacency directions, the first of
+        which indicates the direction to look and the rest of
+        which indicate what types of crossing to count.
+    """
+    raise NotImplementedError()
+
   def print_row(
       self,
       hook_function: Callable[[Point], str],
       ps: Iterable[Point],
       blank: str = " ",
       stream: IO[str] = sys.stdout):
-    """Prints something for each space in the lattice, for a given
-    row and column range.
+    """Prints something for each space in the lattice in one row.
 
     # Arguments:
     hook_function (Callable[[Point], str]): A function implementing
@@ -222,29 +235,12 @@ class Lattice:
         stream.write(col)
       stream.write("\n")
 
-  def get_inside_outside_check_directions(self) -> List[Vector]:
-    """Returns a list of adjacency directions for use in a
-    loop inside-outside check. The first direction is the direction
-    to look, and the remaining directions are the directions to
-    check for crossings.
-
-    For instance, on a rectangular grid, a valid return value would
-    be [Vector(0, -1), Vector(-1, 0)].  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you're inside or outside the loop.
-
-    Returns:
-    (List[Vector]): A list of adjacency directions, the first of
-        which indicates the direction to look and the rest of
-        which indicate what types of crossing to count.
-    """
-    raise NotImplementedError()
-
   def print(
       self, hook_function: Callable[[Point], str],
       blank: str = " ", stream: IO[str] = sys.stdout):
-    """Prints something for each space in the lattice, from top to bottom
-    and left to right.
+    """Prints something for each space in the lattice.
+
+    Printing is done from top to bottom and left to right.
 
     # Arguments:
     hook_function (Callable[[Point], str]): A function implementing
@@ -274,8 +270,10 @@ class Lattice:
 
 
 class RectangularLattice(Lattice):
-  """A set of points corresponding to a rectangular lattice, not
-  necessarily filling a complete rectangle."""
+  """A set of points corresponding to a rectangular lattice.
+
+  Note that these points need not fill a complete rectangle.
+  """
   def __init__(self, points: List[Point]):
     self.__points = sorted(points)
     self.__point_indices = dict(
@@ -288,8 +286,7 @@ class RectangularLattice(Lattice):
     return self.__points
 
   def point_to_index(self, point: Point) -> Optional[int]:
-    """Returns the index of the given point in the ordered list
-    of points in the lattice.
+    """Returns the index of a point in the lattice's ordered list.
 
     # Arguments:
     point (Point): The point to get the index of.
@@ -310,8 +307,7 @@ class RectangularLattice(Lattice):
     ]
 
   def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
-    the directions to adjacent cells."""
+    """(List[str]) A list of names for adjacency directions."""
     return ["N", "S", "E", "W"]
 
   def touching_directions(self) -> List[Vector]:
@@ -324,12 +320,11 @@ class RectangularLattice(Lattice):
     ]
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
-    """Returns the label corresponding to the given pair of
-    adjacency direction names.
+    """Returns the label for a pair of adjacency direction names.
 
     Arguments:
-    d1 (str): The first direction (e.g., "N", "S", etc.)
-    d2 (str): The second direction.
+    d1 (str): The first direction's name (e.g., "N", "S", etc.)
+    d2 (str): The second direction's name.
 
     Returns:
     (str): The label representing both directions.
@@ -353,10 +348,12 @@ class RectangularLattice(Lattice):
       allow_rotations: bool,
       allow_reflections: bool
       ) -> List[Callable[[Vector], Vector]]:
-    """Returns a list of vector transformations satisfying the
-    given constraints. Each vector transformation is a function
-    that transforms a vector into a vector. The returned list
-    always includes the identity function.
+    """Returns a list of vector transformations.
+
+    Each returned transformation is a function that transforms a
+    vector into a vector. The returned list always contains at least
+    one transformation: the identity function.  The transformations
+    returned are all transformations satisfying the given constraints.
 
     # Arguments:
     allow_rotations (bool): Whether rotation is an allowed
@@ -397,15 +394,15 @@ class RectangularLattice(Lattice):
     return [lambda v: v]
 
   def get_inside_outside_check_directions(self) -> List[Vector]:
-    """Returns a list of adjacency directions for use in a
-    loop inside-outside check. The first direction is the direction
-    to look, and the remaining directions are the directions to
-    check for crossings.
+    """Returns directions for use in a loop inside-outside check.
 
-    Since this is a rectangular grid, we return
-    [Vector(0, -1), Vector(-1, 0)].  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you're inside or outside the loop.
+    The first direction returned is the direction to look, and the
+    remaining directions are the directions to check for crossings.
+
+    Since this is a rectangular grid, we return [Vector(0, -1),
+    Vector(-1, 0)].  This means that if you look north and count how
+    many west-going lines you cross, you can tell from its parity if
+    you're inside or outside the loop.
 
     Returns:
     (List[Vector]): A list of adjacency directions, the first of
@@ -416,12 +413,14 @@ class RectangularLattice(Lattice):
 
 
 class FlatToppedHexagonalLattice(Lattice):
-  """A set of points corresponding to a hexagonal lattice where
-  each hexagon has a flat top. We use the doubled coordinates
-  scheme described at https://www.redblobgames.com/grids/hexagons/.
-  That is, y describes the row and x describes the column, so
-  hexagons that are vertically adjacent have their y coordinates
-  differ by 2."""
+  """A set of points forming a flat-topped hexagonal lattice.
+
+  All points must lie on a hexagonal lattice in which each hexagon has
+  a flat top.  We use the doubled coordinates scheme described at
+  https://www.redblobgames.com/grids/hexagons/.  That is, y describes
+  the row and x describes the column, so hexagons that are vertically
+  adjacent have their y coordinates differ by 2.
+  """
   def __init__(self, points: List[Point]):
     for p in points:
       if (p.y + p.x) % 2 == 1:
@@ -437,8 +436,7 @@ class FlatToppedHexagonalLattice(Lattice):
     return self.__points
 
   def point_to_index(self, point: Point) -> Optional[int]:
-    """Returns the index of the given point in the ordered list
-    of points in the lattice.
+    """Returns the index of a point in the lattice's ordered list.
 
     # Arguments:
     point (Point): The point to get the index of.
@@ -461,8 +459,7 @@ class FlatToppedHexagonalLattice(Lattice):
     ]
 
   def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
-    the directions to adjacent cells."""
+    """(List[str]) A list of names for adjacency directions."""
     return ["N", "S", "NE", "NW", "SE", "SW"]
 
   def touching_directions(self) -> List[Vector]:
@@ -470,12 +467,11 @@ class FlatToppedHexagonalLattice(Lattice):
     return self.adjacency_directions()
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
-    """Returns the label corresponding to the given pair of
-    adjacency direction names.
+    """Returns the label for a pair of adjacency direction names.
 
     Arguments:
-    d1 (str): The first direction (e.g., "N", "S", etc.)
-    d2 (str): The second direction.
+    d1 (str): The first direction's name (e.g., "N", "S", etc.)
+    d2 (str): The second direction's name.
 
     Returns:
     (str): The label representing both directions.
@@ -500,10 +496,12 @@ class FlatToppedHexagonalLattice(Lattice):
       allow_rotations: bool,
       allow_reflections: bool
       ) -> List[Callable[[Vector], Vector]]:
-    """Returns a list of vector transformations satisfying the
-    given constraints. Each vector transformation is a function
-    that transforms a vector into a vector. The returned list
-    always includes the identity function.
+    """Returns a list of vector transformations.
+
+    Each returned transformation is a function that transforms a
+    vector into a vector. The returned list always contains at least
+    one transformation: the identity function.  The transformations
+    returned are all transformations satisfying the given constraints.
 
     # Arguments:
     allow_rotations (bool): Whether rotation is an allowed
@@ -554,10 +552,10 @@ class FlatToppedHexagonalLattice(Lattice):
     return [lambda v: v]
 
   def get_inside_outside_check_directions(self) -> List[Vector]:
-    """Returns a list of adjacency directions for use in a
-    loop inside-outside check. The first direction is the direction
-    to look, and the remaining directions are the directions to
-    check for crossings.
+    """Returns directions for use in a loop inside-outside check.
+
+    The first direction returned is the direction to look, and the
+    remaining directions are the directions to check for crossings.
 
     Since this is a flat-topped hexagonal grid, we return
     [Vector(-2, 0), Vector(-1, -1), Vector(1, -1)].  This means
@@ -574,12 +572,14 @@ class FlatToppedHexagonalLattice(Lattice):
 
 
 class PointyToppedHexagonalLattice(Lattice):
-  """A set of points corresponding to a hexagonal lattice where
-  each hexagon has a pointy top. We use the doubled coordinates
-  scheme described at https://www.redblobgames.com/grids/hexagons/.
-  That is, y describes the row and x describes the column, so
-  hexagons that are horizontally adjacent have their x coordinates
-  differ by 2."""
+  """A set of points forming a pointy-topped hexagonal lattice.
+
+  All points must lie on a hexagonal lattice in which each hexagon has
+  a pointy top.  We use the doubled coordinates scheme described at
+  https://www.redblobgames.com/grids/hexagons/.  That is, y describes
+  the row and x describes the column, so hexagons that are horizontally
+  adjacent have their x coordinates differ by 2.
+  """
   def __init__(self, points: List[Point]):
     for p in points:
       if (p.y + p.x) % 2 == 1:
@@ -595,8 +595,7 @@ class PointyToppedHexagonalLattice(Lattice):
     return self.__points
 
   def point_to_index(self, point: Point) -> Optional[int]:
-    """Returns the index of the given point in the ordered list
-    of points in the lattice.
+    """Returns the index of a point in the lattice's ordered list.
 
     # Arguments:
     point (Point): The point to get the index of.
@@ -619,8 +618,7 @@ class PointyToppedHexagonalLattice(Lattice):
     ]
 
   def adjacency_direction_names(self) -> List[str]:
-    """(List[str]) A list of names (e.g., ['N', 'E', ...]) for
-    the directions to adjacent cells."""
+    """(List[str]) A list of names for adjacency directions."""
     return ["E", "W", "NE", "NW", "SE", "SW"]
 
   def touching_directions(self) -> List[Vector]:
@@ -628,12 +626,11 @@ class PointyToppedHexagonalLattice(Lattice):
     return self.adjacency_directions()
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
-    """Returns the label corresponding to the given pair of
-    adjacency direction names.
+    """Returns the label for a pair of adjacency direction names.
 
     Arguments:
-    d1 (str): The first direction (e.g., "N", "S", etc.)
-    d2 (str): The second direction.
+    d1 (str): The first direction's name (e.g., "N", "S", etc.)
+    d2 (str): The second direction's name.
 
     Returns:
     (str): The label representing both directions.
@@ -658,10 +655,12 @@ class PointyToppedHexagonalLattice(Lattice):
       allow_rotations: bool,
       allow_reflections: bool
       ) -> List[Callable[[Vector], Vector]]:
-    """Returns a list of vector transformations satisfying the
-    given constraints. Each vector transformation is a function
-    that transforms a vector into a vector. The returned list
-    always includes the identity function.
+    """Returns a list of vector transformations.
+
+    Each returned transformation is a function that transforms a
+    vector into a vector. The returned list always contains at least
+    one transformation: the identity function.  The transformations
+    returned are all transformations satisfying the given constraints.
 
     # Arguments:
     allow_rotations (bool): Whether rotation is an allowed
@@ -711,10 +710,10 @@ class PointyToppedHexagonalLattice(Lattice):
     return [lambda v: v]
 
   def get_inside_outside_check_directions(self) -> List[Vector]:
-    """Returns a list of adjacency directions for use in a
-    loop inside-outside check. The first direction is the direction
-    to look, and the remaining directions are the directions to
-    check for crossings.
+    """Returns directions for use in a loop inside-outside check.
+
+    The first direction returned is the direction to look, and the
+    remaining directions are the directions to check for crossings.
 
     Since this is a pointy-topped hexagonal grid, we return
     [Vector(0, 2), Vector(-1, -1), Vector(-1, 1)].  This means
@@ -731,8 +730,7 @@ class PointyToppedHexagonalLattice(Lattice):
 
 
 def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
-  """Returns a lattice containing all points in a rectangle of the given
-  height and width.
+  """Returns a lattice of all points in a rectangle of the given dimensions.
 
   # Arguments
   height (int): Height of the lattice.
@@ -746,7 +744,7 @@ def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
 
 
 def get_square_locations(height: int) -> RectangularLattice:
-  """Returns a lattice containing all points in a square of the given height.
+  """Returns a lattice of all points in a square of the given height.
 
   # Arguments
   height (int): Height of the lattice.

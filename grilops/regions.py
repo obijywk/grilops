@@ -53,8 +53,11 @@ class RegionConstrainer:  # pylint: disable=R0902
     self.__add_constraints()
 
   def __manage_adjacencies(self):
-    """Create the structures used for managing mapping between adjacency
-    directions and the parent indices corresponding to them."""
+    """Creates the structures used for managing adjacencies.
+
+    Ccreates the mapping between adjacency directions and the parent
+    indices corresponding to them.
+    """
     self.__adjacency_directions = self.__lattice.adjacency_directions()
     self.__adjacency_to_index = dict(
         (v, index + 2) for index, v in enumerate(self.__adjacency_directions)
