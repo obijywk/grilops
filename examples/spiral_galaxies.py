@@ -41,7 +41,7 @@ def main():
 
   # Make the upper-left-most cell covered by a circle the root of its region.
   roots = {(int(math.floor(y)), int(math.floor(x))) for (y, x) in GIVENS}
-  r = rc.parent_type_to_index("R")
+  r = grilops.regions.R
   for y in range(HEIGHT):
     for x in range(WIDTH):
       sg.solver.add(

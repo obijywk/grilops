@@ -54,7 +54,7 @@ def main():
         sg.solver.add(
             Implies(
                 sg.cell_is(p, SYM.B),
-                rc.parent_grid[p] != rc.parent_type_to_index("R")
+                rc.parent_grid[p] != grilops.regions.R
             )
         )
 

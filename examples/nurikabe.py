@@ -69,7 +69,7 @@ def constrain_islands(sym, sg, rc):
         sg.solver.add(sg.cell_is(p, sym.W))
         # Might as well force the given cell to be the root of the region's tree,
         # to reduce the number of possibilities.
-        sg.solver.add(rc.parent_grid[p] == rc.parent_type_to_index("R"))
+        sg.solver.add(rc.parent_grid[p] == grilops.regions.R)
         sg.solver.add(rc.region_size_grid[p] == GIVENS[(y, x)])
       else:
         # Ensure that cells that are part of island regions are colored white.
@@ -83,7 +83,7 @@ def constrain_islands(sym, sg, rc):
         # to reduce the number of possibilities.
         sg.solver.add(Implies(
             sg.cell_is(p, sym.W),
-            rc.parent_grid[p] != rc.parent_type_to_index("R")
+            rc.parent_grid[p] != grilops.regions.R
         ))
 
 

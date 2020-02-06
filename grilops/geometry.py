@@ -119,8 +119,9 @@ class Lattice:
     cells = []
     for _, d in self.edge_sharing_directions():
       np = p.translate(d)
-      if np in cell_map:
-        cells.append(Neighbor(np, d, cell_map[np]))
+      cell = cell_map.get(np, None)
+      if cell is not None:
+        cells.append(Neighbor(np, d, cell))
     return cells
 
   def vertex_sharing_neighbors(
@@ -139,8 +140,9 @@ class Lattice:
     cells = []
     for _, d in self.vertex_sharing_directions():
       np = p.translate(d)
-      if np in cell_map:
-        cells.append(Neighbor(np, d, cell_map[np]))
+      cell = cell_map.get(np, None)
+      if cell is not None:
+        cells.append(Neighbor(np, d, cell))
     return cells
 
   def vertex_sharing_cells(self, point: Point) -> List[Point]:
@@ -209,13 +211,13 @@ class Lattice:
     """
     raise NotImplementedError()
 
-  def print_row(
+  def print_points(
       self,
       hook_function: Callable[[Point], str],
       ps: Iterable[Point],
       blank: str = " ",
       stream: IO[str] = sys.stdout):
-    """Prints something for each space in the lattice in one row.
+    """Prints something for each of the given points.
 
     # Arguments:
     hook_function (Callable[[Point], str]): A function implementing
@@ -224,7 +226,7 @@ class Lattice:
         newlines, it will be treated as a multi-line element.
         For best results, all elements should have the same number
         of lines as each other and as blank (below).
-    ps (Iterable[int]): The points in the row.
+    ps (Iterable[int]): The points to print something for.
     blank (str): What to print for points not in the lattice, or for
         when the hook function returns None. Defaults to one space.
         If it has embedded newlines, it will be treated as a
@@ -272,9 +274,9 @@ class Lattice:
     min_x = min(p.x for p in ps)
     max_x = max(p.x for p in ps)
     for y in range(min_y, max_y + 1):
-      self.print_row(
+      self.print_points(
           hook_function,
-          (Point(y, x) for x in range(min_x, max_x+1)),
+          (Point(y, x) for x in range(min_x, max_x + 1)),
           blank, stream
       )
 
@@ -286,9 +288,9 @@ class RectangularLattice(Lattice):
   """
   def __init__(self, points: List[Point]):
     self.__points = sorted(points)
-    self.__point_indices = dict(
-        (p, i) for i, p in enumerate(self.__points)
-    )
+    self.__point_indices = {
+        p: i for i, p in enumerate(self.__points)
+    }
 
   @property
   def points(self) -> List[Point]:
@@ -448,9 +450,9 @@ class FlatToppedHexagonalLattice(Lattice):
       if (p.y + p.x) % 2 == 1:
         raise ValueError("Hexagonal coordinates must have an even sum.")
     self.__points = sorted(points)
-    self.__point_indices = dict(
-        (p, i) for i, p in enumerate(self.__points)
-    )
+    self.__point_indices = {
+        p: i for i, p in enumerate(self.__points)
+    }
 
   @property
   def points(self) -> List[Point]:
@@ -493,6 +495,9 @@ class FlatToppedHexagonalLattice(Lattice):
     vertex-sharing adjacency direction and the vector representing
     that direction.  Vertex-sharing adjacency (also known as touching
     adjacency) means adjacency between grid cells that share a vertex.
+
+    Since this is a hexagonal grid, the vertex-sharing directions are
+    the same as the edge-sharing directions.
     """
     return self.edge_sharing_directions()
 
@@ -615,9 +620,9 @@ class PointyToppedHexagonalLattice(Lattice):
       if (p.y + p.x) % 2 == 1:
         raise ValueError("Hexagonal coordinates must have an even sum.")
     self.__points = sorted(points)
-    self.__point_indices = dict(
-        (p, i) for i, p in enumerate(self.__points)
-    )
+    self.__point_indices = {
+        p: i for i, p in enumerate(self.__points)
+    }
 
   @property
   def points(self) -> List[Point]:
@@ -660,6 +665,9 @@ class PointyToppedHexagonalLattice(Lattice):
     vertex-sharing adjacency direction and the vector representing
     that direction.  Vertex-sharing adjacency (also known as touching
     adjacency) means adjacency between grid cells that share a vertex.
+
+    Since this is a hexagonal grid, the vertex-sharing directions are
+    the same as the edge-sharing directions.
     """
     return self.edge_sharing_directions()
 

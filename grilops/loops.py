@@ -9,6 +9,7 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
     is outside of a loop.
 """
 
+import itertools
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Tuple
 from z3 import (  # type: ignore
@@ -38,16 +39,14 @@ class LoopSymbolSet(SymbolSet):
 
     dirs = locations.edge_sharing_directions()
     index_for_direction_pair = 0
-    for i, (namei, di) in enumerate(dirs):
-      for j in range(i+1, len(dirs)):
-        (namej, dj) = dirs[j]
-        lbl = locations.label_for_direction_pair(namei, namej)
-        self.append(namei + namej, lbl)
-        self.__symbols_for_direction[di].append(index_for_direction_pair)
-        self.__symbols_for_direction[dj].append(index_for_direction_pair)
-        self.__symbol_for_direction_pair[(di, dj)] = index_for_direction_pair
-        self.__symbol_for_direction_pair[(dj, di)] = index_for_direction_pair
-        index_for_direction_pair += 1
+    for (namei, di), (namej, dj) in itertools.combinations(dirs, 2):
+      lbl = locations.label_for_direction_pair(namei, namej)
+      self.append(namei + namej, lbl)
+      self.__symbols_for_direction[di].append(index_for_direction_pair)
+      self.__symbols_for_direction[dj].append(index_for_direction_pair)
+      self.__symbol_for_direction_pair[(di, dj)] = index_for_direction_pair
+      self.__symbol_for_direction_pair[(dj, di)] = index_for_direction_pair
+      index_for_direction_pair += 1
     self.__max_loop_symbol_index = index_for_direction_pair - 1
 
   def is_loop(self, symbol: ArithRef) -> BoolRef:
@@ -136,11 +135,9 @@ class LoopConstrainer:
   def __all_direction_pairs(self) -> Iterable[Tuple[int, Vector, Vector]]:
     dirs = self.__symbol_grid.locations.edge_sharing_directions()
     index_for_direction_pair = 0
-    for i, (_, di) in enumerate(dirs):
-      for j in range(i+1, len(dirs)):
-        (_, dj) = dirs[j]
-        yield (index_for_direction_pair, di, dj)
-        index_for_direction_pair += 1
+    for (_, di), (_, dj) in itertools.combinations(dirs, 2):
+      yield (index_for_direction_pair, di, dj)
+      index_for_direction_pair += 1
 
   def __add_single_loop_constraints(self):
     grid = self.__symbol_grid.grid
@@ -165,7 +162,7 @@ class LoopConstrainer:
 
       solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
-      for (index_for_direction_pair, d1, d2) in self.__all_direction_pairs():
+      for index_for_direction_pair, d1, d2 in self.__all_direction_pairs():
         pi = p.translate(d1)
         pj = p.translate(d2)
         if pi in loop_order_grid and pj in loop_order_grid:
@@ -190,13 +187,9 @@ class LoopConstrainer:
     direction_to_look = ds[0]
     crossing_directions = ds[1:]
     crossings = []
-    for (index_for_direction_pair, d1, d2) in self.__all_direction_pairs():
-      if d1 in crossing_directions:
-        if d2 not in crossing_directions:
-          crossings.append(index_for_direction_pair)
-      else:
-        if d2 in crossing_directions:
-          crossings.append(index_for_direction_pair)
+    for index_for_direction_pair, d1, d2 in self.__all_direction_pairs():
+      if (d1 in crossing_directions) ^ (d2 in crossing_directions):
+        crossings.append(index_for_direction_pair)
 
     def accumulate(a, c):
       return Xor(a, Or(*[c == s for s in crossings]))

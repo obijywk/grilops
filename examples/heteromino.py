@@ -60,7 +60,7 @@ def main():
     # Force the root of each region subtree to be in the middle of the
     # region, by not allowing non-root cells to have children.
     sg.solver.add(Implies(
-        rc.parent_grid[p] != rc.parent_type_to_index("R"),
+        rc.parent_grid[p] != grilops.regions.R,
         rc.subtree_size_grid[p] == 1
     ))
 
@@ -68,7 +68,7 @@ def main():
     # different regions must not have the same shape symbol.
 
     shape = sg.grid[p]
-    is_root = rc.parent_grid[p] == rc.parent_type_to_index("R")
+    is_root = rc.parent_grid[p] == grilops.regions.R
 
     has_north = False
     if p.y > 0:

@@ -3,6 +3,12 @@
 Internally, the #RegionConstrainer constructs subtrees, each spanning the cells
 contained within a region. Aspects of a cell's relationship to the other cells
 in its subtree are exposed by properties of the #RegionConstrainer.
+
+# Attributes
+X (int): The #RegionConstrainer.parent_grid value indicating that a cell is not
+    part of a region.
+R (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
+    root of its region's subtree.
 """
 
 from typing import Dict, Optional
@@ -10,6 +16,8 @@ from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum  # type: ignore
 
 from .geometry import Lattice, Point, Vector
 
+X = 0
+R = 1
 
 class RegionConstrainer:  # pylint: disable=R0902
   """Creates constraints for grouping cells into contiguous regions.
@@ -171,16 +179,19 @@ class RegionConstrainer:  # pylint: disable=R0902
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
 
-  def location_to_region_id(self, location: Point) -> Optional[int]:
+  def location_to_region_id(self, location: Point) -> int:
     """Returns the region root ID for a grid location.
 
     # Arguments
     location (Point): The grid location.
 
     # Returns
-    (Optional[int]): The region ID.
+    (int): The region ID.
     """
-    return self.__lattice.point_to_index(location)
+    idx = self.__lattice.point_to_index(location)
+    if idx is None:
+      raise Exception(f"{location} not in grid")
+    return idx
 
   def region_id_to_location(self, region_id: int) -> Point:
     """Returns the grid location for a region root ID.
