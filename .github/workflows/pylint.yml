@@ -1,0 +1,21 @@
+name: mypy and pylint
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mypy pylint
+    - name: mypy
+      run: |
+        mypy grilops
+    - name: pylint
+      run: |
+        pylint examples grilops
