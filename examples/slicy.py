@@ -123,15 +123,16 @@ def add_sea_constraints(sym, sg, rc):
           sg.grid[np2] == sym.W
       ))
 
-  # We know that each area must have at least one sea cell in it
-  # (since in this puzzle all areas have size greater than 4),
-  # so sea_id can be constrained to be the index of one of the
-  # points in the smallest area.
+  # Constrain sea_id to be the index of one of the points in
+  # the smallest area, among those areas of size greater than 4.
   area_to_points = defaultdict(list)
   for p in sg.locations.points:
     r, c = point_to_areas_row_col(p)
     area_to_points[AREAS[r][c]].append(p)
-  _, area_points = min(area_to_points.items(), key=lambda t: len(t[1]))
+  area_points = min(
+      (ps for ps in area_to_points.values() if len(ps) > 4),
+      key=len
+  )
   sg.solver.add(Or(*[
       sea_id == sg.locations.point_to_index(p) for p in area_points
   ]))
