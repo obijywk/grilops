@@ -63,7 +63,7 @@ def main():
   # root of this region to be the first given, to reduce the space of
   # possibilities.
   white_root = min(GIVENS.keys())
-  white_region_id = rc.location_to_region_id(white_root)
+  white_region_id = lattice.point_to_index(white_root)
 
   for y in range(HEIGHT):
     for x in range(WIDTH):

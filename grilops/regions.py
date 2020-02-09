@@ -167,31 +167,6 @@ class RegionConstrainer:  # pylint: disable=R0902
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
 
-  def location_to_region_id(self, location: Point) -> int:
-    """Returns the region root ID for a grid location.
-
-    # Arguments
-    location (Point): The grid location.
-
-    # Returns
-    (int): The region ID.
-    """
-    idx = self.__lattice.point_to_index(location)
-    if idx is None:
-      raise ValueError(f"{location} not in grid")
-    return idx
-
-  def region_id_to_location(self, region_id: int) -> Point:
-    """Returns the grid location for a region root ID.
-
-    # Arguments
-    region_id (int): The region ID.
-
-    # Returns
-    (Point): The (y, x) grid location.
-    """
-    return self.__lattice.points[region_id]
-
   def edge_sharing_direction_to_index(self, direction: Vector) -> int:
     """Returns the parent_grid value corresponding to the given direction.
 
@@ -227,7 +202,8 @@ class RegionConstrainer:  # pylint: disable=R0902
     """(Dict[Point, ArithRef]): A dictionary of numbers identifying regions.
 
     A region's identifier is the position in the grid (going in order from left
-    to right, top to bottom) of the root of that region's subtree.
+    to right, top to bottom) of the root of that region's subtree. It is the
+    same as the index of the point in the lattice.
     """
     return self.__region_id_grid
 

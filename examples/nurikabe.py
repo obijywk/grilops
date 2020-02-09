@@ -36,7 +36,7 @@ def constrain_sea(sym, sg, rc):
   sg.solver.add(sea_id >= 0)
   sg.solver.add(sea_id < HEIGHT * WIDTH)
   for p in GIVENS:
-    sg.solver.add(sea_id != rc.location_to_region_id(Point(p[0], p[1])))
+    sg.solver.add(sea_id != sg.lattice.point_to_index(p))
   for y in range(HEIGHT):
     for x in range(WIDTH):
       p = Point(y, x)
@@ -74,7 +74,7 @@ def constrain_islands(sym, sg, rc):
       else:
         # Ensure that cells that are part of island regions are colored white.
         for gp in GIVENS:
-          island_id = rc.location_to_region_id(Point(gp[0], gp[1]))
+          island_id = sg.lattice.point_to_index(gp)
           sg.solver.add(Implies(
               rc.region_id_grid[p] == island_id,
               sg.cell_is(p, sym.W)

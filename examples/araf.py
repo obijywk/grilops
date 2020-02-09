@@ -52,7 +52,7 @@ def add_given_pair_constraints(sg, rc):
       min_region_size = manhattan_distance + 1
       if lv < min_region_size:
         sg.solver.add(
-            rc.region_id_grid[sp] != rc.location_to_region_id(lp))
+            rc.region_id_grid[sp] != sg.lattice.point_to_index(lp))
         continue
 
       partner_terms.append(
@@ -61,7 +61,7 @@ def add_given_pair_constraints(sg, rc):
               Not(rc.parent_grid[sp] == grilops.regions.R),
 
               # The givens must share a region, rooted at the larger given.
-              rc.region_id_grid[sp] == rc.location_to_region_id(lp),
+              rc.region_id_grid[sp] == sg.lattice.point_to_index(lp),
 
               # The region must be larger than the smaller given's value.
               sv < rc.region_size_grid[lp]
@@ -135,7 +135,7 @@ def main():
   add_given_pair_constraints(sg, rc)
 
   region_id_to_label = {
-      rc.location_to_region_id(Point(y, x)): chr(65 + i)
+      lattice.point_to_index(Point(y, x)): chr(65 + i)
       for i, (y, x) in enumerate(GIVENS.keys())
   }
   def show_cell(unused_loc, region_id):

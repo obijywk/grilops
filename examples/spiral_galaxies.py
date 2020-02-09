@@ -52,7 +52,7 @@ def main():
   for p in lattice.points:
     or_terms = []
     for (gy, gx) in GIVENS:
-      region_id = rc.location_to_region_id(
+      region_id = lattice.point_to_index(
           Point(int(math.floor(gy)), int(math.floor(gx))))
       partner = Point(int(2 * gy - p.y), int(2 * gx - p.x))
       if lattice.point_to_index(partner) is None:
@@ -66,7 +66,7 @@ def main():
     sg.solver.add(Or(*or_terms))
 
   def show_cell(unused_p, region_id):
-    rp = rc.region_id_to_location(region_id)
+    rp = lattice.points[region_id]
     for i, (gy, gx) in enumerate(GIVENS):
       if int(math.floor(gy)) == rp.y and int(math.floor(gx)) == rp.x:
         return chr(65 + i)

@@ -50,7 +50,7 @@ def main():
 
   # Use the RegionConstrainer to require a single connected group made up of
   # only labeled cells.
-  label_region_id = rc.location_to_region_id(min(GIVEN_LABELS.keys()))
+  label_region_id = lattice.point_to_index(min(GIVEN_LABELS.keys()))
   for p in lattice.points:
     sg.solver.add(
         If(
