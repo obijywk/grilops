@@ -6,7 +6,7 @@ Example puzzle can be found at https://en.wikipedia.org/wiki/Sudoku.
 from z3 import Distinct
 
 import grilops
-from grilops import Point
+from grilops.geometry import Point
 
 def main():
   """Sudoku solver example."""
@@ -23,7 +23,7 @@ def main():
   ]
 
   sym = grilops.make_number_range_symbol_set(1, 9)
-  sg = grilops.SymbolGrid(grilops.get_square_locations(9), sym)
+  sg = grilops.SymbolGrid(grilops.geometry.get_square_locations(9), sym)
 
   for y, given_row in enumerate(givens):
     for x, given in enumerate(given_row):

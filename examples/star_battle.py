@@ -8,7 +8,7 @@ from collections import defaultdict
 from z3 import And, If, Implies, Sum  # type: ignore
 
 import grilops
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 10, 10
@@ -29,7 +29,7 @@ AREAS = [
 def main():
   """Star Battle solver example."""
   sym = grilops.SymbolSet([("EMPTY", " "), ("STAR", "*")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
 
   # There must be exactly two stars per column.
@@ -58,7 +58,7 @@ def main():
       p = Point(y, x)
       sg.solver.add(Implies(
           sg.cell_is(p, sym.STAR),
-          And(*[n.symbol == sym.EMPTY for n in sg.touching_cells(p)])
+          And(*[n.symbol == sym.EMPTY for n in sg.vertex_sharing_neighbors(p)])
       ))
 
   if sg.solve():

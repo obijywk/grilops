@@ -1,0 +1,17 @@
+                 L L L       
+        I I I I       L      
+       L       C   C I       
+        L       C C   I      
+         L   L L   I   I     
+    C C L   S   L   I   I L  
+   C     S S     L   I     L 
+    C   S   Y     Y   I     L
+     S   Y Y   Y Y     L   L 
+    S       Y     Y   L      
+     S     S     S   L       
+    S   S S   S S     L      
+       S     S   L L         
+            C   C   L        
+             C C     L       
+
+Unique solution

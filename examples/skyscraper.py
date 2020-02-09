@@ -7,7 +7,7 @@ from z3 import Datatype, Distinct, If, IntSort
 
 import grilops
 import grilops.sightlines
-from grilops import Point, Vector
+from grilops.geometry import Point, Vector
 
 
 SIZE = 5
@@ -20,7 +20,7 @@ GIVEN_BOTTOM = [1, 4, 3, 2, 2]
 
 def main():
   """Skyscraper solver example."""
-  locations = grilops.get_square_locations(SIZE)
+  locations = grilops.geometry.get_square_locations(SIZE)
   sg = grilops.SymbolGrid(locations, SYM)
 
   # Each row and each column contains each building height exactly once.

@@ -8,7 +8,7 @@ from z3 import And, Implies, If  # type: ignore
 import grilops
 import grilops.regions
 import grilops.sightlines
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 11, 11
@@ -37,7 +37,7 @@ GIVENS = {
 def main():
   """Kuromasu solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
@@ -54,7 +54,7 @@ def main():
     visible_cell_count = 1 + sum(
         grilops.sightlines.count_cells(
             sg, n.location, n.direction, stop=lambda c: c == sym.B
-        ) for n in sg.adjacent_cells(p)
+        ) for n in sg.edge_sharing_neighbors(p)
     )
     sg.solver.add(visible_cell_count == c)
 
@@ -73,7 +73,7 @@ def main():
       sg.solver.add(
           Implies(
               sg.cell_is(p, sym.B),
-              And(*[n.symbol == sym.W for n in sg.adjacent_cells(p)])
+              And(*[n.symbol == sym.W for n in sg.edge_sharing_neighbors(p)])
           )
       )
 

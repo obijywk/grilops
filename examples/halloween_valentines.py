@@ -8,7 +8,7 @@ from z3 import PbEq, Implies, Int, Or
 
 import grilops
 import grilops.loops
-from grilops import Point
+from grilops.geometry import Point
 
 
 ANSWERS = [
@@ -21,7 +21,8 @@ ANSWERS = [
     "NURSEJOY",
     "OMOPLATE",
 ]
-SYM = grilops.loops.LoopSymbolSet()
+LOCATIONS = grilops.geometry.get_square_locations(8)
+SYM = grilops.loops.LoopSymbolSet(LOCATIONS)
 TURN_SYMBOLS = [SYM.NE, SYM.SE, SYM.SW, SYM.NW]
 
 
@@ -43,8 +44,7 @@ def extract_answer(sg, loop_order_grid):
 
 def main():
   """Halloween Town / Valentine's Day Town solver."""
-  locations = grilops.get_square_locations(8)
-  sg = grilops.SymbolGrid(locations, SYM)
+  sg = grilops.SymbolGrid(LOCATIONS, SYM)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   # Cheat a little bit and force the loop order to start such that the answer
@@ -58,7 +58,7 @@ def main():
   # There will be exactly twice as many turns as Os. This constraint is not
   # strictly necessary to add, but the solver runs faster when it is added.
   sg.solver.add(PbEq(
-      [(sg.cell_is_one_of(p, TURN_SYMBOLS), 1) for p in locations],
+      [(sg.cell_is_one_of(p, TURN_SYMBOLS), 1) for p in LOCATIONS.points],
       o_count * 2
   ))
 
@@ -69,7 +69,7 @@ def main():
     sg.solver.add(tlo < 8 * 8)
   for i in range(len(turn_loop_orders) - 1):
     sg.solver.add(turn_loop_orders[i] < turn_loop_orders[i + 1])
-  for p in locations:
+  for p in LOCATIONS.points:
     # Figure out each turn's loop order value.
     sg.solver.add(Implies(
         sg.cell_is_one_of(p, TURN_SYMBOLS),

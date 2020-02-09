@@ -8,7 +8,7 @@ from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 HEIGHT, WIDTH = 7, 7
 GIVENS = {
@@ -88,7 +88,7 @@ def main():
 
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
       locations, sg.solver,
@@ -128,7 +128,9 @@ def main():
   for y in range(HEIGHT):
     for x in range(WIDTH):
       if (y, x) not in GIVENS:
-        sg.solver.add(Not(rc.parent_grid[Point(y, x)] == grilops.regions.R))
+        sg.solver.add(
+            Not(rc.parent_grid[Point(y, x)] == grilops.regions.R)
+        )
 
   add_given_pair_constraints(sg, rc)
 

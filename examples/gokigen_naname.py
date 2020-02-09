@@ -7,7 +7,7 @@ from functools import reduce
 from z3 import And, BitVec, BitVecVal, If, PbEq
 
 import grilops
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT = 10
@@ -167,7 +167,7 @@ def add_loop_constraints(sym, sg):
 def main():
   """Gokigen Naname solver example."""
   sym = grilops.SymbolSet([("F", chr(0x2571)), ("B", chr(0x2572))])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
 
   # Ensure the given number of line segment constraints are met.

@@ -8,7 +8,7 @@ from z3 import Implies, Or
 
 import grilops
 import grilops.loops
-from grilops import Point
+from grilops.geometry import Point
 
 
 def main():
@@ -32,9 +32,9 @@ def main():
       sys.stdout.write(cell)
     print()
 
-  sym = grilops.loops.LoopSymbolSet()
+  locations = grilops.geometry.get_rectangle_locations(len(givens), len(givens[0]))
+  sym = grilops.loops.LoopSymbolSet(locations)
   sym.append("EMPTY", " ")
-  locations = grilops.get_rectangle_locations(len(givens), len(givens[0]))
   sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
