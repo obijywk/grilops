@@ -46,11 +46,17 @@ through 9. The symbol set of a binary determination puzzle such as
 [Nurikabe](https://en.wikipedia.org/wiki/Nurikabe_(puzzle)) could contain two
 symbols, one representing a black cell and the other representing a white cell.
 
+The geometry module defines Lattice classes that are used to manage the shapes
+of grids and relationships between cells. Rectangular and hexagonal grids are
+supported, as well as grids with empty spaces in them.
+
 A symbol grid is used to keep track of the assignment of symbols to grid
 cells. Generally, setting up a program to solve a puzzle using grilops involves:
 
 * Constructing a symbol set
-* Constructing a symbol grid limited to contain symbols from that symbol set
+* Constructing a lattice for the grid
+* Constructing a symbol grid in the shape of the lattice, limited to contain
+  symbols from the symbol set
 * Adding puzzle-specific constraints to cells in the symbol grid
 * Checking for satisfying assignments of symbols to symbol grid cells
 

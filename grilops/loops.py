@@ -62,10 +62,10 @@ class LoopSymbolSet(SymbolSet):
   def symbols_for_direction(self, d: Vector) -> List[int]:
     """Returns the symbols with one arm going in the given direction.
 
-    # Arguments:
+    # Arguments
     d (Vector): The given direction.
 
-    # Returns:
+    # Returns
     (List[int]): A list of symbol indices corresponding to symbols
         with one arm going in the given direction.
     """
@@ -74,11 +74,11 @@ class LoopSymbolSet(SymbolSet):
   def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -> int:
     """Returns the symbol with arms going in the two given directions.
 
-    # Arguments:
+    # Arguments
     d1 (Vector): The first given direction.
     d2 (Vector): The second given direction.
 
-    # Returns:
+    # Returns
     (int): The symbol index for the symbol with one arm going in
         each of the two given directions.
     """

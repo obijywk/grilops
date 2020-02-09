@@ -197,7 +197,7 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     For instance, if direction is (-1, 0), return the index for N.
 
-    # Arguments:
+    # Arguments
     direction (Vector): The direction to an edge-sharing cell.
 
     # Returns
@@ -209,10 +209,10 @@ class RegionConstrainer:  # pylint: disable=R0902
   def parent_type_to_index(self, parent_type: str) -> int:
     """Returns the parent_grid value corresponding to the given parent type.
 
-    # Arguments:
+    # Arguments
     parent_type (str): The parent type.
 
-    # Returns:
+    # Returns
     (int): The corresponding parent_grid value.
     """
     return self.__parent_type_to_index[parent_type]

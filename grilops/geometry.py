@@ -62,10 +62,10 @@ class Lattice:
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    # Arguments:
+    # Arguments
     point (Point): The point to get the index of.
 
-    # Returns:
+    # Returns
     (Optional[int]): The index of the point in the ordered list.
         None if the point is not in the list.
     """
@@ -94,10 +94,10 @@ class Lattice:
   def edge_sharing_points(self, point: Point) -> List[Point]:
     """Returns the points that share an edge with the given cell.
 
-    # Arguments:
+    # Arguments
     point (Point): The point of the given cell.
 
-    # Returns:
+    # Returns
     (List[Point]): A list of points in the lattice that correspond
         to cells that share an edge with the given cell.
     """
@@ -106,10 +106,10 @@ class Lattice:
   def vertex_sharing_points(self, point: Point) -> List[Point]:
     """Returns a list of points sharing a vertex with the given cell.
 
-    # Arguments:
+    # Arguments
     point (Point): The point of the given cell.
 
-    # Returns:
+    # Returns
     (List[Point]): A list of points in the lattice corresponding to
        cells that share a vertex with the given cell.
     """
@@ -171,11 +171,11 @@ class Lattice:
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of edge-sharing direction names.
 
-    Arguments:
+    # Arguments
     d1 (str): The first direction (e.g., "N", "S", etc.)
     d2 (str): The second direction.
 
-    Returns:
+    # Returns
     (str): The label representing both directions.
     """
     raise NotImplementedError()
@@ -192,13 +192,13 @@ class Lattice:
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    # Arguments:
+    # Arguments
     allow_rotations (bool): Whether rotation is an allowed
         transformation.
     allow_reflections (bool): Whether reflection is an allowed
         transformation.
 
-    # Returns:
+    # Returns
     (List[Callable[[Vector], Vector]]): A list of vector
         transformations.
     """
@@ -215,7 +215,7 @@ class Lattice:
     north and count how many west-going lines you cross, you can
     tell from its parity if you're inside or outside the loop.
 
-    Returns:
+    # Returns
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
@@ -230,7 +230,7 @@ class Lattice:
       stream: IO[str] = sys.stdout):
     """Prints something for each of the given points.
 
-    # Arguments:
+    # Arguments
     hook_function (Callable[[Point], str]): A function implementing
         per-location display behavior.  It will be called for each
         point in the lattice.  If the returned string has embedded
@@ -265,7 +265,7 @@ class Lattice:
 
     Printing is done from top to bottom and left to right.
 
-    # Arguments:
+    # Arguments
     hook_function (Callable[[Point], str]): A function implementing
         per-location display behavior.  It will be called for each
         point in the lattice.  If the returned string has embedded
@@ -311,10 +311,10 @@ class RectangularLattice(Lattice):
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    # Arguments:
+    # Arguments
     point (Point): The point to get the index of.
 
-    # Returns:
+    # Returns
     (Optional[int]): The index of the point in the ordered list.
         None if the point is not in the list.
     """
@@ -353,14 +353,14 @@ class RectangularLattice(Lattice):
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
 
-    # Arguments:
+    # Arguments
     d1 (str): The first direction's name (e.g., "N", "S", etc.)
     d2 (str): The second direction's name.
 
-    # Returns:
+    # Returns
     (str): The label representing both directions.
 
-    # Raises:
+    # Raises
     ValueError: If there's no character defined for the direction pair.
     """
     if {d1, d2} == {"N", "S"}:
@@ -389,13 +389,13 @@ class RectangularLattice(Lattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    # Arguments:
+    # Arguments
     allow_rotations (bool): Whether rotation is an allowed
         transformation.
     allow_reflections (bool): Whether reflection is an allowed
         transformation.
 
-    # Returns:
+    # Returns
     (List[Callable[[Vector], Vector]]): A list of vector
         transformations.
     """
@@ -438,7 +438,7 @@ class RectangularLattice(Lattice):
     many west-going lines you cross, you can tell from its parity if
     you're inside or outside the loop.
 
-    # Returns:
+    # Returns
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
@@ -473,10 +473,10 @@ class _HexagonalLattice(Lattice):
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    # Arguments:
+    # Arguments
     point (Point): The point to get the index of.
 
-    # Returns:
+    # Returns
     (Optional[int]): The index of the point in the ordered list.
         None if the point is not in the list.
     """
@@ -502,14 +502,14 @@ class _HexagonalLattice(Lattice):
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
 
-    # Arguments:
+    # Arguments
     d1 (str): The first direction's name (e.g., "N", "S", etc.)
     d2 (str): The second direction's name.
 
-    # Returns:
+    # Returns
     (str): The label representing both directions.
 
-    # Raises:
+    # Raises
     ValueError: If there's no character defined for the direction pair.
     """
     ds = {d1, d2}
@@ -566,13 +566,13 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    # Arguments:
+    # Arguments
     allow_rotations (bool): Whether rotation is an allowed
         transformation.
     allow_reflections (bool): Whether reflection is an allowed
         transformation.
 
-    # Returns:
+    # Returns
     (List[Callable[[Vector], Vector]]): A list of vector
         transformations.
     """
@@ -626,7 +626,7 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
     lines you cross, you can tell from its parity if you're inside or
     outside the loop.
 
-    # Returns:
+    # Returns
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
@@ -672,13 +672,13 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    # Arguments:
+    # Arguments
     allow_rotations (bool): Whether rotation is an allowed
         transformation.
     allow_reflections (bool): Whether reflection is an allowed
         transformation.
 
-    # Returns:
+    # Returns
     (List[Callable[[Vector], Vector]]): A list of vector
         transformations.
     """
@@ -731,7 +731,7 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     and/or northeast-going lines you cross, you can tell from
     its parity if you're inside or outside the loop.
 
-    # Returns:
+    # Returns
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.

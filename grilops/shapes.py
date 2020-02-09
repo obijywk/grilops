@@ -14,10 +14,10 @@ def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
   This helps with deduplication, since equivalent shapes will be canonicalized
   identically.
 
-  # Arguments:
+  # Arguments
   shape (List[Vector]): A list of offsets defining a shape.
 
-  # Returns:
+  # Returns
   (List[Vector]): A list of offsets defining the canonicalized version
       of the shape, i.e., in sorted order and with first offset equal
       to Vector(0, 0).
