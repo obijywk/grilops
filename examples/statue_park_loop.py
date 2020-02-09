@@ -10,7 +10,7 @@ from z3 import And, Implies
 import grilops
 import grilops.loops
 import grilops.shapes
-from grilops import Point, Vector
+from grilops.geometry import Point, RectangularLattice, Vector
 
 
 E, W, B, X = " ", chr(0x25e6), chr(0x2022), "X"
@@ -41,14 +41,15 @@ def main():
       sys.stdout.write(cell)
     print()
 
-  sym = grilops.loops.LoopSymbolSet()
-  sym.append("EMPTY", " ")
-
-  locations = []
+  points = []
   for y, row in enumerate(GIVENS):
     for x, c in enumerate(row):
       if c != X:
-        locations.append(Point(y, x))
+        points.append(Point(y, x))
+  locations = RectangularLattice(points)
+
+  sym = grilops.loops.LoopSymbolSet(locations)
+  sym.append("EMPTY", " ")
 
   sg = grilops.SymbolGrid(locations, sym)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
@@ -61,7 +62,7 @@ def main():
       allow_copies=False
   )
 
-  for p in locations:
+  for p in points:
     if GIVENS[p.y][p.x] == W:
       # White circles must be part of the loop.
       sg.solver.add(lc.inside_outside_grid[p] == grilops.loops.L)
@@ -77,7 +78,7 @@ def main():
     )
 
     # Orthogonally-adjacent cells must be part of the same shape.
-    for n in sg.adjacent_cells(p):
+    for n in sg.edge_sharing_neighbors(p):
       np = n.location
       sg.solver.add(
           Implies(

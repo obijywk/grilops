@@ -9,7 +9,7 @@ from z3 import And, Implies, Not, PbEq
 
 import grilops
 import grilops.loops
-from grilops import Point
+from grilops.geometry import Point
 
 
 U, R, D, L = chr(0x25B4), chr(0x25B8), chr(0x25BE), chr(0x25C2)
@@ -54,11 +54,11 @@ def main():
     print()
   print()
 
-  sym = grilops.loops.LoopSymbolSet()
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
+  sym = grilops.loops.LoopSymbolSet(locations)
   sym.append("BLACK", chr(0x25AE))
   sym.append("GRAY", chr(0x25AF))
   sym.append("INDICATIVE", " ")
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
@@ -73,7 +73,7 @@ def main():
         sg.solver.add(Not(sg.cell_is_one_of(p, [sym.INDICATIVE, sym.GRAY])))
       sg.solver.add(Implies(
           sg.cell_is(p, sym.BLACK),
-          And(*[n.symbol != sym.BLACK for n in sg.adjacent_cells(p)])
+          And(*[n.symbol != sym.BLACK for n in sg.edge_sharing_neighbors(p)])
       ))
 
   for (sy, sx), (direction, count) in GIVENS.items():

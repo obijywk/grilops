@@ -8,7 +8,7 @@ from z3 import And, Implies, Not
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 
 SIZE = 4
@@ -31,7 +31,7 @@ SYM = grilops.SymbolSet([
 
 def main():
   """Heteromino solver example."""
-  locations = grilops.get_square_locations(SIZE)
+  locations = grilops.geometry.get_square_locations(SIZE)
   sg = grilops.SymbolGrid(locations, SYM)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
@@ -46,7 +46,7 @@ def main():
         sg.grid[np] != shape
     ))
 
-  for p in locations:
+  for p in locations.points:
     if p in BLACK_CELLS:
       sg.solver.add(sg.cell_is(p, SYM.BL))
       sg.solver.add(rc.region_id_grid[p] == -1)
@@ -73,25 +73,25 @@ def main():
     has_north = False
     if p.y > 0:
       np = Point(p.y - 1, p.x)
-      has_north = rc.parent_grid[np] == grilops.regions.S
+      has_north = rc.parent_grid[np] == rc.parent_type_to_index("S")
       constrain_neighbor(p, np, is_root, shape, has_north)
 
     has_south = False
     if p.y < SIZE - 1:
       np = Point(p.y + 1, p.x)
-      has_south = rc.parent_grid[np] == grilops.regions.N
+      has_south = rc.parent_grid[np] == rc.parent_type_to_index("N")
       constrain_neighbor(p, np, is_root, shape, has_south)
 
     has_west = False
     if p.x > 0:
       np = Point(p.y, p.x - 1)
-      has_west = rc.parent_grid[np] == grilops.regions.E
+      has_west = rc.parent_grid[np] == rc.parent_type_to_index("E")
       constrain_neighbor(p, np, is_root, shape, has_west)
 
     has_east = False
     if p.x < SIZE - 1:
       np = Point(p.y, p.x + 1)
-      has_east = rc.parent_grid[np] == grilops.regions.W
+      has_east = rc.parent_grid[np] == rc.parent_type_to_index("W")
       constrain_neighbor(p, np, is_root, shape, has_east)
 
     # Constrain the shape symbol based on adjacent cell relationships.

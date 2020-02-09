@@ -4,7 +4,7 @@ from z3 import And, Not, Implies, Or, PbEq  # type: ignore
 
 import grilops
 import grilops.shapes
-from grilops import Point, Vector
+from grilops.geometry import Point, Vector
 
 
 SYM = grilops.SymbolSet([
@@ -27,7 +27,7 @@ GIVENS = {
 
 def main():
   """Battleship solver example."""
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, SYM)
   sc = grilops.shapes.ShapeConstrainer(
       locations,
@@ -64,10 +64,10 @@ def main():
       shape_type = sc.shape_type_grid[p]
       shape_id = sc.shape_instance_grid[p]
       touching_types = [
-          n.symbol for n in grilops.touching_cells(sc.shape_type_grid, p)
+          n.symbol for n in locations.vertex_sharing_neighbors(sc.shape_type_grid, p)
       ]
       touching_ids = [
-          n.symbol for n in grilops.touching_cells(sc.shape_instance_grid, p)
+          n.symbol for n in locations.vertex_sharing_neighbors(sc.shape_instance_grid, p)
       ]
 
       # Link the X symbol to the absence of a ship segment.

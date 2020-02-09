@@ -8,7 +8,7 @@ from z3 import And, If, Implies, Int, Or, PbEq
 import grilops
 import grilops.loops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 6, 6
@@ -30,13 +30,12 @@ GIVENS = {
 
 def loop_solve():
   """Slitherlink solver example using loops."""
-  sym = grilops.loops.LoopSymbolSet()
-  sym.append("EMPTY", " ")
-
   # We'll place symbols at the intersections of the grid lines, rather than in
   # the spaces between the grid lines where the givens are written. This
   # requires increasing each dimension by one.
-  locations = grilops.get_rectangle_locations(HEIGHT + 1, WIDTH + 1)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT + 1, WIDTH + 1)
+  sym = grilops.loops.LoopSymbolSet(locations)
+  sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(locations, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
@@ -74,7 +73,7 @@ def loop_solve():
 def region_solve():
   """Slitherlink solver example using regions."""
   sym = grilops.SymbolSet([("I", chr(0x2588)), ("O", " ")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(
       locations, solver=sg.solver, complete=False)
@@ -103,7 +102,7 @@ def region_solve():
     )
 
   region_id = Int("region_id")
-  for p in locations:
+  for p in locations.points:
     # Each cell must be either "inside" (part of a single region) or
     # "outside" (not part of any region).
     sg.solver.add(
@@ -118,7 +117,7 @@ def region_solve():
     if p not in GIVENS:
       continue
     given = GIVENS[p]
-    neighbors = sg.adjacent_cells(p)
+    neighbors = sg.edge_sharing_neighbors(p)
     # The number of grid edge border segments adjacent to this cell.
     num_grid_borders = 4 - len(neighbors)
     # The number of adjacent cells on the opposite side of the loop line.

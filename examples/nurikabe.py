@@ -7,7 +7,7 @@ from z3 import And, Implies, Int, Not  # type: ignore
 
 import grilops
 import grilops.regions
-from grilops import Point
+from grilops.geometry import Point
 
 HEIGHT, WIDTH = 9, 10
 GIVENS = {
@@ -92,9 +92,9 @@ def constrain_adjacent_cells(sg, rc):
   for y in range(HEIGHT):
     for x in range(WIDTH):
       p = Point(y, x)
-      adjacent_cells = [n.symbol for n in sg.adjacent_cells(p)]
+      adjacent_cells = [n.symbol for n in sg.edge_sharing_neighbors(p)]
       adjacent_region_ids = [
-          n.symbol for n in grilops.adjacent_cells(rc.region_id_grid, p)
+          n.symbol for n in sg.locations.edge_sharing_neighbors(rc.region_id_grid, p)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
         sg.solver.add(
@@ -108,7 +108,7 @@ def constrain_adjacent_cells(sg, rc):
 def main():
   """Nurikabe solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
-  locations = grilops.get_rectangle_locations(HEIGHT, WIDTH)
+  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(locations, sym)
   rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
 
