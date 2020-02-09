@@ -1,8 +1,9 @@
 """This module supports puzzles that place fixed shape regions into the grid."""
 
+from collections import defaultdict
 import sys
 from typing import Dict, List
-from z3 import And, ArithRef, Int, Or, Solver, PbEq  # type: ignore
+from z3 import And, ArithRef, Int, Not, Or, Solver, PbEq  # type: ignore
 
 from .geometry import Lattice, Point, Vector
 
@@ -134,59 +135,50 @@ class ShapeConstrainer:
           )
       )
 
-  def __add_shape_instance_constraints(self):
-    for gp in self.__shape_instance_grid:
-      instance_id = self.__lattice.point_to_index(gp)
-      instance_size_pbeq_terms = [
-          (v == instance_id, 1)
-          for v in self.__shape_instance_grid.values()
-      ]
-
-      or_terms = [self.__shape_instance_grid[gp] == -1]
-      for shape_index, variants in enumerate(self.__variants):
-        for variant in variants:
-          or_terms.extend(self.__make_instance_constraints_for_variant(
-              gp, shape_index, variant, instance_size_pbeq_terms))
-      self.__solver.add(Or(*or_terms))
-
-  # pylint: disable=R0913,R0914
-  def __make_instance_constraints_for_variant(
-      self, gp, shape_index, variant, instance_size_pbeq_terms):
-    or_terms = []
-    for srv in variant:
-      # Find the instance ID when srv offsets to gp. Since the instance ID is
-      # the ID of the point corresponding to that first-defined offset, and the
-      # variant's first-defined offset is always Vector(0, 0), we can compute
-      # the point as gp - srv.
-      gidp = Point(gp.y - srv.dy, gp.x - srv.dx)
-      instance_id = self.__lattice.point_to_index(gidp)
-      if instance_id is None:
-        continue
-      constraint = self.__make_instance_constraint_for_variant_coordinate(
-          gp, srv, shape_index, variant, instance_id)
-      if gp == gidp:
-        constraint = And(
-            constraint,
-            PbEq(instance_size_pbeq_terms, len(variant))
+  def __add_shape_instance_constraints(self):  # pylint: disable=R0914
+    point_has_instance_id = {
+        (point, instance_id): self.__shape_instance_grid[point] == instance_id
+        for point in self.__lattice.points
+        for instance_id in [self.__lattice.point_to_index(p) for p in self.__lattice.points]
+    }
+    not_point_has_instance_id = {k: Not(v) for k, v in point_has_instance_id.items()}
+    point_has_shape_type = {
+        (point, shape_index): self.__shape_type_grid[point] == shape_index
+        for point in self.__lattice.points
+        for shape_index in range(len(self.__variants))
+    }
+    root_options = defaultdict(list)
+    for shape_index, variants in enumerate(self.__variants):  # pylint: disable=R1702
+      for variant in variants:
+        for root_point in self.__lattice.points:
+          instance_id = self.__lattice.point_to_index(root_point)
+          offset_points = set()
+          for offset_vector in variant:
+            point = root_point.translate(offset_vector)
+            if point not in self.__shape_instance_grid:
+              offset_points = None
+              break
+            offset_points.add(point)
+          if offset_points:
+            and_terms = []
+            for point in self.__lattice.points:
+              if point in offset_points:
+                and_terms.append(point_has_instance_id[(point, instance_id)])
+                and_terms.append(point_has_shape_type[(point, shape_index)])
+              else:
+                and_terms.append(not_point_has_instance_id[(point, instance_id)])
+            root_options[root_point].append(And(*and_terms))
+    for point in self.__lattice.points:
+      instance_id = self.__lattice.point_to_index(point)
+      or_terms = root_options[point]
+      if or_terms:
+        or_terms.append(
+            And(*[v != instance_id for v in self.__shape_instance_grid.values()])
         )
-      or_terms.append(constraint)
-    return or_terms
-
-  # pylint: disable=R0913
-  def __make_instance_constraint_for_variant_coordinate(
-      self, gp, srv, shape_index, variant, instance_id):
-    and_terms = []
-    for spv in variant:
-      p = Point(gp.y - (srv.dy - spv.dy), gp.x - (srv.dx - spv.dx))
-      if p not in self.__shape_instance_grid:
-        return False
-      and_terms.append(
-          And(
-              self.__shape_instance_grid[p] == instance_id,
-              self.__shape_type_grid[p] == shape_index
-          )
-      )
-    return And(*and_terms)
+        self.__solver.add(Or(*or_terms))
+      else:
+        for v in self.__shape_instance_grid.values():
+          self.__solver.add(v != instance_id)
 
   def __add_single_copy_constraints(self, shape_index, shape):
     sum_terms = []
