@@ -35,9 +35,9 @@ $ pip3 install -e .
 
 ## Basic Concepts and Usage
 
-The `symbols` and `grids` modules contain the core functionality needed for
-modeling most puzzles. For convenience, their attributes can be accessed
-directly from the top-level `grilops` module.
+The `symbols`, `geometry`, and `grids` modules contain the core functionality
+needed for modeling most puzzles. For convenience, their attributes can be
+accessed directly from the top-level `grilops` module.
 
 Symbols represent the marks that are determined and written into a grid by a
 solver while solving a puzzle. For example, the symbol set of a

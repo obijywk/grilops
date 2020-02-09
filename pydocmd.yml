@@ -3,17 +3,10 @@ site_name: "grilops API documentation"
 generate:
   - symbols.md:
     - grilops.symbols++
+  - geometry.md:
+    - grilops.geometry++
   - grids.md:
-    - grilops.grids.Vector
-    - grilops.grids.Point
-    - grilops.grids.Neighbor
-    - grilops.grids.get_adjacency_offsets+
-    - grilops.grids.get_touching_offsets+
-    - grilops.grids.adjacent_cells+
-    - grilops.grids.touching_cells+
-    - grilops.grids.get_rectangle_locations+
-    - grilops.grids.get_square_locations+
-    - grilops.grids.SymbolGrid++
+    - grilops.grids++
   - loops.md:
     - grilops.loops++
   - regions.md:
@@ -27,6 +20,7 @@ pages:
   - Home: index.md << README.md
   - API:
     - Symbols: symbols.md
+    - Geometry: geometry.md
     - Grids: grids.md
     - Loops: loops.md
     - Regions: regions.md
