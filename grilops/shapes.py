@@ -2,7 +2,7 @@
 
 import sys
 from typing import Dict, List
-from z3 import And, ArithRef, If, Int, Or, Solver, Sum, PbEq  # type: ignore
+from z3 import And, ArithRef, Int, Or, Solver, PbEq  # type: ignore
 
 from .geometry import Lattice, Point, Vector
 
@@ -137,21 +137,21 @@ class ShapeConstrainer:
   def __add_shape_instance_constraints(self):
     for gp in self.__shape_instance_grid:
       instance_id = self.__lattice.point_to_index(gp)
-      instance_size = Sum(*[
-          If(v == instance_id, 1, 0)
+      instance_size_pbeq_terms = [
+          (v == instance_id, 1)
           for v in self.__shape_instance_grid.values()
-      ])
+      ]
 
       or_terms = [self.__shape_instance_grid[gp] == -1]
       for shape_index, variants in enumerate(self.__variants):
         for variant in variants:
           or_terms.extend(self.__make_instance_constraints_for_variant(
-              gp, shape_index, variant, instance_size))
+              gp, shape_index, variant, instance_size_pbeq_terms))
       self.__solver.add(Or(*or_terms))
 
   # pylint: disable=R0913,R0914
   def __make_instance_constraints_for_variant(
-      self, gp, shape_index, variant, instance_size):
+      self, gp, shape_index, variant, instance_size_pbeq_terms):
     or_terms = []
     for srv in variant:
       # Find the instance ID when srv offsets to gp. Since the instance ID is
@@ -165,7 +165,10 @@ class ShapeConstrainer:
       constraint = self.__make_instance_constraint_for_variant_coordinate(
           gp, srv, shape_index, variant, instance_id)
       if gp == gidp:
-        constraint = And(constraint, instance_size == len(variant))
+        constraint = And(
+            constraint,
+            PbEq(instance_size_pbeq_terms, len(variant))
+        )
       or_terms.append(constraint)
     return or_terms
 
