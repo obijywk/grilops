@@ -7,7 +7,6 @@ import sys
 from z3 import And, Distinct, If, Implies, Int, Or, PbEq, PbGe
 
 import grilops
-import grilops.geometry
 import grilops.loops
 from grilops.geometry import Point, Vector
 
@@ -25,7 +24,7 @@ OPPOSITE_DIRECTION = {
 
 # Define constants containing data from the puzzle.
 SIZE = 9
-LOCATIONS = grilops.geometry.get_square_locations(SIZE)
+LATTICE = grilops.get_square_lattice(SIZE)
 DOT = "DOT"
 # pylint: disable=C0326
 CELL_PROPERTIES = [
@@ -63,7 +62,7 @@ EXIT_DIRECTION_TO_EXTRACTS = {
 
 
 # Define the symbol set to use in the puzzle grid.
-SYM = grilops.loops.LoopSymbolSet(LOCATIONS)
+SYM = grilops.loops.LoopSymbolSet(LATTICE)
 SYM.append("EMPTY", " ")
 DIRECTION_TO_SYMBOLS = {
     N: [SYM.NE, SYM.NS, SYM.NW],
@@ -82,7 +81,7 @@ def constrain_gate(sg, gate_location):
 
 def constrain_symbols(sg, start, end):
   """All symbols must fully connect to form a path (except at gates)."""
-  for p in LOCATIONS.points:
+  for p in LATTICE.points:
     cell = sg.grid[p]
     for direction in [N, E, S, W]:
       np = p.translate(direction)
@@ -118,7 +117,7 @@ def constrain_visited_counts(sg):
 
 def constrain_path_order(sg, path_order_grid):
   """The path order variables must contain the path traversal order."""
-  for p in LOCATIONS.points:
+  for p in LATTICE.points:
     cell = sg.grid[p]
     po = path_order_grid[p]
     sg.solver.add(If(SYM.is_loop(cell), po >= 0, po < 0))
@@ -171,14 +170,14 @@ def solve(start, end, min_studios):
   if paths is not None:
     return paths
 
-  sg = grilops.SymbolGrid(LOCATIONS, SYM)
+  sg = grilops.SymbolGrid(LATTICE, SYM)
   constrain_gate(sg, start)
   constrain_gate(sg, end)
   constrain_symbols(sg, start, end)
   constrain_visited_counts(sg)
 
   path_order_grid = {}
-  for p in LOCATIONS.points:
+  for p in LATTICE.points:
     po = Int(f"po-{p.y}-{p.x}")
     path_order_grid[p] = po
     if p == start:
@@ -190,7 +189,7 @@ def solve(start, end, min_studios):
   sg.solver.add(Distinct(*path_order_grid.values()))
 
   # Ensure the exit gate has the highest path order.
-  for p in LOCATIONS.points:
+  for p in LATTICE.points:
     if p == end:
       continue
     sg.solver.add(path_order_grid[end] > path_order_grid[p])
@@ -199,7 +198,7 @@ def solve(start, end, min_studios):
 
   # Apply the per-square property constraints from the puzzle.
   studios_terms = []
-  for y, x in LOCATIONS.points:
+  for y, x in LATTICE.points:
     cell = sg.grid[(y, x)]
     properties = CELL_PROPERTIES[y][x]
     for direction in DIRECTIONS:

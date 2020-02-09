@@ -29,8 +29,8 @@ AREAS = [
 def main():
   """Star Battle solver example."""
   sym = grilops.SymbolSet([("EMPTY", " "), ("STAR", "*")])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
 
   # There must be exactly two stars per column.
   for y in range(HEIGHT):

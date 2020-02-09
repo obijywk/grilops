@@ -59,8 +59,8 @@ def main():
       ("EMPTY", " "),
       ("LIGHT", "*"),
   ])
-  locations = grilops.geometry.get_square_locations(size)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_square_lattice(size)
+  sg = grilops.SymbolGrid(lattice, sym)
 
   for y in range(size):
     for x in range(size):

@@ -25,10 +25,10 @@ def main():
   ]
 
   sym = grilops.make_number_range_symbol_set(1, 10)
-  locations = grilops.geometry.get_rectangle_locations(len(givens), len(givens[0]))
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_rectangle_lattice(len(givens), len(givens[0]))
+  sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
-      locations,
+      lattice,
       solver=sg.solver
   )
 
@@ -46,10 +46,10 @@ def main():
 
       # Different regions of the same size may not be orthogonally adjacent.
       region_sizes = [
-          n.symbol for n in locations.edge_sharing_neighbors(rc.region_size_grid, p)
+          n.symbol for n in lattice.edge_sharing_neighbors(rc.region_size_grid, p)
       ]
       region_ids = [
-          n.symbol for n in locations.edge_sharing_neighbors(rc.region_id_grid, p)
+          n.symbol for n in lattice.edge_sharing_neighbors(rc.region_id_grid, p)
       ]
       for region_size, region_id in zip(region_sizes, region_ids):
         sg.solver.add(

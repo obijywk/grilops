@@ -40,18 +40,18 @@ def main():
   points.extend([Point(5, -5), Point(5, -3), Point(5, 3), Point(5, 5)])
   points.extend([Point(6, i) for i in range(-4, 5, 2)])
   points.extend([Point(7, i) for i in range(-3, 4, 2)])
-  locations = PointyToppedHexagonalLattice(points)
+  lattice = PointyToppedHexagonalLattice(points)
   sym = grilops.make_number_range_symbol_set(1, 9)
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
 
-  dirs_by_name = dict(sg.locations.edge_sharing_directions())
+  dirs_by_name = dict(sg.lattice.edge_sharing_directions())
   for entry in SUMS:
     (y, x), dirname, given = entry
     d = dirs_by_name[dirname]
     s = grilops.sightlines.count_cells(sg, Point(y, x), d, count=lambda c: c)
     sg.solver.add(given == s)
 
-  for p in locations.points:
+  for p in lattice.points:
     for d in [Vector(0, 2), Vector(1, 1), Vector(1, -1)]:
       if p.translate(d.negate()) not in sg.grid:
         q = p

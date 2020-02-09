@@ -30,9 +30,9 @@ GIVENS = [
 
 def main():
   """Cave solver example."""
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, SYM)
-  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, SYM)
+  rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver)
 
   # The cave must be a single connected group. We'll define a variable to keep
   # track of its region ID.

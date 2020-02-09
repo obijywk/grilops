@@ -733,7 +733,7 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     return (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)])
 
 
-def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
+def get_rectangle_lattice(height: int, width: int) -> RectangularLattice:
   """Returns a lattice of all points in a rectangle of the given dimensions.
 
   # Arguments
@@ -747,7 +747,7 @@ def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
   return RectangularLattice(points)
 
 
-def get_square_locations(height: int) -> RectangularLattice:
+def get_square_lattice(height: int) -> RectangularLattice:
   """Returns a lattice of all points in a square of the given height.
 
   # Arguments
@@ -756,4 +756,4 @@ def get_square_locations(height: int) -> RectangularLattice:
   # Returns
   (RectangularLattice): The lattice.
   """
-  return get_rectangle_locations(height, height)
+  return get_rectangle_lattice(height, height)

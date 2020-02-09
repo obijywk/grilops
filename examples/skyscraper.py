@@ -20,8 +20,8 @@ GIVEN_BOTTOM = [1, 4, 3, 2, 2]
 
 def main():
   """Skyscraper solver example."""
-  locations = grilops.geometry.get_square_locations(SIZE)
-  sg = grilops.SymbolGrid(locations, SYM)
+  lattice = grilops.get_square_lattice(SIZE)
+  sg = grilops.SymbolGrid(lattice, SYM)
 
   # Each row and each column contains each building height exactly once.
   for y in range(SIZE):

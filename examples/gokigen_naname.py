@@ -167,8 +167,8 @@ def add_loop_constraints(sym, sg):
 def main():
   """Gokigen Naname solver example."""
   sym = grilops.SymbolSet([("F", chr(0x2571)), ("B", chr(0x2572))])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
 
   # Ensure the given number of line segment constraints are met.
   for (y, x), v in GIVENS.items():

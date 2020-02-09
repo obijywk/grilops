@@ -55,7 +55,7 @@ def areas_row_col_to_point(r, c):
 
 def link_symbols_to_shapes(sym, sg, sc):
   """Add constraints to ensure the symbols match the shapes."""
-  for p in sg.locations.points:
+  for p in sg.lattice.points:
     sg.solver.add(
         If(
             sc.shape_type_grid[p] != -1,
@@ -65,13 +65,13 @@ def link_symbols_to_shapes(sym, sg, sc):
     )
 
 
-def add_area_constraints(locations, sc):
+def add_area_constraints(lattice, sc):
   """Ensure each area of the puzzle contains exactly one tetrahex."""
   for area_label in {c for line in AREAS for c in line}:
     area_points = []
     area_type_cells = []
     area_instance_cells = []
-    for p in locations.points:
+    for p in lattice.points:
       r, c = point_to_areas_row_col(p)
       if AREAS[r][c] == area_label:
         area_points.append(p)
@@ -85,7 +85,7 @@ def add_area_constraints(locations, sc):
 
     area_instance = Int(f"ai-{area_label}")
     sc.solver.add(Or(*[
-        area_instance == locations.point_to_index(p) for p in area_points
+        area_instance == lattice.point_to_index(p) for p in area_points
     ]))
     sc.solver.add(And(
         *[Or(c == -1, c == area_instance) for c in area_instance_cells]))
@@ -98,13 +98,13 @@ def add_sea_constraints(sym, sg, rc):
   sharing a vertex)."""
   # There must be only one sea, containing all black cells.
   sea_id = Int("sea-id")
-  for p in sg.locations.points:
+  for p in sg.lattice.points:
     sg.solver.add(sg.cell_is(p, sym.W) == (rc.region_id_grid[p] != sea_id))
 
   # Constrain sea_id to be the index of one of the points in
   # the smallest area, among those areas of size greater than 4.
   area_to_points = defaultdict(list)
-  for p in sg.locations.points:
+  for p in sg.lattice.points:
     r, c = point_to_areas_row_col(p)
     area_to_points[AREAS[r][c]].append(p)
   area_points = min(
@@ -112,11 +112,11 @@ def add_sea_constraints(sym, sg, rc):
       key=len
   )
   sg.solver.add(Or(*[
-      sea_id == sg.locations.point_to_index(p) for p in area_points
+      sea_id == sg.lattice.point_to_index(p) for p in area_points
   ]))
 
   # The sea may not contain three cells sharing a vertex.
-  for p in sg.locations.points:
+  for p in sg.lattice.points:
     np1 = p.translate(Vector(1, -1))
     np2 = p.translate(Vector(1, 1))
     if np1 in sg.grid and np2 in sg.grid:
@@ -135,16 +135,16 @@ def add_sea_constraints(sym, sg, rc):
           sg.grid[np2] == sym.W
       ))
 
-def add_adjacent_tetrahex_constraints(locations, sc):
+def add_adjacent_tetrahex_constraints(lattice, sc):
   """Ensure that no two matching tetrahexes are orthogonally adjacent."""
-  for p in locations.points:
+  for p in lattice.points:
     shape_type = sc.shape_type_grid[p]
     shape_id = sc.shape_instance_grid[p]
     adjacent_types = [
-        n.symbol for n in locations.edge_sharing_neighbors(sc.shape_type_grid, p)
+        n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_type_grid, p)
     ]
     adjacent_ids = [
-        n.symbol for n in locations.edge_sharing_neighbors(sc.shape_instance_grid, p)
+        n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_instance_grid, p)
     ]
     for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
       sc.solver.add(
@@ -162,15 +162,15 @@ def add_adjacent_tetrahex_constraints(locations, sc):
 def main():
   """SLICY solver example."""
   sym = grilops.SymbolSet(["S", "L", "I", "C", "Y", ("W", " ")])
-  locations = PointyToppedHexagonalLattice([
+  lattice = PointyToppedHexagonalLattice([
       areas_row_col_to_point(r, c)
       for r in range(len(AREAS))
       for c in range(len(AREAS[r]))
   ])
-  sg = grilops.SymbolGrid(locations, sym)
-  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver, complete=True)
+  sg = grilops.SymbolGrid(lattice, sym)
+  rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver, complete=True)
   sc = grilops.shapes.ShapeConstrainer(
-      locations,
+      lattice,
       [
           # Note that the example shapes are shown as flat-topped hexagons, so
           # you need to turn the page sideways to see them as pointy-topped ones.
@@ -187,9 +187,9 @@ def main():
   )
 
   link_symbols_to_shapes(sym, sg, sc)
-  add_area_constraints(locations, sc)
+  add_area_constraints(lattice, sc)
   add_sea_constraints(sym, sg, rc)
-  add_adjacent_tetrahex_constraints(locations, sc)
+  add_adjacent_tetrahex_constraints(lattice, sc)
 
   if sg.solve():
     sg.print()

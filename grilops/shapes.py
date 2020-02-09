@@ -31,7 +31,7 @@ class ShapeConstrainer:
   """Creates constraints for placing fixed shape regions into the grid.
 
   # Arguments
-  locations (Lattice): The locations in the grid.
+  lattice (Lattice): The structure of the grid.
   shapes (List[List[Vector]]): A list of region shape definitions.
       Each region shape definition should be a list of offsets.
       The same region shape definition may be included multiple times to
@@ -52,7 +52,7 @@ class ShapeConstrainer:
 
   def __init__(  # pylint: disable=R0913
       self,
-      locations: Lattice,
+      lattice: Lattice,
       shapes: List[List[Vector]],
       solver: Solver = None,
       complete: bool = False,
@@ -66,7 +66,7 @@ class ShapeConstrainer:
     else:
       self.__solver = Solver()
 
-    self.__lattice = locations
+    self.__lattice = lattice
     self.__complete = complete
     self.__allow_copies = allow_copies
 

@@ -27,10 +27,10 @@ GIVENS = {
 
 def main():
   """Battleship solver example."""
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, SYM)
+  lattice = grilops.geometry.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, SYM)
   sc = grilops.shapes.ShapeConstrainer(
-      locations,
+      lattice,
       [
           [Vector(0, i) for i in range(4)],
           [Vector(0, i) for i in range(3)],
@@ -64,10 +64,10 @@ def main():
       shape_type = sc.shape_type_grid[p]
       shape_id = sc.shape_instance_grid[p]
       touching_types = [
-          n.symbol for n in locations.vertex_sharing_neighbors(sc.shape_type_grid, p)
+          n.symbol for n in lattice.vertex_sharing_neighbors(sc.shape_type_grid, p)
       ]
       touching_ids = [
-          n.symbol for n in locations.vertex_sharing_neighbors(sc.shape_instance_grid, p)
+          n.symbol for n in lattice.vertex_sharing_neighbors(sc.shape_instance_grid, p)
       ]
 
       # Link the X symbol to the absence of a ship segment.

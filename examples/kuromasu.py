@@ -37,10 +37,10 @@ GIVENS = {
 def main():
   """Kuromasu solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
-      locations, solver=sg.solver, complete=False)
+      lattice, solver=sg.solver, complete=False)
 
   for (y, x), c in GIVENS.items():
     p = Point(y, x)

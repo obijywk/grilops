@@ -31,16 +31,16 @@ class LoopSymbolSet(SymbolSet):
   to this #SymbolSet by calling #SymbolSet.append() after it's constructed.
   """
 
-  def __init__(self, locations: Lattice):
+  def __init__(self, lattice: Lattice):
     super().__init__([])
 
     self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
     self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
 
-    dirs = locations.edge_sharing_directions()
+    dirs = lattice.edge_sharing_directions()
     for idx, ((namei, di), (namej, dj)) in enumerate(
         itertools.combinations(dirs, 2)):
-      lbl = locations.label_for_direction_pair(namei, namej)
+      lbl = lattice.label_for_direction_pair(namei, namej)
       self.append(namei + namej, lbl)
       self.__symbols_for_direction[di].append(idx)
       self.__symbols_for_direction[dj].append(idx)
@@ -115,7 +115,7 @@ class LoopConstrainer:
     sym: LoopSymbolSet = self.__symbol_grid.symbol_set
 
     for p, cell in self.__symbol_grid.grid.items():
-      for _, d in self.__symbol_grid.locations.edge_sharing_directions():
+      for _, d in self.__symbol_grid.lattice.edge_sharing_directions():
         np = p.translate(d)
         dir_syms = sym.symbols_for_direction(d)
         ncell = self.__symbol_grid.grid.get(np, None)
@@ -129,7 +129,7 @@ class LoopConstrainer:
             solver.add(cell != s)
 
   def __all_direction_pairs(self) -> Iterable[Tuple[int, Vector, Vector]]:
-    dirs = self.__symbol_grid.locations.edge_sharing_directions()
+    dirs = self.__symbol_grid.lattice.edge_sharing_directions()
     for idx, ((_, di), (_, dj)) in enumerate(itertools.combinations(dirs, 2)):
       yield (idx, di, dj)
 
@@ -167,13 +167,13 @@ class LoopConstrainer:
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
     sym: Any = self.__symbol_grid.symbol_set
-    locations: Lattice = self.__symbol_grid.locations
+    lattice: Lattice = self.__symbol_grid.lattice
 
     # Count the number of crossing directions.  If a direction
     # pair consists of two crossing directions, they cancel out
     # and so we don't need to count it.
 
-    look_dir, crossing_dirs = locations.get_inside_outside_check_directions()
+    look_dir, crossing_dirs = lattice.get_inside_outside_check_directions()
     crossings = []
     for idx, d1, d2 in self.__all_direction_pairs():
       if (d1 in crossing_dirs) ^ (d2 in crossing_dirs):
@@ -218,4 +218,4 @@ class LoopConstrainer:
       cell = self.__inside_outside_grid[p]
       return labels[model.eval(cell).as_long()]
 
-    self.__symbol_grid.locations.print(print_function)
+    self.__symbol_grid.lattice.print(print_function)

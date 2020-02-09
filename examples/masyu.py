@@ -32,10 +32,10 @@ def main():
       sys.stdout.write(cell)
     print()
 
-  locations = grilops.geometry.get_rectangle_locations(len(givens), len(givens[0]))
-  sym = grilops.loops.LoopSymbolSet(locations)
+  lattice = grilops.get_rectangle_lattice(len(givens), len(givens[0]))
+  sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("EMPTY", " ")
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   straights = [sym.NS, sym.EW]

@@ -62,8 +62,8 @@ def main():
   }
 
   sym = grilops.make_number_range_symbol_set(1, 9)
-  locations = grilops.geometry.get_square_locations(9)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_square_lattice(9)
+  sg = grilops.SymbolGrid(lattice, sym)
 
   add_sudoku_constraints(sg)
 

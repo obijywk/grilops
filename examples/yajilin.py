@@ -54,12 +54,12 @@ def main():
     print()
   print()
 
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sym = grilops.loops.LoopSymbolSet(locations)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("BLACK", chr(0x25AE))
   sym.append("GRAY", chr(0x25AF))
   sym.append("INDICATIVE", " ")
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for y in range(HEIGHT):

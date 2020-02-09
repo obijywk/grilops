@@ -33,10 +33,10 @@ def loop_solve():
   # We'll place symbols at the intersections of the grid lines, rather than in
   # the spaces between the grid lines where the givens are written. This
   # requires increasing each dimension by one.
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT + 1, WIDTH + 1)
-  sym = grilops.loops.LoopSymbolSet(locations)
+  lattice = grilops.get_rectangle_lattice(HEIGHT + 1, WIDTH + 1)
+  sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("EMPTY", " ")
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   for (y, x), c in GIVENS.items():
@@ -73,10 +73,10 @@ def loop_solve():
 def region_solve():
   """Slitherlink solver example using regions."""
   sym = grilops.SymbolSet([("I", chr(0x2588)), ("O", " ")])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.geometry.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
-      locations, solver=sg.solver, complete=False)
+      lattice, solver=sg.solver, complete=False)
 
   def constrain_no_inside_diagonal(y, x):
     """Add constraints for diagonally touching cells.
@@ -102,7 +102,7 @@ def region_solve():
     )
 
   region_id = Int("region_id")
-  for p in locations.points:
+  for p in lattice.points:
     # Each cell must be either "inside" (part of a single region) or
     # "outside" (not part of any region).
     sg.solver.add(

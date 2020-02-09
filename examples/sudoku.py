@@ -23,7 +23,7 @@ def main():
   ]
 
   sym = grilops.make_number_range_symbol_set(1, 9)
-  sg = grilops.SymbolGrid(grilops.geometry.get_square_locations(9), sym)
+  sg = grilops.SymbolGrid(grilops.get_square_lattice(9), sym)
 
   for y, given_row in enumerate(givens):
     for x, given in enumerate(given_row):

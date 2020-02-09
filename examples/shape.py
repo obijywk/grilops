@@ -26,7 +26,7 @@ def main():
     for x, c in enumerate(row):
       if c == "O":
         points.append(Point(y, x))
-  locations = RectangularLattice(points)
+  lattice = RectangularLattice(points)
 
   shapes = [
       [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)], # I
@@ -35,9 +35,9 @@ def main():
   ]
 
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   sc = grilops.shapes.ShapeConstrainer(
-      locations, shapes, sg.solver,
+      lattice, shapes, sg.solver,
       complete=False,
       allow_rotations=True,
       allow_reflections=True,

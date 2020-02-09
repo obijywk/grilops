@@ -52,20 +52,20 @@ def givens_row_col_to_point(r, c):
 
 def main():
   """Masyu solver example."""
-  locations = PointyToppedHexagonalLattice([
+  lattice = PointyToppedHexagonalLattice([
       givens_row_col_to_point(r, c)
       for r in range(len(GIVENS))
       for c in range(len(GIVENS[r]))
   ])
-  sym = grilops.loops.LoopSymbolSet(locations)
+  sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("Inside", "I \n  ")
   sym.append("Outside", "O \n  ")
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   turns = [sym.NESE, sym.ESW, sym.WSE, sym.NWSW, sym.WNE, sym.ENW]
 
-  for p in locations.points:
+  for p in lattice.points:
     # 60-degree turns are disallowed.
     sg.solver.add(sg.grid[p] != sym.ESE)
     sg.solver.add(sg.grid[p] != sym.SESW)
@@ -81,7 +81,7 @@ def main():
       sg.solver.add(sg.cell_is_one_of(p, turns))
 
       # All connected adjacent cells must contain straight loop segments.
-      for _, d in locations.edge_sharing_directions():
+      for _, d in lattice.edge_sharing_directions():
         np = p.translate(d)
         if np in sg.grid:
           sg.solver.add(Implies(
@@ -118,14 +118,14 @@ def main():
     def print_function(p):
       return sym.symbols[solved_grid[p]].label
 
-    locations.print(print_function, "  \n  ")
+    lattice.print(print_function, "  \n  ")
     print()
     if sg.is_unique():
       print("Unique solution")
     else:
       print("Alternate solution")
       solved_grid = sg.solved_grid()
-      locations.print(print_function, "  \n  ")
+      lattice.print(print_function, "  \n  ")
       print()
   else:
     print("No solution")

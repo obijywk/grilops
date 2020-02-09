@@ -157,11 +157,11 @@ def get_lattice():
 def region_solve():
   """Hex slitherlink solver example using regions."""
 
-  locations = get_lattice()
+  lattice = get_lattice()
   sym = grilops.SymbolSet(["I", "O"])
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
-      locations, solver=sg.solver, complete=True)
+      lattice, solver=sg.solver, complete=True)
 
   # There must be exactly two connected regions:  the inside and the outside.
   # The outside region ID will be 0 because the top-left-most element will
@@ -170,7 +170,7 @@ def region_solve():
   inside_region_id = Int("inside_region_id")
   sg.solver.add(inside_region_id != 0)
 
-  for p in locations.points:
+  for p in lattice.points:
     # A cell should have symbol I if and only if it's in the inside region.
     sg.solver.add(
         (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == inside_region_id)

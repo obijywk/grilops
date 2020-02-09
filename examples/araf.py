@@ -88,10 +88,10 @@ def main():
 
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
-      locations, sg.solver,
+      lattice, sg.solver,
       min_region_size=min_given_value + 1,
       max_region_size=max_given_value - 1
   )

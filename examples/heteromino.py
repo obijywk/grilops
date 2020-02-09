@@ -31,10 +31,10 @@ SYM = grilops.SymbolSet([
 
 def main():
   """Heteromino solver example."""
-  locations = grilops.geometry.get_square_locations(SIZE)
-  sg = grilops.SymbolGrid(locations, SYM)
+  lattice = grilops.get_square_lattice(SIZE)
+  sg = grilops.SymbolGrid(lattice, SYM)
   rc = grilops.regions.RegionConstrainer(
-      locations, solver=sg.solver, complete=False)
+      lattice, solver=sg.solver, complete=False)
 
   def constrain_neighbor(p, np, is_root, shape, has_neighbor):
     sg.solver.add(Implies(
@@ -46,7 +46,7 @@ def main():
         sg.grid[np] != shape
     ))
 
-  for p in locations.points:
+  for p in lattice.points:
     if p in BLACK_CELLS:
       sg.solver.add(sg.cell_is(p, SYM.BL))
       sg.solver.add(rc.region_id_grid[p] == -1)

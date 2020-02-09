@@ -11,7 +11,7 @@ class SymbolGrid:
   """A grid of cells that can be solved to contain specific symbols.
 
   # Arguments
-  locations (Lattice): The locations of grid cells.
+  lattice (Lattice): The structure of the grid.
   symbol_set (SymbolSet): The set of symbols to be filled into the grid.
   solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
       constructed.
@@ -20,7 +20,7 @@ class SymbolGrid:
 
   def __init__(
       self,
-      locations: Lattice,
+      lattice: Lattice,
       symbol_set: SymbolSet,
       solver: Solver = None
   ):
@@ -29,10 +29,10 @@ class SymbolGrid:
       self.__solver = solver
     else:
       self.__solver = Solver()
-    self.__lattice = locations
+    self.__lattice = lattice
     self.__symbol_set = symbol_set
     self.__grid: Dict[Point, ArithRef] = {}
-    for p in locations.points:
+    for p in lattice.points:
       v = Int(f"sg-{SymbolGrid._instance_index}-{p.y}-{p.x}")
       self.__solver.add(v >= symbol_set.min_index())
       self.__solver.add(v <= symbol_set.max_index())
@@ -54,7 +54,7 @@ class SymbolGrid:
     return self.__grid
 
   @property
-  def locations(self) -> Lattice:
+  def lattice(self) -> Lattice:
     """(Lattice): The lattice of points in the grid."""
     return self.__lattice
 

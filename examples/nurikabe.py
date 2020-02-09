@@ -94,7 +94,7 @@ def constrain_adjacent_cells(sg, rc):
       p = Point(y, x)
       adjacent_cells = [n.symbol for n in sg.edge_sharing_neighbors(p)]
       adjacent_region_ids = [
-          n.symbol for n in sg.locations.edge_sharing_neighbors(rc.region_id_grid, p)
+          n.symbol for n in sg.lattice.edge_sharing_neighbors(rc.region_id_grid, p)
       ]
       for cell, region_id in zip(adjacent_cells, adjacent_region_ids):
         sg.solver.add(
@@ -108,9 +108,9 @@ def constrain_adjacent_cells(sg, rc):
 def main():
   """Nurikabe solver example."""
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
-  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
+  rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver)
 
   constrain_sea(sym, sg, rc)
   constrain_islands(sym, sg, rc)

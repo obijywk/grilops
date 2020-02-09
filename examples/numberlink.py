@@ -25,8 +25,8 @@ GIVENS = {
     (6, 4): 4,
 }
 
-LOCATIONS = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-SYM = grilops.loops.LoopSymbolSet(LOCATIONS)
+LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+SYM = grilops.loops.LoopSymbolSet(LATTICE)
 SYM.append("TERMINAL", "X")
 N_SYMS = [SYM.NS, SYM.NE, SYM.NW, SYM.TERMINAL]
 E_SYMS = [SYM.EW, SYM.NE, SYM.SE, SYM.TERMINAL]
@@ -36,8 +36,8 @@ W_SYMS = [SYM.EW, SYM.SW, SYM.NW, SYM.TERMINAL]
 
 def main():
   """Numberlink solver example."""
-  sg = grilops.SymbolGrid(LOCATIONS, SYM)
-  rc = grilops.regions.RegionConstrainer(LOCATIONS, sg.solver)
+  sg = grilops.SymbolGrid(LATTICE, SYM)
+  rc = grilops.regions.RegionConstrainer(LATTICE, sg.solver)
 
   numbers = sorted(list(set(GIVENS.values())))
   number_regions = {n: Int(f"nr-{n}") for n in numbers}

@@ -124,10 +124,10 @@ def add_neighbor_constraints(sg, y, x):
 
 def main():
   """Tapa solver example."""
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, SYM)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, SYM)
   rc = grilops.regions.RegionConstrainer(
-      locations, solver=sg.solver, complete=False)
+      lattice, solver=sg.solver, complete=False)
 
   # Ensure the wall consists of a single region and is made up of shaded
   # symbols.

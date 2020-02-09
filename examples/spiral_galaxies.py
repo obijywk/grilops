@@ -32,9 +32,9 @@ def main():
   """Spiral Galaxies solver example."""
   # The grid symbols will be the region IDs from the region constrainer.
   sym = grilops.make_number_range_symbol_set(0, HEIGHT * WIDTH - 1)
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
-  rc = grilops.regions.RegionConstrainer(locations, sg.solver)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
+  rc = grilops.regions.RegionConstrainer(lattice, sg.solver)
 
   for p in sg.grid:
     sg.solver.add(sg.cell_is(p, rc.region_id_grid[p]))
@@ -49,13 +49,13 @@ def main():
 
   # Ensure that each cell has a "partner" within the same region that is
   # rotationally symmetric with respect to that region's circle.
-  for p in locations.points:
+  for p in lattice.points:
     or_terms = []
     for (gy, gx) in GIVENS:
       region_id = rc.location_to_region_id(
           Point(int(math.floor(gy)), int(math.floor(gx))))
       partner = Point(int(2 * gy - p.y), int(2 * gx - p.x))
-      if locations.point_to_index(partner) is None:
+      if lattice.point_to_index(partner) is None:
         continue
       or_terms.append(
           And(

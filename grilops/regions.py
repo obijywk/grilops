@@ -23,7 +23,7 @@ class RegionConstrainer:  # pylint: disable=R0902
   """Creates constraints for grouping cells into contiguous regions.
 
   # Arguments
-  locations (Lattice): Lattice of locations in the grid.
+  lattice (Lattice): The structure of the grid.
   solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
       constructed.
   complete (bool): If true, every cell must be part of a region. Defaults to
@@ -35,14 +35,14 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def __init__(  # pylint: disable=R0913
       self,
-      locations: Lattice,
+      lattice: Lattice,
       solver: Solver = None,
       complete: bool = True,
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
     RegionConstrainer._instance_index += 1
-    self.__lattice = locations
+    self.__lattice = lattice
     if solver:
       self.__solver = solver
     else:
@@ -77,9 +77,8 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   def __create_grids(self):
     """Create the grids used to model region constraints."""
-    locations = self.__lattice.points
     self.__parent_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"rcp-{RegionConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= R)
@@ -89,7 +88,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__parent_grid[p] = v
 
     self.__subtree_size_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"rcss-{RegionConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= 1)
@@ -99,13 +98,13 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__subtree_size_grid[p] = v
 
     self.__region_id_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"rcid-{RegionConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= 0)
       else:
         self.__solver.add(v >= -1)
-      self.__solver.add(v < len(locations))
+      self.__solver.add(v < len(self.__lattice.points))
       parent = self.__parent_grid[p]
       self.__solver.add(Implies(parent == X, v == -1))
       self.__solver.add(Implies(
@@ -115,7 +114,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__region_id_grid[p] = v
 
     self.__region_size_grid: Dict[Point, ArithRef] = {}
-    for p in locations:
+    for p in self.__lattice.points:
       v = Int(f"rcrs-{RegionConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
         self.__solver.add(v >= self.__min_region_size)

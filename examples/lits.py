@@ -93,7 +93,7 @@ def add_nurikabe_constraints(sym, sg, rc):
       sg.solver.add(Not(And(*[Not(cell == sym.W) for cell in pool_cells])))
 
 
-def add_adjacent_tetronimo_constraints(locations, sc):
+def add_adjacent_tetronimo_constraints(lattice, sc):
   """Ensure that no two matching tetrominoes are orthogonally adjacent."""
   for y in range(HEIGHT):
     for x in range(WIDTH):
@@ -101,10 +101,10 @@ def add_adjacent_tetronimo_constraints(locations, sc):
       shape_type = sc.shape_type_grid[p]
       shape_id = sc.shape_instance_grid[p]
       adjacent_types = [
-          n.symbol for n in locations.edge_sharing_neighbors(sc.shape_type_grid, p)
+          n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_type_grid, p)
       ]
       adjacent_ids = [
-          n.symbol for n in locations.edge_sharing_neighbors(sc.shape_instance_grid, p)
+          n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_instance_grid, p)
       ]
       for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
         sc.solver.add(
@@ -122,11 +122,11 @@ def add_adjacent_tetronimo_constraints(locations, sc):
 def main():
   """LITS solver example."""
   sym = grilops.SymbolSet(["L", "I", "T", "S", ("W", " ")])
-  locations = grilops.geometry.get_rectangle_locations(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(locations, sym)
-  rc = grilops.regions.RegionConstrainer(locations, solver=sg.solver)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+  sg = grilops.SymbolGrid(lattice, sym)
+  rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver)
   sc = grilops.shapes.ShapeConstrainer(
-      locations,
+      lattice,
       [
           [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)],  # L
           [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)],  # I
@@ -142,7 +142,7 @@ def main():
   link_symbols_to_shapes(sym, sg, sc)
   add_area_constraints(sc)
   add_nurikabe_constraints(sym, sg, rc)
-  add_adjacent_tetronimo_constraints(locations, sc)
+  add_adjacent_tetronimo_constraints(lattice, sc)
 
   if sg.solve():
     sg.print()

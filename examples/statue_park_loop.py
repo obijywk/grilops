@@ -46,15 +46,15 @@ def main():
     for x, c in enumerate(row):
       if c != X:
         points.append(Point(y, x))
-  locations = RectangularLattice(points)
+  lattice = RectangularLattice(points)
 
-  sym = grilops.loops.LoopSymbolSet(locations)
+  sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("EMPTY", " ")
 
-  sg = grilops.SymbolGrid(locations, sym)
+  sg = grilops.SymbolGrid(lattice, sym)
   lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
   sc = grilops.shapes.ShapeConstrainer(
-      locations,
+      lattice,
       [[Vector(y, x) for y, x in shape] for shape in SHAPES],
       solver=sg.solver,
       allow_rotations=True,
