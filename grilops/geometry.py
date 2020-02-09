@@ -353,12 +353,15 @@ class RectangularLattice(Lattice):
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
 
-    Arguments:
+    # Arguments:
     d1 (str): The first direction's name (e.g., "N", "S", etc.)
     d2 (str): The second direction's name.
 
-    Returns:
+    # Returns:
     (str): The label representing both directions.
+
+    # Raises:
+    ValueError: If there's no character defined for the direction pair.
     """
     if {d1, d2} == {"N", "S"}:
       return chr(0x2502)
@@ -435,7 +438,7 @@ class RectangularLattice(Lattice):
     many west-going lines you cross, you can tell from its parity if
     you're inside or outside the loop.
 
-    Returns:
+    # Returns:
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
@@ -499,12 +502,15 @@ class _HexagonalLattice(Lattice):
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
 
-    Arguments:
+    # Arguments:
     d1 (str): The first direction's name (e.g., "N", "S", etc.)
     d2 (str): The second direction's name.
 
-    Returns:
+    # Returns:
     (str): The label representing both directions.
+
+    # Raises:
+    ValueError: If there's no character defined for the direction pair.
     """
     ds = {d1, d2}
 
@@ -620,7 +626,7 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
     lines you cross, you can tell from its parity if you're inside or
     outside the loop.
 
-    Returns:
+    # Returns:
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
@@ -725,7 +731,7 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     and/or northeast-going lines you cross, you can tell from
     its parity if you're inside or outside the loop.
 
-    Returns:
+    # Returns:
     (Tuple[Vector, List[Vector]]): A tuple, the first component of
         which indicates the direction to look and the second component
         of which indicates what types of crossing to count.
