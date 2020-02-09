@@ -56,23 +56,23 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__max_region_size = max_region_size
     else:
       self.__max_region_size = len(self.__lattice.points)
-    self.__manage_adjacencies()
+    self.__manage_edge_sharing_directions()
     self.__create_grids()
     self.__add_constraints()
 
-  def __manage_adjacencies(self):
-    """Creates the structures used for managing adjacencies.
+  def __manage_edge_sharing_directions(self):
+    """Creates the structures used for managing edge-sharing directions.
 
-    Ccreates the mapping between adjacency directions and the parent
+    Creates the mapping between edge-sharing directions and the parent
     indices corresponding to them.
     """
-    self.__adjacency_to_index = {}
-    self.__parent_type_to_index = {"X": 0, "R": 1}
+    self.__edge_sharing_direction_to_index = {}
+    self.__parent_type_to_index = {"X": X, "R": R}
     self.__parent_types = ["X", "R"]
     for name, d in self.__lattice.edge_sharing_directions():
       index = len(self.__parent_types)
       self.__parent_type_to_index[name] = index
-      self.__adjacency_to_index[d] = index
+      self.__edge_sharing_direction_to_index[d] = index
       self.__parent_types.append(name)
 
   def __create_grids(self):
@@ -82,10 +82,10 @@ class RegionConstrainer:  # pylint: disable=R0902
     for p in locations:
       v = Int(f"rcp-{RegionConstrainer._instance_index}-{p.y}-{p.x}")
       if self.__complete:
-        self.__solver.add(v >= self.parent_type_to_index("R"))
+        self.__solver.add(v >= R)
       else:
-        self.__solver.add(v >= self.parent_type_to_index("X"))
-      self.__solver.add(v <= len(self.__lattice.edge_sharing_directions()) + 1)
+        self.__solver.add(v >= X)
+      self.__solver.add(v < len(self.__parent_types))
       self.__parent_grid[p] = v
 
     self.__subtree_size_grid: Dict[Point, ArithRef] = {}
@@ -107,12 +107,9 @@ class RegionConstrainer:  # pylint: disable=R0902
         self.__solver.add(v >= -1)
       self.__solver.add(v < len(locations))
       parent = self.__parent_grid[p]
+      self.__solver.add(Implies(parent == X, v == -1))
       self.__solver.add(Implies(
-          parent == self.parent_type_to_index("X"),
-          v == -1
-      ))
-      self.__solver.add(Implies(
-          parent == self.parent_type_to_index("R"),
+          parent == R,
           v == self.__lattice.point_to_index(p)
       ))
       self.__region_id_grid[p] = v
@@ -127,21 +124,15 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__solver.add(v <= self.__max_region_size)
       parent = self.__parent_grid[p]
       subtree_size = self.__subtree_size_grid[p]
-      self.__solver.add(Implies(
-          parent == self.parent_type_to_index("X"),
-          v == -1
-      ))
-      self.__solver.add(Implies(
-          parent == self.parent_type_to_index("R"),
-          v == subtree_size
-      ))
+      self.__solver.add(Implies(parent == X, v == -1))
+      self.__solver.add(Implies(parent == R, v == subtree_size))
       self.__region_size_grid[p] = v
 
   def __add_constraints(self):
     """Add constraints to the region modeling grids."""
     def constrain_side(p, sp, sd):
       self.__solver.add(Implies(
-          self.__parent_grid[p] == self.parent_type_to_index("X"),
+          self.__parent_grid[p] == X,
           self.__parent_grid[sp] != sd
       ))
       self.__solver.add(Implies(
@@ -161,18 +152,16 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     for p in self.__lattice.points:
       parent = self.__parent_grid[p]
-      subtree_size_terms = [
-          If(parent != self.parent_type_to_index("X"), 1, 0)
-      ]
+      subtree_size_terms = [If(parent != X, 1, 0)]
 
       for _, d in self.__lattice.edge_sharing_directions():
         sp = p.translate(d)
         if sp in self.__parent_grid:
-          opposite_index = self.__adjacency_to_index[d.negate()]
+          opposite_index = self.__edge_sharing_direction_to_index[d.negate()]
           constrain_side(p, sp, opposite_index)
           subtree_size_terms.append(subtree_size_term(sp, opposite_index))
         else:
-          d_index = self.__adjacency_to_index[d]
+          d_index = self.__edge_sharing_direction_to_index[d]
           self.__solver.add(parent != d_index)
 
       self.__solver.add(
@@ -190,7 +179,7 @@ class RegionConstrainer:  # pylint: disable=R0902
     """
     idx = self.__lattice.point_to_index(location)
     if idx is None:
-      raise Exception(f"{location} not in grid")
+      raise ValueError(f"{location} not in grid")
     return idx
 
   def region_id_to_location(self, region_id: int) -> Point:
@@ -204,19 +193,19 @@ class RegionConstrainer:  # pylint: disable=R0902
     """
     return self.__lattice.points[region_id]
 
-  def adjacency_to_index(self, direction: Vector) -> int:
+  def edge_sharing_direction_to_index(self, direction: Vector) -> int:
     """Returns the parent_grid value corresponding to the given direction.
 
     For instance, if direction is (-1, 0), return the index for N.
 
     # Arguments:
-    direction (Vector): The direction of adjacency.
+    direction (Vector): The direction to an edge-sharing cell.
 
     # Returns
     (int): The parent_grid value that means that the parent in its region's
         subtree is the cell offset by that direction.
     """
-    return self.__adjacency_to_index[direction]
+    return self.__edge_sharing_direction_to_index[direction]
 
   def parent_type_to_index(self, parent_type: str) -> int:
     """Returns the parent_grid value corresponding to the given parent type.
@@ -270,10 +259,10 @@ class RegionConstrainer:  # pylint: disable=R0902
     labels = {
         "X": " ",
         "R": "R",
-        "N": chr(0x25B4),
-        "E": chr(0x25B8),
-        "S": chr(0x25BE),
-        "W": chr(0x25C2),
+        "N": chr(0x2B61),
+        "E": chr(0x2B62),
+        "S": chr(0x2B63),
+        "W": chr(0x2B60),
         "NE": chr(0x2B67),
         "NW": chr(0x2B66),
         "SE": chr(0x2B68),

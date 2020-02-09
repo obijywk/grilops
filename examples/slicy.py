@@ -1,8 +1,9 @@
 """SLICY solver example.
 
-Example puzzle can be found at https://www.gmpuzzles.com/blog/tag/variation-2/page/59/.
+Example puzzle can be found at https://www.gmpuzzles.com/blog/2015/02/slicy-thomas-snyder/.
 """
 
+from collections import defaultdict
 from z3 import And, If, Implies, Int, Or, PbEq  # type: ignore
 
 import grilops
@@ -65,13 +66,15 @@ def link_symbols_to_shapes(sym, sg, sc):
 
 
 def add_area_constraints(locations, sc):
-  """Ensure each area of the puzzle contains exactly one tetromino."""
+  """Ensure each area of the puzzle contains exactly one tetrahex."""
   for area_label in {c for line in AREAS for c in line}:
+    area_points = []
     area_type_cells = []
     area_instance_cells = []
     for p in locations.points:
       r, c = point_to_areas_row_col(p)
       if AREAS[r][c] == area_label:
+        area_points.append(p)
         area_type_cells.append(sc.shape_type_grid[p])
         area_instance_cells.append(sc.shape_instance_grid[p])
 
@@ -81,8 +84,9 @@ def add_area_constraints(locations, sc):
     sc.solver.add(And(*[Or(c == -1, c == area_type) for c in area_type_cells]))
 
     area_instance = Int(f"ai-{area_label}")
-    sc.solver.add(area_instance >= 0)
-    sc.solver.add(area_instance < len(locations.points))
+    sc.solver.add(Or(*[
+        area_instance == locations.point_to_index(p) for p in area_points
+    ]))
     sc.solver.add(And(
         *[Or(c == -1, c == area_instance) for c in area_instance_cells]))
 
@@ -119,9 +123,21 @@ def add_sea_constraints(sym, sg, rc):
           sg.grid[np2] == sym.W
       ))
 
+  # We know that each area must have at least one sea cell in it
+  # (since in this puzzle all areas have size greater than 4),
+  # so sea_id can be constrained to be the index of one of the
+  # points in the smallest area.
+  area_to_points = defaultdict(list)
+  for p in sg.locations.points:
+    r, c = point_to_areas_row_col(p)
+    area_to_points[AREAS[r][c]].append(p)
+  _, area_points = min(area_to_points.items(), key=lambda t: len(t[1]))
+  sg.solver.add(Or(*[
+      sea_id == sg.locations.point_to_index(p) for p in area_points
+  ]))
 
-def add_adjacent_tetronimo_constraints(locations, sc):
-  """Ensure that no two matching tetrominoes are orthogonally adjacent."""
+def add_adjacent_tetrahex_constraints(locations, sc):
+  """Ensure that no two matching tetrahexes are orthogonally adjacent."""
   for p in locations.points:
     shape_type = sc.shape_type_grid[p]
     shape_id = sc.shape_instance_grid[p]
@@ -174,7 +190,7 @@ def main():
   link_symbols_to_shapes(sym, sg, sc)
   add_area_constraints(locations, sc)
   add_sea_constraints(sym, sg, rc)
-  add_adjacent_tetronimo_constraints(locations, sc)
+  add_adjacent_tetrahex_constraints(locations, sc)
 
   if sg.solve():
     sg.print()

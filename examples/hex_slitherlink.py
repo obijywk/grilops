@@ -63,8 +63,11 @@ def givens_row_col_to_point(r, c):
   return Point(y, x)
 
 def is_outside(grid, model, y, x):
-  """Returns 0 if the given point is in the grid and inside the loop.
-  Returns 1 if it's not in the grid or outside the loop."""
+  """Returns whether the given point is effectively outside the loop.
+
+  Returns 1 if the given point is not in the grid or outside the loop.
+  Returns 0 if the given point is in the grid and inside the loop.
+  """
   p = Point(y, x)
   if p in grid:
     return model.eval(grid[p]).as_long()
@@ -74,7 +77,7 @@ def print_loop(grid, model):
   """Prints the loop."""
   for y in range(0, len(GIVENS) + 3, 2):
     for x in range(-4, 5, 2):
-      if is_outside(grid, model, y, x) != is_outside(grid, model, y+1, x-1):
+      if is_outside(grid, model, y, x) != is_outside(grid, model, y + 1, x - 1):
         sys.stdout.write(chr(0x2572))
       else:
         sys.stdout.write(" ")
@@ -89,12 +92,12 @@ def print_loop(grid, model):
         else:
           sys.stdout.write(str(GIVENS[r][c]))
 
-      if is_outside(grid, model, y, x) != is_outside(grid, model, y+1, x+1):
+      if is_outside(grid, model, y, x) != is_outside(grid, model, y + 1, x + 1):
         sys.stdout.write(chr(0x2571))
       else:
         sys.stdout.write(" ")
 
-      if is_outside(grid, model, y-1, x+1) != is_outside(grid, model, y+1, x+1):
+      if is_outside(grid, model, y - 1, x + 1) != is_outside(grid, model, y + 1, x + 1):
         sys.stdout.write(chr(0x2594))
       else:
         sys.stdout.write(" ")
@@ -102,22 +105,22 @@ def print_loop(grid, model):
     sys.stdout.write("\n")
 
     for x in range(-4, 5, 2):
-      if is_outside(grid, model, y+1, x-1) != is_outside(grid, model, y+2, x):
+      if is_outside(grid, model, y + 1, x - 1) != is_outside(grid, model, y + 2, x):
         sys.stdout.write(chr(0x2571))
       else:
         sys.stdout.write(" ")
 
-      if is_outside(grid, model, y, x) != is_outside(grid, model, y+2, x):
+      if is_outside(grid, model, y, x) != is_outside(grid, model, y + 2, x):
         sys.stdout.write(chr(0x2594))
       else:
         sys.stdout.write(" ")
 
-      if is_outside(grid, model, y+1, x+1) != is_outside(grid, model, y+2, x):
+      if is_outside(grid, model, y + 1, x + 1) != is_outside(grid, model, y + 2, x):
         sys.stdout.write(chr(0x2572))
       else:
         sys.stdout.write(" ")
 
-      addr = point_to_givens_row_col(Point(y+1, x+1))
+      addr = point_to_givens_row_col(Point(y + 1, x + 1))
       if addr is None:
         sys.stdout.write(" ")
       else:
@@ -152,7 +155,7 @@ def get_lattice():
 
 
 def region_solve():
-  """Hex litherlink solver example using regions."""
+  """Hex slitherlink solver example using regions."""
 
   locations = get_lattice()
   sym = grilops.SymbolSet(["I", "O"])
@@ -168,7 +171,7 @@ def region_solve():
   sg.solver.add(inside_region_id != 0)
 
   for p in locations.points:
-    # A cell should have symbol I if and only if it's in the inside region
+    # A cell should have symbol I if and only if it's in the inside region.
     sg.solver.add(
         (sg.grid[p] == sym.I) == (rc.region_id_grid[p] == inside_region_id)
     )

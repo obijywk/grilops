@@ -10,24 +10,24 @@ import grilops.sightlines
 from grilops.geometry import Point, PointyToppedHexagonalLattice, Vector
 
 SUMS = [
-    (2, -2, -1, -1, 4),
-    (2, 0, -1, 1, 11),
-    (2, 0, -1, -1, 10),
-    (2, 2, -1, 1, 3),
-    (3, 3, 0, 2, 12),
-    (4, 2, 1, 1, 22),
-    (4, 2, 0, 2, 8),
-    (4, 2, -1, 1, 12),
-    (5, 3, 0, 2, 12),
-    (6, 2, 1, 1, 4),
-    (6, 0, 1, -1, 13),
-    (6, 0, 1, 1, 15),
-    (6, -2, 1, -1, 10),
-    (5, -3, 0, -2, 17),
-    (4, -2, -1, -1, 10),
-    (4, -2, 0, -2, 12),
-    (4, -2, 1, -1, 11),
-    (3, -3, 0, -2, 16),
+    ((2, -2), "NW", 4),
+    ((2, 0), "NE", 11),
+    ((2, 0), "NW", 10),
+    ((2, 2), "NE", 3),
+    ((3, 3), "E", 12),
+    ((4, 2), "SE", 22),
+    ((4, 2), "E", 8),
+    ((4, 2), "NE", 12),
+    ((5, 3), "E", 12),
+    ((6, 2), "SE", 4),
+    ((6, 0), "SW", 13),
+    ((6, 0), "SE", 15),
+    ((6, -2), "SW", 10),
+    ((5, -3), "W", 17),
+    ((4, -2), "NW", 10),
+    ((4, -2), "W", 12),
+    ((4, -2), "SW", 11),
+    ((3, -3), "W", 16),
 ]
 
 def main():
@@ -44,9 +44,11 @@ def main():
   sym = grilops.make_number_range_symbol_set(1, 9)
   sg = grilops.SymbolGrid(locations, sym)
 
+  dirs_by_name = dict(sg.locations.edge_sharing_directions())
   for entry in SUMS:
-    y, x, dy, dx, given = entry
-    s = grilops.sightlines.count_cells(sg, Point(y, x), Vector(dy, dx), count=lambda c: c)
+    (y, x), dirname, given = entry
+    d = dirs_by_name[dirname]
+    s = grilops.sightlines.count_cells(sg, Point(y, x), d, count=lambda c: c)
     sg.solver.add(given == s)
 
   for p in locations.points:

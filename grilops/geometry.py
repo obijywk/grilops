@@ -72,27 +72,27 @@ class Lattice:
     raise NotImplementedError()
 
   def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of edge-sharing directions.
 
     Each entry in the returned list includes the name of an
-    edge-sharing adjacency direction and the vector representing that
-    direction.  Edge-sharing adjacency (also known as orthogonal
-    adjacency) means adjacency between grid cells that share an edge.
+    edge-sharing direction and the vector representing that direction.
+    Edge sharing (also known as orthogonal adjacency) is the
+    relationship between grid cells that share an edge.
     """
     raise NotImplementedError()
 
   def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of vertex-sharing directions.
 
     Each entry in the returned list includes the name of a
-    vertex-sharing adjacency direction and the vector representing
-    that direction.  Vertex-sharing adjacency (also known as touching
-    adjacency) means adjacency between grid cells that share a vertex.
+    vertex-sharing direction and the vector representing that
+    direction.  Vertex sharing (also known as touching adjacency) is
+    the relationship between grid cells that share a vertex.
     """
     raise NotImplementedError()
 
-  def edge_sharing_cells(self, point: Point) -> List[Point]:
-    """Returns the cells that share an edge with the given cell.
+  def edge_sharing_points(self, point: Point) -> List[Point]:
+    """Returns the points that share an edge with the given cell.
 
     # Arguments:
     point (Point): The point of the given cell.
@@ -102,6 +102,41 @@ class Lattice:
         to cells that share an edge with the given cell.
     """
     return [point.translate(v) for _, v in self.edge_sharing_directions()]
+
+  def vertex_sharing_points(self, point: Point) -> List[Point]:
+    """Returns a list of points sharing a vertex with the given cell.
+
+    # Arguments:
+    point (Point): The point of the given cell.
+
+    # Returns:
+    (List[Point]): A list of points in the lattice corresponding to
+       cells that share a vertex with the given cell.
+    """
+    return [point.translate(v) for _, v in self.vertex_sharing_directions()]
+
+  @staticmethod
+  def __get_neighbors(cell_map: Dict[Point, ArithRef], p: Point,
+                      directions: List[Tuple[str, Vector]]) -> List[Neighbor]:
+    """Returns a list of neighbors in the given directions of the given cell.
+
+    # Arguments
+    cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
+        the lattice to z3 constants.
+    p (Point): Point of the given cell.
+    directions: The given list of directions to find neighbors with.
+
+    # Returns
+    (List[Neighbor]): The neighbor structures corresponding to the cells
+        that are in the given directions from the given cell.
+    """
+    cells = []
+    for _, d in directions:
+      np = p.translate(d)
+      cell = cell_map.get(np, None)
+      if cell is not None:
+        cells.append(Neighbor(np, d, cell))
+    return cells
 
   def edge_sharing_neighbors(
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
@@ -116,13 +151,7 @@ class Lattice:
     (List[Neighbor]): The neighbor structures corresponding to the cells
         that share an edge with the given cell.
     """
-    cells = []
-    for _, d in self.edge_sharing_directions():
-      np = p.translate(d)
-      cell = cell_map.get(np, None)
-      if cell is not None:
-        cells.append(Neighbor(np, d, cell))
-    return cells
+    return self.__get_neighbors(cell_map, p, self.edge_sharing_directions())
 
   def vertex_sharing_neighbors(
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
@@ -137,25 +166,7 @@ class Lattice:
     (List[Neighbor]): The neighbor structures corresponding to the cells
         that share a vertex with the given cell.
     """
-    cells = []
-    for _, d in self.vertex_sharing_directions():
-      np = p.translate(d)
-      cell = cell_map.get(np, None)
-      if cell is not None:
-        cells.append(Neighbor(np, d, cell))
-    return cells
-
-  def vertex_sharing_cells(self, point: Point) -> List[Point]:
-    """Returns a list of cells sharing a vertex with the given cell.
-
-    # Arguments:
-    point (Point): The point of the given cell.
-
-    # Returns:
-    (List[Point]): A list of points in the lattice corresponding to
-       cells that share a vertex with the given cell.
-    """
-    return [point.translate(v) for _, v in self.vertex_sharing_directions()]
+    return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
   def label_for_direction_pair(self, d1: str, d2: str) -> str:
     """Returns the label for a pair of adjacency direction names.
@@ -193,25 +204,25 @@ class Lattice:
     """
     raise NotImplementedError()
 
-  def get_inside_outside_check_directions(self) -> List[Vector]:
+  def get_inside_outside_check_directions(self) -> Tuple[Vector, List[Vector]]:
     """Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     For instance, on a rectangular grid, a valid return value would
-    be [Vector(0, -1), Vector(-1, 0)].  This means that if you look
+    be (Vector(0, -1), [Vector(-1, 0)]).  This means that if you look
     north and count how many west-going lines you cross, you can
     tell from its parity if you're inside or outside the loop.
 
     Returns:
-    (List[Vector]): A list of adjacency directions, the first of
-        which indicates the direction to look and the rest of
-        which indicate what types of crossing to count.
+    (Tuple[Vector, List[Vector]]): A tuple, the first component of
+        which indicates the direction to look and the second component
+        of which indicates what types of crossing to count.
     """
     raise NotImplementedError()
 
-  def print_points(
+  def __print_points(
       self,
       hook_function: Callable[[Point], str],
       ps: Iterable[Point],
@@ -274,7 +285,7 @@ class Lattice:
     min_x = min(p.x for p in ps)
     max_x = max(p.x for p in ps)
     for y in range(min_y, max_y + 1):
-      self.print_points(
+      self.__print_points(
           hook_function,
           (Point(y, x) for x in range(min_x, max_x + 1)),
           blank, stream
@@ -310,12 +321,12 @@ class RectangularLattice(Lattice):
     return self.__point_indices.get(point)
 
   def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of edge-sharing directions.
 
     Each entry in the returned list includes the name of an
-    edge-sharing adjacency direction and the vector representing that
-    direction.  Edge-sharing adjacency (also known as orthogonal
-    adjacency) means adjacency between grid cells that share an edge.
+    edge-sharing direction and the vector representing that direction.
+    Edge sharing (also known as orthogonal adjacency) is the
+    relationship between grid cells that share an edge.
     """
     return [
         ("N", Vector(-1, 0)),
@@ -325,18 +336,14 @@ class RectangularLattice(Lattice):
     ]
 
   def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of vertex-sharing directions.
 
     Each entry in the returned list includes the name of a
-    vertex-sharing adjacency direction and the vector representing
-    that direction.  Vertex-sharing adjacency (also known as touching
-    adjacency) means adjacency between grid cells that share a vertex.
+    vertex-sharing direction and the vector representing that
+    direction.  Vertex sharing (also known as touching adjacency) is
+    the relationship between grid cells that share a vertex.
     """
-    return [
-        ("N", Vector(-1, 0)),
-        ("S", Vector(1, 0)),
-        ("E", Vector(0, 1)),
-        ("W", Vector(0, -1)),
+    return self.edge_sharing_directions() + [
         ("NE", Vector(-1, 1)),
         ("NW", Vector(-1, -1)),
         ("SE", Vector(1, 1)),
@@ -417,33 +424,33 @@ class RectangularLattice(Lattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -> List[Vector]:
+  def get_inside_outside_check_directions(self) -> Tuple[Vector, List[Vector]]:
     """Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
-    Since this is a rectangular grid, we return [Vector(0, -1),
-    Vector(-1, 0)].  This means that if you look north and count how
+    Since this is a rectangular grid, we return (Vector(0, -1),
+    [Vector(-1, 0)]).  This means that if you look north and count how
     many west-going lines you cross, you can tell from its parity if
     you're inside or outside the loop.
 
     Returns:
-    (List[Vector]): A list of adjacency directions, the first of
-        which indicates the direction to look and the rest of
-        which indicate what types of crossing to count.
+    (Tuple[Vector, List[Vector]]): A tuple, the first component of
+        which indicates the direction to look and the second component
+        of which indicates what types of crossing to count.
     """
-    return [Vector(0, -1), Vector(-1, 0)]
+    return (Vector(0, -1), [Vector(-1, 0)])
 
+class _HexagonalLattice(Lattice):
+  """A set of points forming a hexagonal lattice.
 
-class FlatToppedHexagonalLattice(Lattice):
-  """A set of points forming a flat-topped hexagonal lattice.
+  This private class implements functions identical between
+  FlatToppedHexagonalLattice and PointyToppedHexagonalLattice.
 
-  All points must lie on a hexagonal lattice in which each hexagon has
-  a flat top.  We use the doubled coordinates scheme described at
+  We use the doubled coordinates scheme described at
   https://www.redblobgames.com/grids/hexagons/.  That is, y describes
-  the row and x describes the column, so hexagons that are vertically
-  adjacent have their y coordinates differ by 2.
+  the row and x describes the column, so x + y is always even.
   """
   def __init__(self, points: List[Point]):
     for p in points:
@@ -472,29 +479,22 @@ class FlatToppedHexagonalLattice(Lattice):
     return self.__point_indices.get(point)
 
   def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of edge-sharing directions.
 
     Each entry in the returned list includes the name of an
-    edge-sharing adjacency direction and the vector representing that
-    direction.  Edge-sharing adjacency (also known as orthogonal
-    adjacency) means adjacency between grid cells that share an edge.
+    edge-sharing direction and the vector representing that direction.
+    Edge sharing (also known as orthogonal adjacency) is the
+    relationship between grid cells that share an edge.
     """
-    return [
-        ("N", Vector(-2, 0)),
-        ("S", Vector(2, 0)),
-        ("NE", Vector(-1, 1)),
-        ("NW", Vector(-1, -1)),
-        ("SE", Vector(1, 1)),
-        ("SW", Vector(1, -1)),
-    ]
+    raise NotImplementedError()
 
   def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of vertex-sharing directions.
 
     Each entry in the returned list includes the name of a
-    vertex-sharing adjacency direction and the vector representing
-    that direction.  Vertex-sharing adjacency (also known as touching
-    adjacency) means adjacency between grid cells that share a vertex.
+    vertex-sharing direction and the vector representing that
+    direction.  Vertex sharing (also known as touching adjacency) is
+    the relationship between grid cells that share a vertex.
 
     Since this is a hexagonal grid, the vertex-sharing directions are
     the same as the edge-sharing directions.
@@ -525,6 +525,34 @@ class FlatToppedHexagonalLattice(Lattice):
     ll = char_for_pos(("SW", "S", "W"), (0x2571, 0x2595, 0x2594))
     lr = char_for_pos(("SE", "S", "E"), (0x2572, 0x258F, 0x2594))
     return ul + ur + "\n" + ll + lr
+
+
+
+class FlatToppedHexagonalLattice(_HexagonalLattice):
+  """A set of points forming a flat-topped hexagonal lattice.
+
+  All points must lie on a hexagonal lattice in which each hexagon has
+  a flat top.  We use the doubled coordinates scheme described at
+  https://www.redblobgames.com/grids/hexagons/.  That is, y describes
+  the row and x describes the column, so hexagons that are vertically
+  adjacent have their y coordinates differ by 2.
+  """
+  def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
+    """(List[Tuple[str, Vector]]): A list of edge-sharing directions.
+
+    Each entry in the returned list includes the name of an
+    edge-sharing direction and the vector representing that direction.
+    Edge sharing (also known as orthogonal adjacency) is the
+    relationship between grid cells that share an edge.
+    """
+    return [
+        ("N", Vector(-2, 0)),
+        ("S", Vector(2, 0)),
+        ("NE", Vector(-1, 1)),
+        ("NW", Vector(-1, -1)),
+        ("SE", Vector(1, 1)),
+        ("SW", Vector(1, -1)),
+    ]
 
   def transformation_functions(
       self,
@@ -586,27 +614,27 @@ class FlatToppedHexagonalLattice(Lattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -> List[Vector]:
+  def get_inside_outside_check_directions(self) -> Tuple[Vector, List[Vector]]:
     """Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
-    Since this is a flat-topped hexagonal grid, we return
-    [Vector(-2, 0), Vector(-1, -1), Vector(1, -1)].  This means
-    that if you look north and count how many northwest-going
-    and/or southwest-going lines you cross, you can tell from
-    its parity if you're inside or outside the loop.
+    Since this is a flat-topped hexagonal grid, we return (Vector(-2,
+    0), [Vector(-1, -1), Vector(1, -1)]).  This means that if you look
+    north and count how many northwest-going and/or southwest-going
+    lines you cross, you can tell from its parity if you're inside or
+    outside the loop.
 
     Returns:
-    (List[Vector]): A list of adjacency directions, the first of
-        which indicates the direction to look and the rest of
-        which indicate what types of crossing to count.
+    (Tuple[Vector, List[Vector]]): A tuple, the first component of
+        which indicates the direction to look and the second component
+        of which indicates what types of crossing to count.
     """
-    return [Vector(-2, 0), Vector(-1, -1), Vector(1, -1)]
+    return (Vector(-2, 0), [Vector(-1, -1), Vector(1, -1)])
 
 
-class PointyToppedHexagonalLattice(Lattice):
+class PointyToppedHexagonalLattice(_HexagonalLattice):
   """A set of points forming a pointy-topped hexagonal lattice.
 
   All points must lie on a hexagonal lattice in which each hexagon has
@@ -615,39 +643,13 @@ class PointyToppedHexagonalLattice(Lattice):
   the row and x describes the column, so hexagons that are horizontally
   adjacent have their x coordinates differ by 2.
   """
-  def __init__(self, points: List[Point]):
-    for p in points:
-      if (p.y + p.x) % 2 == 1:
-        raise ValueError("Hexagonal coordinates must have an even sum.")
-    self.__points = sorted(points)
-    self.__point_indices = {
-        p: i for i, p in enumerate(self.__points)
-    }
-
-  @property
-  def points(self) -> List[Point]:
-    """(List[Point]): The points in the lattice, sorted."""
-    return self.__points
-
-  def point_to_index(self, point: Point) -> Optional[int]:
-    """Returns the index of a point in the lattice's ordered list.
-
-    # Arguments:
-    point (Point): The point to get the index of.
-
-    # Returns:
-    (Optional[int]): The index of the point in the ordered list.
-        None if the point is not in the list.
-    """
-    return self.__point_indices.get(point)
-
   def edge_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of edge-sharing directions.
+    """(List[Tuple[str, Vector]]): A list of edge-sharing directions.
 
     Each entry in the returned list includes the name of an
-    edge-sharing adjacency direction and the vector representing that
-    direction.  Edge-sharing adjacency (also known as orthogonal
-    adjacency) means adjacency between grid cells that share an edge.
+    edge-sharing direction and the vector representing that direction.
+    Edge sharing (also known as orthogonal adjacency) is the
+    relationship between grid cells that share an edge.
     """
     return [
         ("E", Vector(0, 2)),
@@ -657,44 +659,6 @@ class PointyToppedHexagonalLattice(Lattice):
         ("SE", Vector(1, 1)),
         ("SW", Vector(1, -1)),
     ]
-
-  def vertex_sharing_directions(self) -> List[Tuple[str, Vector]]:
-    """(List[Tuple[str, Vector]]) A list of vertex-sharing directions.
-
-    Each entry in the returned list includes the name of a
-    vertex-sharing adjacency direction and the vector representing
-    that direction.  Vertex-sharing adjacency (also known as touching
-    adjacency) means adjacency between grid cells that share a vertex.
-
-    Since this is a hexagonal grid, the vertex-sharing directions are
-    the same as the edge-sharing directions.
-    """
-    return self.edge_sharing_directions()
-
-  def label_for_direction_pair(self, d1: str, d2: str) -> str:
-    """Returns the label for a pair of adjacency direction names.
-
-    Arguments:
-    d1 (str): The first direction's name (e.g., "N", "S", etc.)
-    d2 (str): The second direction's name.
-
-    Returns:
-    (str): The label representing both directions.
-    """
-    ds = {d1, d2}
-
-    def char_for_pos(dirs, chars):
-      for d, c in zip(dirs, chars):
-        if d in ds:
-          ds.remove(d)
-          return chr(c)
-      return " "
-
-    ul = char_for_pos(("NW", "N", "W"), (0x2572, 0x2595, 0x2581))
-    ur = char_for_pos(("NE", "N", "E"), (0x2571, 0x258F, 0x2581))
-    ll = char_for_pos(("SW", "S", "W"), (0x2571, 0x2595, 0x2594))
-    lr = char_for_pos(("SE", "S", "E"), (0x2572, 0x258F, 0x2594))
-    return ul + ur + "\n" + ll + lr
 
   def transformation_functions(
       self,
@@ -755,24 +719,24 @@ class PointyToppedHexagonalLattice(Lattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -> List[Vector]:
+  def get_inside_outside_check_directions(self) -> Tuple[Vector, List[Vector]]:
     """Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     Since this is a pointy-topped hexagonal grid, we return
-    [Vector(0, 2), Vector(-1, -1), Vector(-1, 1)].  This means
+    (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)]).  This means
     that if you look east and count how many northwest-going
     and/or northeast-going lines you cross, you can tell from
     its parity if you're inside or outside the loop.
 
     Returns:
-    (List[Vector]): A list of adjacency directions, the first of
-        which indicates the direction to look and the rest of
-        which indicate what types of crossing to count.
+    (Tuple[Vector, List[Vector]]): A tuple, the first component of
+        which indicates the direction to look and the second component
+        of which indicates what types of crossing to count.
     """
-    return [Vector(0, 2), Vector(-1, -1), Vector(-1, 1)]
+    return (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)])
 
 
 def get_rectangle_locations(height: int, width: int) -> RectangularLattice:
