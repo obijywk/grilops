@@ -98,10 +98,22 @@ def add_sea_constraints(sym, sg, rc):
   sharing a vertex)."""
   # There must be only one sea, containing all black cells.
   sea_id = Int("sea-id")
-  sg.solver.add(sea_id >= 0)
-  sg.solver.add(sea_id < len(sg.locations.points))
   for p in sg.locations.points:
     sg.solver.add(sg.cell_is(p, sym.W) == (rc.region_id_grid[p] != sea_id))
+
+  # Constrain sea_id to be the index of one of the points in
+  # the smallest area, among those areas of size greater than 4.
+  area_to_points = defaultdict(list)
+  for p in sg.locations.points:
+    r, c = point_to_areas_row_col(p)
+    area_to_points[AREAS[r][c]].append(p)
+  area_points = min(
+      (ps for ps in area_to_points.values() if len(ps) > 4),
+      key=len
+  )
+  sg.solver.add(Or(*[
+      sea_id == sg.locations.point_to_index(p) for p in area_points
+  ]))
 
   # The sea may not contain three cells sharing a vertex.
   for p in sg.locations.points:
@@ -122,20 +134,6 @@ def add_sea_constraints(sym, sg, rc):
           sg.grid[np1] == sym.W,
           sg.grid[np2] == sym.W
       ))
-
-  # Constrain sea_id to be the index of one of the points in
-  # the smallest area, among those areas of size greater than 4.
-  area_to_points = defaultdict(list)
-  for p in sg.locations.points:
-    r, c = point_to_areas_row_col(p)
-    area_to_points[AREAS[r][c]].append(p)
-  area_points = min(
-      (ps for ps in area_to_points.values() if len(ps) > 4),
-      key=len
-  )
-  sg.solver.add(Or(*[
-      sea_id == sg.locations.point_to_index(p) for p in area_points
-  ]))
 
 def add_adjacent_tetrahex_constraints(locations, sc):
   """Ensure that no two matching tetrahexes are orthogonally adjacent."""
