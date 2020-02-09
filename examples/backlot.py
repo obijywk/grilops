@@ -244,7 +244,6 @@ def check_path(path):
         0
     ):
       ok = False
-      break
     else:
       nexts.append((studio_start_direction, studio_end_direction))
   return ok, nexts
