@@ -63,6 +63,10 @@
                 </li>
                 <li class="">
                     
+    <a class="" href="../geometry/">Geometry</a>
+                </li>
+                <li class="">
+                    
     <a class="" href="../grids/">Grids</a>
                 </li>
                 <li class="">
@@ -126,62 +130,31 @@
                 <h1 id="grilops.shapes">grilops.shapes</h1>
 
 <p>This module supports puzzles that place fixed shape regions into the grid.
-<h2 id="grilops.shapes.rotate_shape_clockwise">rotate_shape_clockwise</h2></p>
-<pre><code class="python">rotate_shape_clockwise(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
-</code></pre>
-
-<p>Returns a new shape offset list rotated 90 degrees clockwise.</p>
-<p><strong>Arguments:</strong></p>
-<p>shape (List[Vector]): A list of offsets defining a shape.</p>
-<p><strong>Returns:</strong></p>
-<p>(List[Vector]): A list of offsets defining the 90-degree
-    clockwise rotation of the input shape.</p>
-<h2 id="grilops.shapes.reflect_shape_y">reflect_shape_y</h2>
-
-<pre><code class="python">reflect_shape_y(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
-</code></pre>
-
-<p>Returns a new shape offset list reflected vertically.</p>
-<p><strong>Arguments:</strong></p>
-<p>shape (List[Vector]): A list of offsets defining a shape.</p>
-<p><strong>Returns:</strong></p>
-<p>(List[Vector]): A list of offsets defining the vertical
-    reflection of the input shape.</p>
-<h2 id="grilops.shapes.reflect_shape_x">reflect_shape_x</h2>
-
-<pre><code class="python">reflect_shape_x(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
-</code></pre>
-
-<p>Returns a new shape coordinate list reflected horizontally.</p>
-<p><strong>Arguments:</strong></p>
-<p>shape (List[Vector]): A list of offsets defining a shape.</p>
-<p><strong>Returns:</strong></p>
-<p>(List[Vector]): A list of offsets defining the horizontal
-    reflection of the input shape.</p>
-<h2 id="grilops.shapes.canonicalize_shape">canonicalize_shape</h2>
-
-<pre><code class="python">canonicalize_shape(shape:List[grilops.grids.Vector]) -&gt; List[grilops.grids.Vector]
+<h2 id="grilops.shapes.canonicalize_shape">canonicalize_shape</h2></p>
+<pre><code class="python">canonicalize_shape(shape:List[grilops.geometry.Vector]) -&gt; List[grilops.geometry.Vector]
 </code></pre>
 
 <p>Returns a new shape that's canonicalized.</p>
 <p>A canonicalized shape is in sorted order and its first offset is Vector(0, 0).
 This helps with deduplication, since equivalent shapes will be canonicalized
 identically.</p>
-<p><strong>Arguments:</strong></p>
-<p>shape (List[Vector]): A list of offsets defining a shape.</p>
-<p><strong>Returns:</strong></p>
-<p>(List[Vector]): A list of offsets defining the canonicalized version
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>shape (List[Vector])</strong>: A list of offsets defining a shape.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>(List[Vector])</code>: A list of offsets defining the canonicalized version
     of the shape, i.e., in sorted order and with first offset equal
     to Vector(0, 0).</p>
 <h2 id="grilops.shapes.ShapeConstrainer">ShapeConstrainer</h2>
 
-<pre><code class="python">ShapeConstrainer(self, locations:List[grilops.grids.Point], shapes:List[List[grilops.grids.Vector]], solver:z3.z3.Solver=None, complete:bool=False, allow_rotations:bool=False, allow_reflections:bool=False, allow_copies:bool=False)
+<pre><code class="python">ShapeConstrainer(self, lattice:grilops.geometry.Lattice, shapes:List[List[grilops.geometry.Vector]], solver:z3.z3.Solver=None, complete:bool=False, allow_rotations:bool=False, allow_reflections:bool=False, allow_copies:bool=False)
 </code></pre>
 
 <p>Creates constraints for placing fixed shape regions into the grid.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>locations (List[Point])</strong>: The locations in the grid.</li>
+<li><strong>lattice (Lattice)</strong>: The structure of the grid.</li>
 <li><strong>shapes (List[List[Vector]])</strong>: A list of region shape definitions.
     Each region shape definition should be a list of offsets.
     The same region shape definition may be included multiple times to

@@ -63,6 +63,10 @@
                 </li>
                 <li class="">
                     
+    <a class="" href="../geometry/">Geometry</a>
+                </li>
+                <li class="">
+                    
     <a class="" href="../grids/">Grids</a>
                 </li>
                 <li class=" current">
@@ -137,21 +141,12 @@
 </ul>
 <h2 id="grilops.loops.LoopSymbolSet">LoopSymbolSet</h2>
 
-<pre><code class="python">LoopSymbolSet(self)
+<pre><code class="python">LoopSymbolSet(self, lattice:grilops.geometry.Lattice)
 </code></pre>
 
 <p>A <code>SymbolSet</code> consisting of symbols that may form loops.</p>
 <p>Additional symbols (e.g. a <code>Symbol</code> representing an empty space) may be added
 to this <code>SymbolSet</code> by calling <code>SymbolSet.append()</code> after it's constructed.</p>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><code>NS</code>: The <code>Symbol</code> connecting the cells above and below.</li>
-<li><code>EW</code>: The <code>Symbol</code> connecting the cells to the left and to the right.</li>
-<li><code>NE</code>: The <code>Symbol</code> connecting the cells above and to the right.</li>
-<li><code>SE</code>: The <code>Symbol</code> connecting the cells below and to the right.</li>
-<li><code>SW</code>: The <code>Symbol</code> connecting the cells below and to the left.</li>
-<li><code>NW</code>: The <code>Symbol</code> connecting the cells above and to the left.</li>
-</ul>
 <h3 id="grilops.loops.LoopSymbolSet.is_loop">is_loop</h3>
 
 <pre><code class="python">LoopSymbolSet.is_loop(self, symbol:z3.z3.ArithRef) -&gt; z3.z3.BoolRef
@@ -164,6 +159,33 @@ to this <code>SymbolSet</code> by calling <code>SymbolSet.append()</code> after 
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>(z3.BoolRef)</code>: true if the symbol represents part of the loop.</p>
+<h3 id="grilops.loops.LoopSymbolSet.symbols_for_direction">symbols_for_direction</h3>
+
+<pre><code class="python">LoopSymbolSet.symbols_for_direction(self, d:grilops.geometry.Vector) -&gt; List[int]
+</code></pre>
+
+<p>Returns the symbols with one arm going in the given direction.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>d (Vector)</strong>: The given direction.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>(List[int])</code>: A list of symbol indices corresponding to symbols
+    with one arm going in the given direction.</p>
+<h3 id="grilops.loops.LoopSymbolSet.symbol_for_direction_pair">symbol_for_direction_pair</h3>
+
+<pre><code class="python">LoopSymbolSet.symbol_for_direction_pair(self, d1:grilops.geometry.Vector, d2:grilops.geometry.Vector) -&gt; int
+</code></pre>
+
+<p>Returns the symbol with arms going in the two given directions.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>d1 (Vector)</strong>: The first given direction.</li>
+<li><strong>d2 (Vector)</strong>: The second given direction.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>(int)</code>: The symbol index for the symbol with one arm going in
+    each of the two given directions.</p>
 <h2 id="grilops.loops.LoopConstrainer">LoopConstrainer</h2>
 
 <pre><code class="python">LoopConstrainer(self, symbol_grid:grilops.grids.SymbolGrid, single_loop:bool=False)

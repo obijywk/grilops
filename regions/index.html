@@ -63,6 +63,10 @@
                 </li>
                 <li class="">
                     
+    <a class="" href="../geometry/">Geometry</a>
+                </li>
+                <li class="">
+                    
     <a class="" href="../grids/">Grids</a>
                 </li>
                 <li class="">
@@ -135,24 +139,16 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
     part of a region.</li>
 <li><code>R (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
     root of its region's subtree.</li>
-<li><code>N (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
-    child of the cell above it in its region's subtree.</li>
-<li><code>E (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
-    child of the cell to the right of it in its region's subtree.</li>
-<li><code>S (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
-    child of the cell below it in its region's subtree.</li>
-<li><code>W (int)</code>: The <code>RegionConstrainer.parent_grid</code> value indicating that a cell is the
-    child of the cell to the left of it in its region's subtree.</li>
 </ul>
 <h2 id="grilops.regions.RegionConstrainer">RegionConstrainer</h2>
 
-<pre><code class="python">RegionConstrainer(self, locations:List[grilops.grids.Point], solver:z3.z3.Solver=None, complete:bool=True, min_region_size:Union[int, NoneType]=None, max_region_size:Union[int, NoneType]=None)
+<pre><code class="python">RegionConstrainer(self, lattice:grilops.geometry.Lattice, solver:z3.z3.Solver=None, complete:bool=True, min_region_size:Union[int, NoneType]=None, max_region_size:Union[int, NoneType]=None)
 </code></pre>
 
 <p>Creates constraints for grouping cells into contiguous regions.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>locations (List[Point])</strong>: List of locations in the grid.</li>
+<li><strong>lattice (Lattice)</strong>: The structure of the grid.</li>
 <li><strong>solver (z3.Solver, None)</strong>: A <code>Solver</code> object. If None, a <code>Solver</code> will be
     constructed.</li>
 <li><strong>complete (bool)</strong>: If true, every cell must be part of a region. Defaults to
@@ -162,14 +158,12 @@ in its subtree are exposed by properties of the <code>RegionConstrainer</code>.<
 </ul>
 <h3 id="grilops.regions.RegionConstrainer.parent_grid">parent_grid</h3>
 
-<p>(Dict[Point, ArithRef]): A dictionary of region subtree parent pointers.</p>
-<p>The values that may be present in this grid are the module
-attributes <code>X</code>, <code>R</code>, <code>N</code>, <code>E</code>, <code>S</code>, and <code>W</code>.</p>
-<h3 id="grilops.regions.RegionConstrainer.region_id_grid">region_id_grid</h3>
-
+<p>(Dict[Point, ArithRef]): A dictionary of region subtree parent pointers.
+<h3 id="grilops.regions.RegionConstrainer.region_id_grid">region_id_grid</h3></p>
 <p>(Dict[Point, ArithRef]): A dictionary of numbers identifying regions.</p>
 <p>A region's identifier is the position in the grid (going in order from left
-to right, top to bottom) of the root of that region's subtree.</p>
+to right, top to bottom) of the root of that region's subtree. It is the
+same as the index of the point in the lattice.</p>
 <h3 id="grilops.regions.RegionConstrainer.region_size_grid">region_size_grid</h3>
 
 <p>(Dict[Point, ArithRef]): A dictionary of region sizes.
@@ -179,30 +173,32 @@ to right, top to bottom) of the root of that region's subtree.</p>
 <p>(Dict[Point, ArithRef]): A dictionary of cell subtree sizes.</p>
 <p>A cell's subtree size is one plus the number of cells that are descendents
 of the cell in its region's subtree.</p>
-<h3 id="grilops.regions.RegionConstrainer.location_to_region_id">location_to_region_id</h3>
+<h3 id="grilops.regions.RegionConstrainer.edge_sharing_direction_to_index">edge_sharing_direction_to_index</h3>
 
-<pre><code class="python">RegionConstrainer.location_to_region_id(self, location:grilops.grids.Point) -&gt; int
+<pre><code class="python">RegionConstrainer.edge_sharing_direction_to_index(self, direction:grilops.geometry.Vector) -&gt; int
 </code></pre>
 
-<p>Returns the region root ID for a grid location.</p>
+<p>Returns the parent_grid value corresponding to the given direction.</p>
+<p>For instance, if direction is (-1, 0), return the index for N.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>location (Point)</strong>: The grid location.</li>
+<li><strong>direction (Vector)</strong>: The direction to an edge-sharing cell.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(int)</code>: The region ID.</p>
-<h3 id="grilops.regions.RegionConstrainer.region_id_to_location">region_id_to_location</h3>
+<p><code>(int)</code>: The parent_grid value that means that the parent in its region's
+    subtree is the cell offset by that direction.</p>
+<h3 id="grilops.regions.RegionConstrainer.parent_type_to_index">parent_type_to_index</h3>
 
-<pre><code class="python">RegionConstrainer.region_id_to_location(self, region_id:int) -&gt; grilops.grids.Point
+<pre><code class="python">RegionConstrainer.parent_type_to_index(self, parent_type:str) -&gt; int
 </code></pre>
 
-<p>Returns the grid location for a region root ID.</p>
+<p>Returns the parent_grid value corresponding to the given parent type.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>region_id (int)</strong>: The region ID.</li>
+<li><strong>parent_type (str)</strong>: The parent type.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>(Point)</code>: The (y, x) grid location.</p>
+<p><code>(int)</code>: The corresponding parent_grid value.</p>
 <h3 id="grilops.regions.RegionConstrainer.print_trees">print_trees</h3>
 
 <pre><code class="python">RegionConstrainer.print_trees(self)

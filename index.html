@@ -77,6 +77,10 @@
                 </li>
                 <li class="">
                     
+    <a class="" href="geometry/">Geometry</a>
+                </li>
+                <li class="">
+                    
     <a class="" href="grids/">Grids</a>
                 </li>
                 <li class="">
@@ -156,20 +160,25 @@ $ pip3 install -e .
 </code></pre>
 
 <h2 id="basic-concepts-and-usage">Basic Concepts and Usage</h2>
-<p>The <code>symbols</code> and <code>grids</code> modules contain the core functionality needed for
-modeling most puzzles. For convenience, their attributes can be accessed
-directly from the top-level <code>grilops</code> module.</p>
+<p>The <code>symbols</code>, <code>geometry</code>, and <code>grids</code> modules contain the core functionality
+needed for modeling most puzzles. For convenience, their attributes can be
+accessed directly from the top-level <code>grilops</code> module.</p>
 <p>Symbols represent the marks that are determined and written into a grid by a
 solver while solving a puzzle. For example, the symbol set of a
 <a href="https://en.wikipedia.org/wiki/Sudoku">Sudoku</a> puzzle would be the digits 1
 through 9. The symbol set of a binary determination puzzle such as
 <a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> could contain two
 symbols, one representing a black cell and the other representing a white cell.</p>
+<p>The geometry module defines Lattice classes that are used to manage the shapes
+of grids and relationships between cells. Rectangular and hexagonal grids are
+supported, as well as grids with empty spaces in them.</p>
 <p>A symbol grid is used to keep track of the assignment of symbols to grid
 cells. Generally, setting up a program to solve a puzzle using grilops involves:</p>
 <ul>
 <li>Constructing a symbol set</li>
-<li>Constructing a symbol grid limited to contain symbols from that symbol set</li>
+<li>Constructing a lattice for the grid</li>
+<li>Constructing a symbol grid in the shape of the lattice, limited to contain
+  symbols from the symbol set</li>
 <li>Adding puzzle-specific constraints to cells in the symbol grid</li>
 <li>Checking for satisfying assignments of symbols to symbol grid cells</li>
 </ul>
@@ -308,5 +317,5 @@ Unique solution
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2020-01-08 13:02:55
+Build Date UTC : 2020-02-10 03:31:35
 -->

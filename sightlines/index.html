@@ -63,6 +63,10 @@
                 </li>
                 <li class="">
                     
+    <a class="" href="../geometry/">Geometry</a>
+                </li>
+                <li class="">
+                    
     <a class="" href="../grids/">Grids</a>
                 </li>
                 <li class="">
@@ -130,9 +134,13 @@
 condition, determined based on the symbol encountered in the grid, which, when
 satisfied, results in no further symbols along the line being counted. It may
 also have a custom counting or accumulation function.</p>
+<p>A sightline always stops when it reaches a point not in the grid. So, if the
+grid is not convex, a sightline might stop at a hole in the middle of the
+grid. If it is desired that a sightline continues through such holes, the
+holes should be treated as part of the grid, e.g., as black cells.</p>
 <h2 id="grilops.sightlines.count_cells">count_cells</h2>
 
-<pre><code class="python">count_cells(symbol_grid:grilops.grids.SymbolGrid, start:grilops.grids.Point, direction:grilops.grids.Vector, count:Callable[[z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7f7a83c76d08&gt;, stop:Callable[[z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f7a83c76d90&gt;)
+<pre><code class="python">count_cells(symbol_grid:grilops.grids.SymbolGrid, start:grilops.geometry.Point, direction:grilops.geometry.Vector, count:Callable[[z3.z3.ArithRef], z3.z3.ArithRef]=&lt;function &lt;lambda&gt; at 0x7fe22d90df28&gt;, stop:Callable[[z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7fe22d933048&gt;)
 </code></pre>
 
 <p>Returns a count of cells along a sightline through a grid.</p>
@@ -154,7 +162,7 @@ also have a custom counting or accumulation function.</p>
 </ul>
 <h2 id="grilops.sightlines.reduce_cells">reduce_cells</h2>
 
-<pre><code class="python">reduce_cells(symbol_grid:grilops.grids.SymbolGrid, start:grilops.grids.Point, direction:grilops.grids.Vector, initializer:~Accumulator, accumulate:Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], stop:Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7f7a83c76ea0&gt;)
+<pre><code class="python">reduce_cells(symbol_grid:grilops.grids.SymbolGrid, start:grilops.geometry.Point, direction:grilops.geometry.Vector, initializer:~Accumulator, accumulate:Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], stop:Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef]=&lt;function &lt;lambda&gt; at 0x7fe22d933158&gt;)
 </code></pre>
 
 <p>Returns a computation of a sightline through a grid.</p>
