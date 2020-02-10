@@ -73,7 +73,7 @@ def loop_solve():
 def region_solve():
   """Slitherlink solver example using regions."""
   sym = grilops.SymbolSet([("I", chr(0x2588)), ("O", " ")])
-  lattice = grilops.geometry.get_rectangle_lattice(HEIGHT, WIDTH)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(
       lattice, solver=sg.solver, complete=False)

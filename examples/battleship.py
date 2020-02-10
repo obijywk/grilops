@@ -27,7 +27,7 @@ GIVENS = {
 
 def main():
   """Battleship solver example."""
-  lattice = grilops.geometry.get_rectangle_lattice(HEIGHT, WIDTH)
+  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(lattice, SYM)
   sc = grilops.shapes.ShapeConstrainer(
       lattice,
