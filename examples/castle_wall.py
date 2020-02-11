@@ -19,13 +19,13 @@ HEIGHT, WIDTH = 7, 7
 #     the number of loop segments in the given direction
 #     the given direction (+/-1 y, +/-1 x)
 GIVENS = {
-    (1, 5): (I, 1, (1, 0)),
-    (2, 1): (I, 0, (-1, 0)),
-    (2, 3): (O, None, None),
-    (3, 3): (O, 2, (0, -1)),
-    (4, 3): (O, None, None),
-    (4, 5): (I, 2, (0, -1)),
-    (5, 1): (I, 3, (0, 1)),
+    Point(1, 5): (I, 1, Vector(1, 0)),
+    Point(2, 1): (I, 0, Vector(-1, 0)),
+    Point(2, 3): (O, None, None),
+    Point(3, 3): (O, 2, Vector(0, -1)),
+    Point(4, 3): (O, None, None),
+    Point(4, 5): (I, 2, Vector(0, -1)),
+    Point(5, 1): (I, 3, Vector(0, 1)),
 }
 
 LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
@@ -46,8 +46,7 @@ def main():
   sg = grilops.SymbolGrid(LATTICE, SYM)
   lc = LoopConstrainer(sg, single_loop=True)
 
-  for (y, x), (io, expected_count, direction) in GIVENS.items():
-    p = Point(y, x)
+  for p, (io, expected_count, direction) in GIVENS.items():
     # Constrain whether the given cell is inside or outside of the loop. This
     # also prevents these cells from containing loop symbols themselves.
     sg.solver.add(lc.inside_outside_grid[p] == io)
@@ -55,18 +54,17 @@ def main():
     if expected_count is not None and direction is not None:
       # Count and constrain the number of loop segments in the given direction.
       segment_symbols = DIRECTION_SEGMENT_SYMBOLS[direction]
-      dy, dx = direction
       actual_count = grilops.sightlines.count_cells(
-          sg, p, Vector(dy, dx),
+          sg, p, direction,
           lambda c: If(Or(*[c == s for s in segment_symbols]), 1, 0)
       )
       sg.solver.add(actual_count == expected_count)
 
   def show_cell(p, _):
-    if (p.y, p.x) in GIVENS:
-      if GIVENS[(p.y, p.x)][0] == I:
+    if p in GIVENS:
+      if GIVENS[p][0] == I:
         return chr(0x25AB)
-      if GIVENS[(p.y, p.x)][0] == O:
+      if GIVENS[p][0] == O:
         return chr(0x25AA)
     return None
 
