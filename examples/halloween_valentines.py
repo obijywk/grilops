@@ -29,16 +29,17 @@ TURN_SYMBOLS = [SYM.NE, SYM.SE, SYM.SW, SYM.NW]
 def extract_answer(sg, loop_order_grid):
   """Extract the metapuzzle answer from the grids."""
   model = sg.solver.model()
-  loop_order_to_yx = {}
-  for y in range(8):
-    for x in range(8):
-      loop_order_to_yx[model.eval(loop_order_grid[Point(y, x)]).as_long()] = (y, x)
-  ordered_yx = sorted(list(loop_order_to_yx.items()))
+  loop_order_to_point = {
+      model.eval(loop_order_grid[p]).as_long(): p
+      for p in sg.lattice.points
+  }
+  ordered_points = sorted(list(loop_order_to_point.items()))
   solved_grid = sg.solved_grid()
   answer = ""
-  for _, (y, x) in ordered_yx:
-    if solved_grid[Point(y, x)] in TURN_SYMBOLS and ANSWERS[y][x] != "O":
-      answer += ANSWERS[y][x]
+  for _, p in ordered_points:
+    letter = ANSWERS[p.y][p.x]
+    if solved_grid[p] in TURN_SYMBOLS and letter != "O":
+      answer += letter
   return answer
 
 
