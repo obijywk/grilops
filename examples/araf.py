@@ -12,22 +12,22 @@ from grilops.geometry import Point
 
 HEIGHT, WIDTH = 7, 7
 GIVENS = {
-    (0, 0): 1,
-    (0, 1): 9,
-    (0, 4): 8,
-    (1, 6): 8,
-    (2, 1): 7,
-    (2, 4): 9,
-    (2, 6): 7,
-    (3, 0): 10,
-    (3, 3): 1,
-    (4, 0): 3,
-    (4, 2): 8,
-    (4, 6): 6,
-    (5, 0): 2,
-    (6, 1): 1,
-    (6, 5): 1,
-    (6, 6): 3,
+    Point(0, 0): 1,
+    Point(0, 1): 9,
+    Point(0, 4): 8,
+    Point(1, 6): 8,
+    Point(2, 1): 7,
+    Point(2, 4): 9,
+    Point(2, 6): 7,
+    Point(3, 0): 10,
+    Point(3, 3): 1,
+    Point(4, 0): 3,
+    Point(4, 2): 8,
+    Point(4, 6): 6,
+    Point(5, 0): 2,
+    Point(6, 1): 1,
+    Point(6, 5): 1,
+    Point(6, 6): 3,
 }
 
 
@@ -35,20 +35,15 @@ def add_given_pair_constraints(sg, rc):
   """Add constraints for the pairs of givens contained within each region."""
   # Each larger (root) given must be paired with a single smaller given in its
   # same region, and the size of the region must be between the givens' values.
-  for (ly, lx), lv in GIVENS.items():
-    lp = Point(ly, lx)
+  for lp, lv in GIVENS.items():
     partner_terms = []
-    for (sy, sx), sv in GIVENS.items():
-      if (ly, lx) == (sy, sx):
+    for sp, sv in GIVENS.items():
+      if lp == sp or lv <= sv:
         continue
-      if lv <= sv:
-        continue
-
-      sp = Point(sy, sx)
 
       # Rule out pairs that can't possibly work, due to the Manhattan distance
       # between givens being too large.
-      manhattan_distance = abs(ly - sy) + abs(lx - sx)
+      manhattan_distance = abs(lp.y - sp.y) + abs(lp.x - sp.x)
       min_region_size = manhattan_distance + 1
       if lv < min_region_size:
         sg.solver.add(
@@ -95,18 +90,15 @@ def main():
       min_region_size=min_given_value + 1,
       max_region_size=max_given_value - 1
   )
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      sg.solver.add(sg.cell_is(p, rc.region_id_grid[p]))
+  for point in lattice.points:
+    sg.solver.add(sg.cell_is(point, rc.region_id_grid[point]))
 
   # Exactly half of the givens must be region roots. As an optimization, add
   # constraints that the smallest givens must not be region roots, and that the
   # largest givens must be region roots.
   undetermined_given_locations = []
   num_undetermined_roots = len(GIVENS) // 2
-  for (y, x), v in GIVENS.items():
-    p = Point(y, x)
+  for p, v in GIVENS.items():
     if v == min_given_value:
       sg.solver.add(Not(rc.parent_grid[p] == grilops.regions.R))
     elif v == max_given_value:
@@ -124,19 +116,16 @@ def main():
       )
   )
 
-  # Non-givens must not be region roots.
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      if (y, x) not in GIVENS:
-        sg.solver.add(
-            Not(rc.parent_grid[Point(y, x)] == grilops.regions.R)
-        )
+  # Non-givens must not be region roots
+  for point in lattice.points:
+    if point not in GIVENS:
+      sg.solver.add(Not(rc.parent_grid[point] == grilops.regions.R))
 
   add_given_pair_constraints(sg, rc)
 
   region_id_to_label = {
-      lattice.point_to_index(Point(y, x)): chr(65 + i)
-      for i, (y, x) in enumerate(GIVENS.keys())
+      lattice.point_to_index(point): chr(65 + i)
+      for i, point in enumerate(GIVENS.keys())
   }
   def show_cell(unused_loc, region_id):
     return region_id_to_label[region_id]
