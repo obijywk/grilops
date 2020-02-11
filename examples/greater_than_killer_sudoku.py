@@ -69,9 +69,8 @@ def main():
 
   # Build a map from each cage label to the cells within that cage.
   cage_cells = defaultdict(list)
-  for y in range(9):
-    for x in range(9):
-      cage_cells[cages[y][x]].append(sg.grid[Point(y, x)])
+  for p in lattice.points:
+    cage_cells[cages[p.y][p.x]].append(sg.grid[p])
 
   # The digits used in each cage must be unique.
   for cells_in_cage in cage_cells.values():
