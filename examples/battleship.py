@@ -16,21 +16,27 @@ SYM = grilops.SymbolSet([
     ("B", chr(0x25AA)),
     ("O", chr(0x2022)),
 ])
+DIR_TO_OPPOSITE_SYM = {
+    Vector(-1, 0): SYM.S,
+    Vector(0, 1): SYM.W,
+    Vector(1, 0): SYM.N,
+    Vector(0, -1): SYM.E,
+}
 HEIGHT, WIDTH = 8, 8
+LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
 GIVENS_Y = [1, 5, 1, 5, 0, 3, 2, 2]
 GIVENS_X = [2, 4, 2, 3, 0, 4, 1, 3]
 GIVENS = {
-    (2, 5): SYM.S,
-    (6, 1): SYM.S,
-    (7, 5): SYM.O,
+    Point(2, 5): SYM.S,
+    Point(6, 1): SYM.S,
+    Point(7, 5): SYM.O,
 }
 
 def main():
   """Battleship solver example."""
-  lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
-  sg = grilops.SymbolGrid(lattice, SYM)
+  sg = grilops.SymbolGrid(LATTICE, SYM)
   sc = grilops.shapes.ShapeConstrainer(
-      lattice,
+      LATTICE,
       [
           [Vector(0, i) for i in range(4)],
           [Vector(0, i) for i in range(3)],
@@ -55,94 +61,59 @@ def main():
     sg.solver.add(
         PbEq([(Not(sg.cell_is(Point(y, x), SYM.X)), 1) for y in range(HEIGHT)], count)
     )
-  for (y, x), s in GIVENS.items():
-    sg.solver.add(sg.cell_is(Point(y, x), s))
+  for p, s in GIVENS.items():
+    sg.solver.add(sg.cell_is(p, s))
 
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      shape_type = sc.shape_type_grid[p]
-      shape_id = sc.shape_instance_grid[p]
-      touching_types = [
-          n.symbol for n in lattice.vertex_sharing_neighbors(sc.shape_type_grid, p)
-      ]
-      touching_ids = [
-          n.symbol for n in lattice.vertex_sharing_neighbors(sc.shape_instance_grid, p)
-      ]
+  for p in LATTICE.points:
+    shape_type = sc.shape_type_grid[p]
+    shape_id = sc.shape_instance_grid[p]
+    touching_types = [
+        n.symbol for n in LATTICE.vertex_sharing_neighbors(sc.shape_type_grid, p)
+    ]
+    touching_ids = [
+        n.symbol for n in LATTICE.vertex_sharing_neighbors(sc.shape_instance_grid, p)
+    ]
 
-      # Link the X symbol to the absence of a ship segment.
-      sg.solver.add(
-          (sc.shape_type_grid[p] == -1) == sg.cell_is(p, SYM.X))
+    # Link the X symbol to the absence of a ship segment.
+    sg.solver.add(
+        (sc.shape_type_grid[p] == -1) == sg.cell_is(p, SYM.X))
 
-      # Ship segments of different ships may not touch.
-      and_terms = []
-      for touching_id in touching_ids:
-        and_terms.append(
-            Implies(
-                shape_id >= 0,
-                Or(touching_id == shape_id, touching_id == -1)
-            )
-        )
-      sg.solver.add(And(*and_terms))
-
-      # Choose the correct symbol for each ship segment.
-      touching_count_terms = [(c == shape_type, 1) for c in touching_types]
-      sg.solver.add(
+    # Ship segments of different ships may not touch.
+    and_terms = []
+    for touching_id in touching_ids:
+      and_terms.append(
           Implies(
-              And(shape_type >= 0, PbEq(touching_count_terms, 2)),
-              sg.cell_is(p, SYM.B)
+              shape_id >= 0,
+              Or(touching_id == shape_id, touching_id == -1)
           )
       )
+    sg.solver.add(And(*and_terms))
+
+    # Choose the correct symbol for each ship segment.
+    touching_count_terms = [(c == shape_type, 1) for c in touching_types]
+    sg.solver.add(
+        Implies(
+            And(shape_type >= 0, PbEq(touching_count_terms, 2)),
+            sg.cell_is(p, SYM.B)
+        )
+    )
+    sg.solver.add(
+        Implies(
+            And(shape_type >= 0, PbEq(touching_count_terms, 0)),
+            sg.cell_is(p, SYM.O)
+        )
+    )
+    for n in sg.edge_sharing_neighbors(p):
       sg.solver.add(
           Implies(
-              And(shape_type >= 0, PbEq(touching_count_terms, 0)),
-              sg.cell_is(p, SYM.O)
+              And(
+                  shape_type >= 0,
+                  PbEq(touching_count_terms, 1),
+                  sc.shape_type_grid[n.location] == shape_type
+              ),
+              sg.cell_is(p, DIR_TO_OPPOSITE_SYM[n.direction])
           )
       )
-      if y > 0:
-        sg.solver.add(
-            Implies(
-                And(
-                    shape_type >= 0,
-                    PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[Point(y - 1, x)] == shape_type
-                ),
-                sg.cell_is(p, SYM.S)
-            )
-        )
-      if y < HEIGHT - 1:
-        sg.solver.add(
-            Implies(
-                And(
-                    shape_type >= 0,
-                    PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[Point(y + 1, x)] == shape_type
-                ),
-                sg.cell_is(p, SYM.N)
-            )
-        )
-      if x > 0:
-        sg.solver.add(
-            Implies(
-                And(
-                    shape_type >= 0,
-                    PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[Point(y, x - 1)] == shape_type
-                ),
-                sg.cell_is(p, SYM.E)
-            )
-        )
-      if x < WIDTH - 1:
-        sg.solver.add(
-            Implies(
-                And(
-                    shape_type >= 0,
-                    PbEq(touching_count_terms, 1),
-                    sc.shape_type_grid[Point(y, x + 1)] == shape_type
-                ),
-                sg.cell_is(p, SYM.W)
-            )
-        )
 
   if sg.solve():
     sg.print()
