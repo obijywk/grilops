@@ -5,7 +5,7 @@ https://krazydad.com/starbattle/tutorial/tutorial_10x10.php.
 """
 
 from collections import defaultdict
-from z3 import And, If, Implies, Sum  # type: ignore
+from z3 import And, If, Implies, Sum
 
 import grilops
 from grilops.geometry import Point

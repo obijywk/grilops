@@ -4,7 +4,7 @@ Example puzzle can be found at https://www.gmpuzzles.com/blog/2015/02/slicy-thom
 """
 
 from collections import defaultdict
-from z3 import And, If, Implies, Int, Or, PbEq  # type: ignore
+from z3 import And, If, Implies, Int, Or, PbEq
 
 import grilops
 import grilops.regions

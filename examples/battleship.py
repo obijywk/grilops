@@ -1,6 +1,6 @@
 """Battleship solver example."""
 
-from z3 import And, Not, Implies, Or, PbEq  # type: ignore
+from z3 import And, Not, Implies, Or, PbEq
 
 import grilops
 import grilops.shapes

@@ -3,7 +3,7 @@
 Example puzzle can be found at https://en.wikipedia.org/wiki/Fillomino.
 """
 
-from z3 import Implies  # type: ignore
+from z3 import Implies
 
 import grilops
 import grilops.regions

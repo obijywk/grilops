@@ -2,7 +2,7 @@
 
 import sys
 from typing import Callable, Dict, IO, Iterable, List, NamedTuple, Optional, Tuple
-from z3 import ArithRef  # type: ignore
+from z3 import ArithRef
 
 
 class Vector(NamedTuple):

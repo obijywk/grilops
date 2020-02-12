@@ -3,7 +3,7 @@
 from collections import defaultdict
 import sys
 from typing import Dict, List
-from z3 import And, ArithRef, Int, Not, Or, Solver, PbEq  # type: ignore
+from z3 import And, ArithRef, Int, Not, Or, Solver, PbEq
 
 from .geometry import Lattice, Point, Vector
 

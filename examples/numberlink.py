@@ -3,7 +3,7 @@
 Example puzzle can be found at https://en.wikipedia.org/wiki/Numberlink.
 """
 
-from z3 import And, Distinct, Int, Or  # type: ignore
+from z3 import And, Distinct, Int, Or
 
 import grilops
 import grilops.loops

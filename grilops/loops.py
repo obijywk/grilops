@@ -12,7 +12,7 @@ O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
 import itertools
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Tuple
-from z3 import (  # type: ignore
+from z3 import (
     And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
 )
 

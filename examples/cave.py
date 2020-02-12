@@ -4,7 +4,7 @@ Example puzzle can be found at
 https://www.gmpuzzles.com/blog/cave-rules-and-info/.
 """
 
-from z3 import Implies  # type: ignore
+from z3 import Implies
 
 import grilops
 import grilops.regions

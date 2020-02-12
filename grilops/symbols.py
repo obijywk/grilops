@@ -86,8 +86,11 @@ class SymbolSet:
         raise Exception(f"Invalid symbol spec: {spec}")
 
     for symbol in self.__index_to_symbol.values():
-      self.__dict__[symbol.name] = symbol.index
+      setattr(self, symbol.name, symbol.index)
       self.__label_to_symbol_index[symbol.label] = symbol.index
+
+  def __getattr__(self, name):  # pylint: disable=W0235
+    return super().__getattribute__(name)
 
   def __next_unused_index(self):
     if not self.__index_to_symbol:
@@ -104,7 +107,7 @@ class SymbolSet:
     index = self.__next_unused_index()
     symbol = Symbol(index, name, label)
     self.__index_to_symbol[index] = symbol
-    self.__dict__[symbol.name] = symbol.index
+    setattr(self, symbol.name, symbol.index)
     self.__label_to_symbol_index[symbol.label] = symbol.index
 
   def min_index(self):

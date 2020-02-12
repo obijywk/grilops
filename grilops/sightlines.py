@@ -11,8 +11,8 @@ grid. If it is desired that a sightline continues through such holes, the
 holes should be treated as part of the grid, e.g., as black cells.
 """
 
-from typing import Callable, TypeVar
-from z3 import ArithRef, BoolRef, If  # type: ignore
+from typing import cast, Callable, TypeVar
+from z3 import ArithRef, BoolRef, BoolVal, ExprRef, If, IntVal
 
 from .geometry import Point, Vector
 from .grids import SymbolGrid
@@ -22,8 +22,8 @@ def count_cells(
     symbol_grid: SymbolGrid,
     start: Point,
     direction: Vector,
-    count: Callable[[ArithRef], ArithRef] = lambda c: 1,
-    stop: Callable[[ArithRef], BoolRef] = lambda c: False
+    count: Callable[[ArithRef], ArithRef] = lambda c: IntVal(1),
+    stop: Callable[[ArithRef], BoolRef] = lambda c: BoolVal(False)
 ):
   """Returns a count of cells along a sightline through a grid.
 
@@ -46,13 +46,13 @@ def count_cells(
       symbol_grid,
       start,
       direction,
-      0,
+      cast(ArithRef, IntVal(0)),
       lambda a, c: a + count(c),
       lambda a, c: stop(c)
   )
 
 
-Accumulator = TypeVar("Accumulator")
+Accumulator = TypeVar("Accumulator", bound=ExprRef)
 
 
 def reduce_cells(  # pylint: disable=R0913
@@ -61,7 +61,7 @@ def reduce_cells(  # pylint: disable=R0913
     direction: Vector,
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, ArithRef], Accumulator],
-    stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: False,
+    stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
 ):
   """Returns a computation of a sightline through a grid.
 

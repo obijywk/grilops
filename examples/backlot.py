@@ -4,6 +4,7 @@ This puzzle was part of the 2020 MIT Mystery Hunt.
 """
 
 import sys
+from typing import Dict, List, Tuple
 from z3 import And, Distinct, If, Implies, Int, Or, PbEq, PbGe
 
 import grilops
@@ -157,7 +158,7 @@ def get_path_locations(sg, path_order_grid):
   return [t[1] for t in path]
 
 
-SOLVE_MEMO = {}
+SOLVE_MEMO: Dict[Tuple[Point, Point, int], List[List[Point]]] = {}
 def solve(start, end, min_studios):
   """Solve an instance of the grid, given start and end gate locations.
 

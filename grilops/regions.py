@@ -12,7 +12,7 @@ R (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
 """
 
 from typing import Dict, Optional
-from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum  # type: ignore
+from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
 
 from .geometry import Lattice, Point, Vector
 

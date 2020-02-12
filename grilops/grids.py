@@ -1,7 +1,7 @@
 """This module supports constructing and working with grids of cells."""
 
 from typing import Callable, Dict, List
-from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat  # type: ignore
+from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat
 
 from .symbols import SymbolSet
 from .geometry import Lattice, Neighbor, Point

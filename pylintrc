@@ -5,5 +5,4 @@ load-plugins=pylint.extensions.docparams
 indent-string="  "
 argument-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
 variable-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
-ignored-classes=LoopSymbolSet,SymbolSet
 disable=C0200,C0201,R0801,R0902,R0912

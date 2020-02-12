@@ -16,7 +16,7 @@ jobs:
         pip install mypy pylint
     - name: mypy
       run: |
-        mypy grilops
+        mypy examples grilops
     - name: pylint
       run: |
         pylint examples grilops

@@ -3,7 +3,7 @@
 Example puzzle can be found at https://en.wikipedia.org/wiki/LITS.
 """
 
-from z3 import And, If, Implies, Int, Not, Or, PbEq  # type: ignore
+from z3 import And, If, Implies, Int, Not, Or, PbEq
 
 import grilops
 import grilops.regions
