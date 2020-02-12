@@ -89,7 +89,7 @@ class SymbolSet:
       setattr(self, symbol.name, symbol.index)
       self.__label_to_symbol_index[symbol.label] = symbol.index
 
-  def __getattr__(self, name):  # pylint: disable=W0235
+  def __getattr__(self, name):
     return super().__getattribute__(name)
 
   def __next_unused_index(self):
