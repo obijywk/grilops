@@ -5,8 +5,20 @@ from typing import Sequence, Tuple, TypeVar
 class Z3PPObject:
   pass
 
-class AstRef(Z3PPObject):
+class Z3_ast:
   pass
+
+class ContextObj:
+  pass
+
+class Context:
+  def ref(self) -> ContextObj: ...
+
+def main_ctx() -> Context: ...
+
+class AstRef(Z3PPObject):
+  def __init__(self, ast: Z3_ast, ctx: Context = None): ...
+  def as_ast(self) -> Z3_ast: ...
 
 class SortRef(AstRef):
   pass

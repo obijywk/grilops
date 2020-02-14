@@ -3,9 +3,16 @@
 from collections import defaultdict
 import sys
 from typing import Dict, List
-from z3 import And, ArithRef, Int, Not, Or, Solver, PbEq
+from z3 import ArithRef, Int, IntVal, Or, Solver, PbEq
 
+from .fastz3 import fast_and, fast_eq, fast_ne
 from .geometry import Lattice, Point, Vector
+from .quadtree import ExpressionQuadTree
+
+
+# Key types for use with the ExpressionQuadTree when adding shape instance
+# constraints.
+HAS_INSTANCE_ID, NOT_HAS_INSTANCE_ID, HAS_SHAPE_TYPE = range(3)
 
 
 def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
@@ -124,11 +131,11 @@ class ShapeConstrainer:
     for p in self.__shape_type_grid:
       self.__solver.add(
           Or(
-              And(
+              fast_and(
                   self.__shape_type_grid[p] == -1,
                   self.__shape_instance_grid[p] == -1
               ),
-              And(
+              fast_and(
                   self.__shape_type_grid[p] != -1,
                   self.__shape_instance_grid[p] != -1
               )
@@ -136,17 +143,23 @@ class ShapeConstrainer:
       )
 
   def __add_shape_instance_constraints(self):  # pylint: disable=R0914
-    point_has_instance_id = {
-        (point, instance_id): self.__shape_instance_grid[point] == instance_id
-        for point in self.__lattice.points
-        for instance_id in [self.__lattice.point_to_index(p) for p in self.__lattice.points]
-    }
-    not_point_has_instance_id = {k: Not(v) for k, v in point_has_instance_id.items()}
-    point_has_shape_type = {
-        (point, shape_index): self.__shape_type_grid[point] == shape_index
-        for point in self.__lattice.points
-        for shape_index in range(len(self.__variants))
-    }
+    int_vals = {}
+    for i in range(max(len(self.__lattice.points), len(self.__variants))):
+      int_vals[i] = IntVal(i)
+
+    quadtree = ExpressionQuadTree(self.__lattice.points)
+    for instance_id in [self.__lattice.point_to_index(p) for p in self.__lattice.points]:
+      quadtree.add_expr(
+          (HAS_INSTANCE_ID, instance_id),
+          lambda p, i=instance_id: fast_eq(self.__shape_instance_grid[p], int_vals[i]))
+      quadtree.add_expr(
+          (NOT_HAS_INSTANCE_ID, instance_id),
+          lambda p, i=instance_id: fast_ne(self.__shape_instance_grid[p], int_vals[i]))
+    for shape_index in range(len(self.__variants)):
+      quadtree.add_expr(
+          (HAS_SHAPE_TYPE, shape_index),
+          lambda p, i=shape_index: fast_eq(self.__shape_type_grid[p], int_vals[i]))
+
     root_options = defaultdict(list)
     for shape_index, variants in enumerate(self.__variants):  # pylint: disable=R1702
       for variant in variants:
@@ -161,24 +174,22 @@ class ShapeConstrainer:
             offset_points.add(point)
           if offset_points:
             and_terms = []
-            for point in self.__lattice.points:
-              if point in offset_points:
-                and_terms.append(point_has_instance_id[(point, instance_id)])
-                and_terms.append(point_has_shape_type[(point, shape_index)])
-              else:
-                and_terms.append(not_point_has_instance_id[(point, instance_id)])
-            root_options[root_point].append(And(*and_terms))
-    for point in self.__lattice.points:
-      instance_id = self.__lattice.point_to_index(point)
-      or_terms = root_options[point]
+            for p in offset_points:
+              and_terms.append(quadtree.get_point_expr((HAS_INSTANCE_ID, instance_id), p))
+              and_terms.append(quadtree.get_point_expr((HAS_SHAPE_TYPE, shape_index), p))
+            and_terms.append(quadtree.get_other_points_expr(
+                (NOT_HAS_INSTANCE_ID, instance_id), offset_points))
+            root_options[root_point].append(fast_and(*and_terms))
+    for p in self.__lattice.points:
+      instance_id = self.__lattice.point_to_index(p)
+      not_has_instance_id_expr = quadtree.get_other_points_expr(
+          (NOT_HAS_INSTANCE_ID, instance_id), [])
+      or_terms = root_options[p]
       if or_terms:
-        or_terms.append(
-            And(*[v != instance_id for v in self.__shape_instance_grid.values()])
-        )
+        or_terms.append(not_has_instance_id_expr)
         self.__solver.add(Or(*or_terms))
       else:
-        for v in self.__shape_instance_grid.values():
-          self.__solver.add(v != instance_id)
+        self.__solver.add(not_has_instance_id_expr)
 
   def __add_single_copy_constraints(self, shape_index, shape):
     sum_terms = []
