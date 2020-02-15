@@ -8,7 +8,7 @@ from z3 import Implies, Or
 
 import grilops
 import grilops.loops
-from grilops.geometry import Point
+from grilops.geometry import Vector
 
 
 def main():
@@ -36,61 +36,64 @@ def main():
   sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(lattice, sym)
-  grilops.loops.LoopConstrainer(sg, single_loop=True)
+  lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
+
+  # Choose a non-empty cell to have loop order zero, to speed up solving.
+  p = min(p for p in lattice.points if givens[p.y][p.x] != e)
+  sg.solver.add(lc.loop_order_grid[p] == 0)
 
   straights = [sym.NS, sym.EW]
   turns = [sym.NE, sym.SE, sym.SW, sym.NW]
 
-  for y in range(len(givens)):
-    for x in range(len(givens[0])):
-      p = Point(y, x)
-      if givens[y][x] == b:
-        # The loop must turn at a black circle.
-        sg.solver.add(sg.cell_is_one_of(p, turns))
+  for p in lattice.points:
+    given = givens[p.y][p.x]
+    if given == b:
+      # The loop must turn at a black circle.
+      sg.solver.add(sg.cell_is_one_of(p, turns))
 
-        # All connected adjacent cells must contain straight loop segments.
-        if y > 0:
+      # All connected adjacent cells must contain straight loop segments.
+      for n in sg.edge_sharing_neighbors(p):
+        if n.location.y < p.y:
           sg.solver.add(Implies(
               sg.cell_is_one_of(p, [sym.NE, sym.NW]),
-              sg.cell_is(Point(y - 1, x), sym.NS)
+              sg.cell_is(n.location, sym.NS)
           ))
-        if y < len(givens) - 1:
+        if n.location.y > p.y:
           sg.solver.add(Implies(
               sg.cell_is_one_of(p, [sym.SE, sym.SW]),
-              sg.cell_is(Point(y + 1, x), sym.NS)
+              sg.cell_is(n.location, sym.NS)
           ))
-        if x > 0:
+        if n.location.x < p.x:
           sg.solver.add(Implies(
               sg.cell_is_one_of(p, [sym.SW, sym.NW]),
-              sg.cell_is(Point(y, x - 1), sym.EW)
+              sg.cell_is(n.location, sym.EW)
           ))
-        if x < len(givens[0]) - 1:
+        if n.location.x > p.x:
           sg.solver.add(Implies(
               sg.cell_is_one_of(p, [sym.NE, sym.SE]),
-              sg.cell_is(Point(y, x + 1), sym.EW)
+              sg.cell_is(n.location, sym.EW)
           ))
+    elif given == w:
+      # The loop must go straight through a white circle.
+      sg.solver.add(sg.cell_is_one_of(p, straights))
 
-      elif givens[y][x] == w:
-        # The loop must go straight through a white circle.
-        sg.solver.add(sg.cell_is_one_of(p, straights))
-
-        # At least one connected adjacent cell must turn.
-        if 0 < y < len(givens) - 1:
-          sg.solver.add(Implies(
-              sg.cell_is(p, sym.NS),
-              Or(
-                  sg.cell_is_one_of(Point(y - 1, x), turns),
-                  sg.cell_is_one_of(Point(y + 1, x), turns)
-              )
-          ))
-        if 0 < x < len(givens[0]) - 1:
-          sg.solver.add(Implies(
-              sg.cell_is(p, sym.EW),
-              Or(
-                  sg.cell_is_one_of(Point(y, x - 1), turns),
-                  sg.cell_is_one_of(Point(y, x + 1), turns)
-              )
-          ))
+      # At least one connected adjacent cell must turn.
+      if 0 < p.y < len(givens) - 1:
+        sg.solver.add(Implies(
+            sg.cell_is(p, sym.NS),
+            Or(
+                sg.cell_is_one_of(p.translate(Vector(-1, 0)), turns),
+                sg.cell_is_one_of(p.translate(Vector(1, 0)), turns)
+            )
+        ))
+      if 0 < p.x < len(givens[0]) - 1:
+        sg.solver.add(Implies(
+            sg.cell_is(p, sym.EW),
+            Or(
+                sg.cell_is_one_of(p.translate(Vector(0, -1)), turns),
+                sg.cell_is_one_of(p.translate(Vector(0, 1)), turns)
+            )
+        ))
 
   if sg.solve():
     sg.print()
