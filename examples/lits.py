@@ -3,6 +3,7 @@
 Example puzzle can be found at https://en.wikipedia.org/wiki/LITS.
 """
 
+from collections import defaultdict
 from z3 import And, If, Implies, Int, Not, Or, PbEq
 
 import grilops
@@ -28,29 +29,27 @@ AREAS = [
 
 def link_symbols_to_shapes(sym, sg, sc):
   """Add constraints to ensure the symbols match the shapes."""
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      sg.solver.add(
-          If(
-              sc.shape_type_grid[p] != -1,
-              sg.cell_is(p, sc.shape_type_grid[p]),
-              sg.cell_is(p, sym.W)
-          )
-      )
+  for p in sg.lattice.points:
+    sg.solver.add(
+        If(
+            sc.shape_type_grid[p] != -1,
+            sg.cell_is(p, sc.shape_type_grid[p]),
+            sg.cell_is(p, sym.W)
+        )
+    )
 
 
-def add_area_constraints(sc):
+def add_area_constraints(lattice, sc):
   """Ensure each area of the puzzle contains exactly one tetromino."""
   for area_label in {c for line in AREAS for c in line}:
+    area_points = []
     area_type_cells = []
     area_instance_cells = []
-    for y in range(HEIGHT):
-      for x in range(WIDTH):
-        if AREAS[y][x] == area_label:
-          p = Point(y, x)
-          area_type_cells.append(sc.shape_type_grid[p])
-          area_instance_cells.append(sc.shape_instance_grid[p])
+    for p in lattice.points:
+      if AREAS[p.y][p.x] == area_label:
+        area_points.append(p)
+        area_type_cells.append(sc.shape_type_grid[p])
+        area_instance_cells.append(sc.shape_instance_grid[p])
 
     area_type = Int(f"at-{area_label}")
     sc.solver.add(area_type >= 0)
@@ -58,8 +57,9 @@ def add_area_constraints(sc):
     sc.solver.add(And(*[Or(c == -1, c == area_type) for c in area_type_cells]))
 
     area_instance = Int(f"ai-{area_label}")
-    sc.solver.add(area_instance >= 0)
-    sc.solver.add(area_instance < HEIGHT * WIDTH)
+    sc.solver.add(Or(*[
+        area_instance == lattice.point_to_index(p) for p in area_points
+    ]))
     sc.solver.add(And(
         *[Or(c == -1, c == area_instance) for c in area_instance_cells]))
 
@@ -70,19 +70,21 @@ def add_nurikabe_constraints(sym, sg, rc):
   """Add the nurikabe constraints (one connected sea with no 2x2 regions)."""
   # There must be only one sea, containing all black cells.
   sea_id = Int("sea-id")
-  sg.solver.add(sea_id >= 0)
-  sg.solver.add(sea_id < HEIGHT * WIDTH)
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      sg.solver.add(Implies(
-          Not(sg.cell_is(p, sym.W)),
-          rc.region_id_grid[p] == sea_id
-      ))
-      sg.solver.add(Implies(
-          sg.cell_is(p, sym.W),
-          rc.region_id_grid[p] != sea_id
-      ))
+  for p in sg.lattice.points:
+    sg.solver.add(sg.cell_is(p, sym.W) == (rc.region_id_grid[p] != sea_id))
+
+  # Constrain sea_id to be the index of one of the points in
+  # the smallest area, among those areas of size greater than 4.
+  area_to_points = defaultdict(list)
+  for p in sg.lattice.points:
+    area_to_points[AREAS[p.y][p.x]].append(p)
+  area_points = min(
+      (ps for ps in area_to_points.values() if len(ps) > 4),
+      key=len
+  )
+  sg.solver.add(Or(*[
+      sea_id == sg.lattice.point_to_index(p) for p in area_points
+  ]))
 
   # The sea is not allowed to contain 2x2 areas of black cells.
   for sy in range(HEIGHT - 1):
@@ -95,28 +97,26 @@ def add_nurikabe_constraints(sym, sg, rc):
 
 def add_adjacent_tetronimo_constraints(lattice, sc):
   """Ensure that no two matching tetrominoes are orthogonally adjacent."""
-  for y in range(HEIGHT):
-    for x in range(WIDTH):
-      p = Point(y, x)
-      shape_type = sc.shape_type_grid[p]
-      shape_id = sc.shape_instance_grid[p]
-      adjacent_types = [
-          n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_type_grid, p)
-      ]
-      adjacent_ids = [
-          n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_instance_grid, p)
-      ]
-      for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
-        sc.solver.add(
-            Implies(
-                And(
-                    shape_type != -1,
-                    adjacent_type != -1,
-                    shape_type == adjacent_type
-                ),
-                shape_id == adjacent_id
-            )
-        )
+  for p in lattice.points:
+    shape_type = sc.shape_type_grid[p]
+    shape_id = sc.shape_instance_grid[p]
+    adjacent_types = [
+        n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_type_grid, p)
+    ]
+    adjacent_ids = [
+        n.symbol for n in lattice.edge_sharing_neighbors(sc.shape_instance_grid, p)
+    ]
+    for adjacent_type, adjacent_id in zip(adjacent_types, adjacent_ids):
+      sc.solver.add(
+          Implies(
+              And(
+                  shape_type != -1,
+                  adjacent_type != -1,
+                  shape_type == adjacent_type
+              ),
+              shape_id == adjacent_id
+          )
+      )
 
 
 def main():
@@ -140,7 +140,7 @@ def main():
   )
 
   link_symbols_to_shapes(sym, sg, sc)
-  add_area_constraints(sc)
+  add_area_constraints(lattice, sc)
   add_nurikabe_constraints(sym, sg, rc)
   add_adjacent_tetronimo_constraints(lattice, sc)
 
