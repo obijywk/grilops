@@ -98,7 +98,6 @@ class LoopConstrainer:
       self,
       symbol_grid: SymbolGrid,
       single_loop: bool = False,
-      inside_outside: bool = False
   ):
     LoopConstrainer._instance_index += 1
 
@@ -107,8 +106,6 @@ class LoopConstrainer:
     self.__loop_order_grid: Dict[Point, ArithRef] = {}
 
     self.__add_loop_edge_constraints()
-    if inside_outside:
-      self.__make_inside_outside_grid()
     if single_loop:
       self.__add_single_loop_constraints()
 
@@ -203,9 +200,11 @@ class LoopConstrainer:
   def inside_outside_grid(self) -> Dict[Point, ArithRef]:
     """(Dict[Point, ArithRef]): Whether cells are contained by loops.
 
-    Values are the L, I, and O attributes of this module. Only populated if
-    inside_outside was true.
+    Values are the L, I, and O attributes of this module. On the first call
+    to this property, the grid will be constructed.
     """
+    if not self.__inside_outside_grid:
+      self.__make_inside_outside_grid()
     return self.__inside_outside_grid
 
   def print_inside_outside_grid(self):

@@ -44,7 +44,7 @@ DIRECTION_SEGMENT_SYMBOLS = {
 def main():
   """Castle Wall solver example."""
   sg = grilops.SymbolGrid(LATTICE, SYM)
-  lc = LoopConstrainer(sg, single_loop=True, inside_outside=True)
+  lc = LoopConstrainer(sg, single_loop=True)
 
   for p, (io, expected_count, direction) in GIVENS.items():
     # Constrain whether the given cell is inside or outside of the loop. This
