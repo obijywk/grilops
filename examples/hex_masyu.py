@@ -58,10 +58,9 @@ def main():
       for c in range(len(GIVENS[r]))
   ])
   sym = grilops.loops.LoopSymbolSet(lattice)
-  sym.append("Inside", "I \n  ")
-  sym.append("Outside", "O \n  ")
+  sym.append("EMPTY", ". \n  ")
   sg = grilops.SymbolGrid(lattice, sym)
-  lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
+  grilops.loops.LoopConstrainer(sg, single_loop=True)
 
   turns = [sym.NESE, sym.ESW, sym.WSE, sym.NWSW, sym.WNE, sym.ENW]
 
@@ -105,12 +104,6 @@ def main():
                   sg.cell_is_one_of(np2, turns)
               )
           ))
-
-    else:
-      sg.solver.add(
-          (lc.inside_outside_grid[p] == grilops.loops.I) ==
-          (sg.grid[p] == sym.Inside)
-      )
 
   if sg.solve():
     solved_grid = sg.solved_grid()
