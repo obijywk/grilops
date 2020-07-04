@@ -27,7 +27,6 @@ GIVENS = {
     (8, 8): 4,
 }
 
-
 def constrain_sea(sym, sg, rc):
   """Add constraints to the sea cells."""
 
@@ -42,7 +41,10 @@ def constrain_sea(sym, sg, rc):
       p = Point(y, x)
       sg.solver.add(Implies(
           sg.cell_is(p, sym.B),
-          rc.region_id_grid[p] == sea_id
+          And(
+              rc.region_id_grid[p] == sea_id,
+              rc.region_size_grid[p] == HEIGHT * WIDTH - sum(GIVENS.values())
+          )
       ))
       sg.solver.add(Implies(
           sg.cell_is(p, sym.W),
@@ -110,7 +112,12 @@ def main():
   sym = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
   lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(lattice, sym)
-  rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver)
+  rc = grilops.regions.RegionConstrainer(
+      lattice,
+      solver=sg.solver,
+      min_region_size=min(GIVENS.values()),
+      max_region_size=HEIGHT * WIDTH - sum(GIVENS.values())
+  )
 
   constrain_sea(sym, sg, rc)
   constrain_islands(sym, sg, rc)
