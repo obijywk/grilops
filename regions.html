@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>grilops.regions API documentation</title>
+<meta name="description" content="This module supports puzzles that group cells into contiguous regions …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grilops.regions</code></h1>
+</header>
+<section id="section-intro">
+<p>This module supports puzzles that group cells into contiguous regions.</p>
+<p>Internally, the <code><a title="grilops.regions.RegionConstrainer" href="#grilops.regions.RegionConstrainer">RegionConstrainer</a></code> constructs subtrees, each spanning the cells
+contained within a region. Aspects of a cell's relationship to the other cells
+in its subtree are exposed by properties of the <code><a title="grilops.regions.RegionConstrainer" href="#grilops.regions.RegionConstrainer">RegionConstrainer</a></code>.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module supports puzzles that group cells into contiguous regions.
+
+Internally, the `RegionConstrainer` constructs subtrees, each spanning the cells
+contained within a region. Aspects of a cell&#39;s relationship to the other cells
+in its subtree are exposed by properties of the `RegionConstrainer`.
+&#34;&#34;&#34;
+
+from typing import Dict, Optional
+from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
+
+from .geometry import Lattice, Point, Vector
+
+
+X: int = 0
+&#34;&#34;&#34;The `RegionConstrainer.parent_grid` value indicating that a cell is not
+  part of a region.&#34;&#34;&#34;
+
+R: int = 1
+&#34;&#34;&#34;The `RegionConstrainer.parent_grid` value indicating that a cell is the
+  root of its region&#39;s subtree.&#34;&#34;&#34;
+
+
+class RegionConstrainer:  # pylint: disable=R0902
+  &#34;&#34;&#34;Creates constraints for grouping cells into contiguous regions.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will be
+      constructed.
+    complete (bool): If true, every cell must be part of a region. Defaults to
+      true.
+    min_region_size (Optional[int]): The minimum possible size of a region.
+    max_region_size (Optional[int]): The maximum possible size of a region.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(  # pylint: disable=R0913
+      self,
+      lattice: Lattice,
+      solver: Solver = None,
+      complete: bool = True,
+      min_region_size: Optional[int] = None,
+      max_region_size: Optional[int] = None
+  ):
+    RegionConstrainer._instance_index += 1
+    self.__lattice = lattice
+    if solver:
+      self.__solver = solver
+    else:
+      self.__solver = Solver()
+    self.__complete = complete
+    if min_region_size is not None:
+      self.__min_region_size = min_region_size
+    else:
+      self.__min_region_size = 1
+    if max_region_size is not None:
+      self.__max_region_size = max_region_size
+    else:
+      self.__max_region_size = len(self.__lattice.points)
+    self.__manage_edge_sharing_directions()
+    self.__create_grids()
+    self.__add_constraints()
+
+  def __manage_edge_sharing_directions(self):
+    &#34;&#34;&#34;Creates the structures used for managing edge-sharing directions.
+
+    Creates the mapping between edge-sharing directions and the parent
+    indices corresponding to them.
+    &#34;&#34;&#34;
+    self.__edge_sharing_direction_to_index = {}
+    self.__parent_type_to_index = {&#34;X&#34;: X, &#34;R&#34;: R}
+    self.__parent_types = [&#34;X&#34;, &#34;R&#34;]
+    for name, d in self.__lattice.edge_sharing_directions():
+      index = len(self.__parent_types)
+      self.__parent_type_to_index[name] = index
+      self.__edge_sharing_direction_to_index[d] = index
+      self.__parent_types.append(name)
+
+  def __create_grids(self):
+    &#34;&#34;&#34;Create the grids used to model region constraints.&#34;&#34;&#34;
+    self.__parent_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcp-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= R)
+      else:
+        self.__solver.add(v &gt;= X)
+      self.__solver.add(v &lt; len(self.__parent_types))
+      self.__parent_grid[p] = v
+
+    self.__subtree_size_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcss-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= 1)
+      else:
+        self.__solver.add(v &gt;= 0)
+      self.__solver.add(v &lt;= self.__max_region_size)
+      self.__subtree_size_grid[p] = v
+
+    self.__region_id_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcid-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= 0)
+      else:
+        self.__solver.add(v &gt;= -1)
+      self.__solver.add(v &lt; len(self.__lattice.points))
+      parent = self.__parent_grid[p]
+      self.__solver.add(Implies(parent == X, v == -1))
+      self.__solver.add(Implies(
+          parent == R,
+          v == self.__lattice.point_to_index(p)
+      ))
+      self.__region_id_grid[p] = v
+
+    self.__region_size_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcrs-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= self.__min_region_size)
+      else:
+        self.__solver.add(Or(v &gt;= self.__min_region_size, v == -1))
+      self.__solver.add(v &lt;= self.__max_region_size)
+      parent = self.__parent_grid[p]
+      subtree_size = self.__subtree_size_grid[p]
+      self.__solver.add(Implies(parent == X, v == -1))
+      self.__solver.add(Implies(parent == R, v == subtree_size))
+      self.__region_size_grid[p] = v
+
+  def __add_constraints(self):
+    &#34;&#34;&#34;Add constraints to the region modeling grids.&#34;&#34;&#34;
+    def constrain_side(p, sp, sd):
+      self.__solver.add(Implies(
+          self.__parent_grid[p] == X,
+          self.__parent_grid[sp] != sd
+      ))
+      self.__solver.add(Implies(
+          self.__parent_grid[sp] == sd,
+          And(
+              self.__region_id_grid[p] == self.__region_id_grid[sp],
+              self.__region_size_grid[p] == self.__region_size_grid[sp],
+          )
+      ))
+
+    def subtree_size_term(sp, sd):
+      return If(
+          self.__parent_grid[sp] == sd,
+          self.__subtree_size_grid[sp],
+          0
+      )
+
+    for p in self.__lattice.points:
+      parent = self.__parent_grid[p]
+      subtree_size_terms = [If(parent != X, 1, 0)]
+
+      for _, d in self.__lattice.edge_sharing_directions():
+        sp = p.translate(d)
+        if sp in self.__parent_grid:
+          opposite_index = self.__edge_sharing_direction_to_index[d.negate()]
+          constrain_side(p, sp, opposite_index)
+          subtree_size_terms.append(subtree_size_term(sp, opposite_index))
+        else:
+          d_index = self.__edge_sharing_direction_to_index[d]
+          self.__solver.add(parent != d_index)
+
+      self.__solver.add(
+          self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
+      )
+
+  def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+    &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
+
+    For instance, if direction is (-1, 0), return the index for N.
+
+    Args:
+      direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+
+    Returns:
+      The `RegionConstrainer.parent_grid` value that means that the parent
+        in its region&#39;s subtree is the cell offset by that direction.
+    &#34;&#34;&#34;
+    return self.__edge_sharing_direction_to_index[direction]
+
+  def parent_type_to_index(self, parent_type: str) -&gt; int:
+    &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the parent type.
+
+    The parent_type may be a direction name (like &#34;N&#34;) or name of a special
+    value like &#34;R&#34; or &#34;X&#34;.
+
+    Args:
+      parent_type (str): The parent type.
+
+    Returns:
+      The corresponding `RegionConstrainer.parent_grid` value.
+    &#34;&#34;&#34;
+    return self.__parent_type_to_index[parent_type]
+
+  @property
+  def solver(self) -&gt; Solver:
+    &#34;&#34;&#34;The `Solver` associated with this `RegionConstrainer`.&#34;&#34;&#34;
+    return self.__solver
+
+  @property
+  def region_id_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of numbers identifying regions.
+
+    A region&#39;s identifier is the position in the grid (going in order from left
+    to right, top to bottom) of the root of that region&#39;s subtree. It is the
+    same as the index of the point in the lattice.
+    &#34;&#34;&#34;
+    return self.__region_id_grid
+
+  @property
+  def region_size_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of region sizes.&#34;&#34;&#34;
+    return self.__region_size_grid
+
+  @property
+  def parent_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of region subtree parent pointers.&#34;&#34;&#34;
+    return self.__parent_grid
+
+  @property
+  def subtree_size_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of cell subtree sizes.
+
+    A cell&#39;s subtree size is one plus the number of cells that are descendents
+    of the cell in its region&#39;s subtree.
+    &#34;&#34;&#34;
+    return self.__subtree_size_grid
+
+  def print_trees(self):
+    &#34;&#34;&#34;Prints the region parent assigned to each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    labels = {
+        &#34;X&#34;: &#34; &#34;,
+        &#34;R&#34;: &#34;R&#34;,
+        &#34;N&#34;: chr(0x2B61),
+        &#34;E&#34;: chr(0x2B62),
+        &#34;S&#34;: chr(0x2B63),
+        &#34;W&#34;: chr(0x2B60),
+        &#34;NE&#34;: chr(0x2B67),
+        &#34;NW&#34;: chr(0x2B66),
+        &#34;SE&#34;: chr(0x2B68),
+        &#34;SW&#34;: chr(0x2B69),
+    }
+
+    model = self.__solver.model()
+
+    def print_function(p):
+      v = self.__parent_grid[p]
+      parent_index = model.eval(v).as_long()
+      parent_type = self.__parent_types[parent_index]
+      return labels[parent_type]
+
+    self.__lattice.print(print_function, &#34; &#34;)
+
+  def print_subtree_sizes(self):
+    &#34;&#34;&#34;Prints the region subtree size of each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__subtree_size_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)
+
+  def print_region_ids(self):
+    &#34;&#34;&#34;Prints a number identifying the region that owns each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__region_id_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)
+
+  def print_region_sizes(self):
+    &#34;&#34;&#34;Prints the size of the region that contains each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__region_size_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="grilops.regions.R"><code class="name">var <span class="ident">R</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value indicating that a cell is the
+root of its region's subtree.</p></div>
+</dd>
+<dt id="grilops.regions.X"><code class="name">var <span class="ident">X</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value indicating that a cell is not
+part of a region.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="grilops.regions.RegionConstrainer"><code class="flex name class">
+<span>class <span class="ident">RegionConstrainer</span></span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, solver: z3.z3.Solver = None, complete: bool = True, min_region_size: Union[int, NoneType] = None, max_region_size: Union[int, NoneType] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates constraints for grouping cells into contiguous regions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lattice</code></strong> :&ensp;<code><a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
+<dd>The structure of the grid.</dd>
+<dt><strong><code>solver</code></strong> :&ensp;<code>Optional[z3.Solver]</code></dt>
+<dd>A <code>Solver</code> object. If None, a <code>Solver</code> will be
+constructed.</dd>
+<dt><strong><code>complete</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, every cell must be part of a region. Defaults to
+true.</dd>
+<dt><strong><code>min_region_size</code></strong> :&ensp;<code>Optional[int]</code></dt>
+<dd>The minimum possible size of a region.</dd>
+<dt><strong><code>max_region_size</code></strong> :&ensp;<code>Optional[int]</code></dt>
+<dd>The maximum possible size of a region.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RegionConstrainer:  # pylint: disable=R0902
+  &#34;&#34;&#34;Creates constraints for grouping cells into contiguous regions.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will be
+      constructed.
+    complete (bool): If true, every cell must be part of a region. Defaults to
+      true.
+    min_region_size (Optional[int]): The minimum possible size of a region.
+    max_region_size (Optional[int]): The maximum possible size of a region.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(  # pylint: disable=R0913
+      self,
+      lattice: Lattice,
+      solver: Solver = None,
+      complete: bool = True,
+      min_region_size: Optional[int] = None,
+      max_region_size: Optional[int] = None
+  ):
+    RegionConstrainer._instance_index += 1
+    self.__lattice = lattice
+    if solver:
+      self.__solver = solver
+    else:
+      self.__solver = Solver()
+    self.__complete = complete
+    if min_region_size is not None:
+      self.__min_region_size = min_region_size
+    else:
+      self.__min_region_size = 1
+    if max_region_size is not None:
+      self.__max_region_size = max_region_size
+    else:
+      self.__max_region_size = len(self.__lattice.points)
+    self.__manage_edge_sharing_directions()
+    self.__create_grids()
+    self.__add_constraints()
+
+  def __manage_edge_sharing_directions(self):
+    &#34;&#34;&#34;Creates the structures used for managing edge-sharing directions.
+
+    Creates the mapping between edge-sharing directions and the parent
+    indices corresponding to them.
+    &#34;&#34;&#34;
+    self.__edge_sharing_direction_to_index = {}
+    self.__parent_type_to_index = {&#34;X&#34;: X, &#34;R&#34;: R}
+    self.__parent_types = [&#34;X&#34;, &#34;R&#34;]
+    for name, d in self.__lattice.edge_sharing_directions():
+      index = len(self.__parent_types)
+      self.__parent_type_to_index[name] = index
+      self.__edge_sharing_direction_to_index[d] = index
+      self.__parent_types.append(name)
+
+  def __create_grids(self):
+    &#34;&#34;&#34;Create the grids used to model region constraints.&#34;&#34;&#34;
+    self.__parent_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcp-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= R)
+      else:
+        self.__solver.add(v &gt;= X)
+      self.__solver.add(v &lt; len(self.__parent_types))
+      self.__parent_grid[p] = v
+
+    self.__subtree_size_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcss-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= 1)
+      else:
+        self.__solver.add(v &gt;= 0)
+      self.__solver.add(v &lt;= self.__max_region_size)
+      self.__subtree_size_grid[p] = v
+
+    self.__region_id_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcid-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= 0)
+      else:
+        self.__solver.add(v &gt;= -1)
+      self.__solver.add(v &lt; len(self.__lattice.points))
+      parent = self.__parent_grid[p]
+      self.__solver.add(Implies(parent == X, v == -1))
+      self.__solver.add(Implies(
+          parent == R,
+          v == self.__lattice.point_to_index(p)
+      ))
+      self.__region_id_grid[p] = v
+
+    self.__region_size_grid: Dict[Point, ArithRef] = {}
+    for p in self.__lattice.points:
+      v = Int(f&#34;rcrs-{RegionConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      if self.__complete:
+        self.__solver.add(v &gt;= self.__min_region_size)
+      else:
+        self.__solver.add(Or(v &gt;= self.__min_region_size, v == -1))
+      self.__solver.add(v &lt;= self.__max_region_size)
+      parent = self.__parent_grid[p]
+      subtree_size = self.__subtree_size_grid[p]
+      self.__solver.add(Implies(parent == X, v == -1))
+      self.__solver.add(Implies(parent == R, v == subtree_size))
+      self.__region_size_grid[p] = v
+
+  def __add_constraints(self):
+    &#34;&#34;&#34;Add constraints to the region modeling grids.&#34;&#34;&#34;
+    def constrain_side(p, sp, sd):
+      self.__solver.add(Implies(
+          self.__parent_grid[p] == X,
+          self.__parent_grid[sp] != sd
+      ))
+      self.__solver.add(Implies(
+          self.__parent_grid[sp] == sd,
+          And(
+              self.__region_id_grid[p] == self.__region_id_grid[sp],
+              self.__region_size_grid[p] == self.__region_size_grid[sp],
+          )
+      ))
+
+    def subtree_size_term(sp, sd):
+      return If(
+          self.__parent_grid[sp] == sd,
+          self.__subtree_size_grid[sp],
+          0
+      )
+
+    for p in self.__lattice.points:
+      parent = self.__parent_grid[p]
+      subtree_size_terms = [If(parent != X, 1, 0)]
+
+      for _, d in self.__lattice.edge_sharing_directions():
+        sp = p.translate(d)
+        if sp in self.__parent_grid:
+          opposite_index = self.__edge_sharing_direction_to_index[d.negate()]
+          constrain_side(p, sp, opposite_index)
+          subtree_size_terms.append(subtree_size_term(sp, opposite_index))
+        else:
+          d_index = self.__edge_sharing_direction_to_index[d]
+          self.__solver.add(parent != d_index)
+
+      self.__solver.add(
+          self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
+      )
+
+  def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+    &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
+
+    For instance, if direction is (-1, 0), return the index for N.
+
+    Args:
+      direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+
+    Returns:
+      The `RegionConstrainer.parent_grid` value that means that the parent
+        in its region&#39;s subtree is the cell offset by that direction.
+    &#34;&#34;&#34;
+    return self.__edge_sharing_direction_to_index[direction]
+
+  def parent_type_to_index(self, parent_type: str) -&gt; int:
+    &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the parent type.
+
+    The parent_type may be a direction name (like &#34;N&#34;) or name of a special
+    value like &#34;R&#34; or &#34;X&#34;.
+
+    Args:
+      parent_type (str): The parent type.
+
+    Returns:
+      The corresponding `RegionConstrainer.parent_grid` value.
+    &#34;&#34;&#34;
+    return self.__parent_type_to_index[parent_type]
+
+  @property
+  def solver(self) -&gt; Solver:
+    &#34;&#34;&#34;The `Solver` associated with this `RegionConstrainer`.&#34;&#34;&#34;
+    return self.__solver
+
+  @property
+  def region_id_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of numbers identifying regions.
+
+    A region&#39;s identifier is the position in the grid (going in order from left
+    to right, top to bottom) of the root of that region&#39;s subtree. It is the
+    same as the index of the point in the lattice.
+    &#34;&#34;&#34;
+    return self.__region_id_grid
+
+  @property
+  def region_size_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of region sizes.&#34;&#34;&#34;
+    return self.__region_size_grid
+
+  @property
+  def parent_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of region subtree parent pointers.&#34;&#34;&#34;
+    return self.__parent_grid
+
+  @property
+  def subtree_size_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;A dictionary of cell subtree sizes.
+
+    A cell&#39;s subtree size is one plus the number of cells that are descendents
+    of the cell in its region&#39;s subtree.
+    &#34;&#34;&#34;
+    return self.__subtree_size_grid
+
+  def print_trees(self):
+    &#34;&#34;&#34;Prints the region parent assigned to each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    labels = {
+        &#34;X&#34;: &#34; &#34;,
+        &#34;R&#34;: &#34;R&#34;,
+        &#34;N&#34;: chr(0x2B61),
+        &#34;E&#34;: chr(0x2B62),
+        &#34;S&#34;: chr(0x2B63),
+        &#34;W&#34;: chr(0x2B60),
+        &#34;NE&#34;: chr(0x2B67),
+        &#34;NW&#34;: chr(0x2B66),
+        &#34;SE&#34;: chr(0x2B68),
+        &#34;SW&#34;: chr(0x2B69),
+    }
+
+    model = self.__solver.model()
+
+    def print_function(p):
+      v = self.__parent_grid[p]
+      parent_index = model.eval(v).as_long()
+      parent_type = self.__parent_types[parent_index]
+      return labels[parent_type]
+
+    self.__lattice.print(print_function, &#34; &#34;)
+
+  def print_subtree_sizes(self):
+    &#34;&#34;&#34;Prints the region subtree size of each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__subtree_size_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)
+
+  def print_region_ids(self):
+    &#34;&#34;&#34;Prints a number identifying the region that owns each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__region_id_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)
+
+  def print_region_sizes(self):
+    &#34;&#34;&#34;Prints the size of the region that contains each cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    def print_function(p):
+      v = self.__region_size_grid[p]
+      value = model.eval(v).as_long()
+      return f&#34;{value:3}&#34;
+
+    self.__lattice.print(print_function, &#34;   &#34;)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.regions.RegionConstrainer.parent_grid"><code class="name">var <span class="ident">parent_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>A dictionary of region subtree parent pointers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def parent_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;A dictionary of region subtree parent pointers.&#34;&#34;&#34;
+  return self.__parent_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.region_id_grid"><code class="name">var <span class="ident">region_id_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>A dictionary of numbers identifying regions.</p>
+<p>A region's identifier is the position in the grid (going in order from left
+to right, top to bottom) of the root of that region's subtree. It is the
+same as the index of the point in the lattice.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def region_id_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;A dictionary of numbers identifying regions.
+
+  A region&#39;s identifier is the position in the grid (going in order from left
+  to right, top to bottom) of the root of that region&#39;s subtree. It is the
+  same as the index of the point in the lattice.
+  &#34;&#34;&#34;
+  return self.__region_id_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.region_size_grid"><code class="name">var <span class="ident">region_size_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>A dictionary of region sizes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def region_size_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;A dictionary of region sizes.&#34;&#34;&#34;
+  return self.__region_size_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.solver"><code class="name">var <span class="ident">solver</span> : z3.z3.Solver</code></dt>
+<dd>
+<div class="desc"><p>The <code>Solver</code> associated with this <code><a title="grilops.regions.RegionConstrainer" href="#grilops.regions.RegionConstrainer">RegionConstrainer</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def solver(self) -&gt; Solver:
+  &#34;&#34;&#34;The `Solver` associated with this `RegionConstrainer`.&#34;&#34;&#34;
+  return self.__solver</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.subtree_size_grid"><code class="name">var <span class="ident">subtree_size_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>A dictionary of cell subtree sizes.</p>
+<p>A cell's subtree size is one plus the number of cells that are descendents
+of the cell in its region's subtree.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def subtree_size_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;A dictionary of cell subtree sizes.
+
+  A cell&#39;s subtree size is one plus the number of cells that are descendents
+  of the cell in its region&#39;s subtree.
+  &#34;&#34;&#34;
+  return self.__subtree_size_grid</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.regions.RegionConstrainer.edge_sharing_direction_to_index"><code class="name flex">
+<span>def <span class="ident">edge_sharing_direction_to_index</span></span>(<span>self, direction: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value for the direction.</p>
+<p>For instance, if direction is (-1, 0), return the index for N.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
+<dd>The direction to an edge-sharing cell.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value that means that the parent
+in its region's subtree is the cell offset by that direction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+  &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
+
+  For instance, if direction is (-1, 0), return the index for N.
+
+  Args:
+    direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+
+  Returns:
+    The `RegionConstrainer.parent_grid` value that means that the parent
+      in its region&#39;s subtree is the cell offset by that direction.
+  &#34;&#34;&#34;
+  return self.__edge_sharing_direction_to_index[direction]</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.parent_type_to_index"><code class="name flex">
+<span>def <span class="ident">parent_type_to_index</span></span>(<span>self, parent_type: str) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value for the parent type.</p>
+<p>The parent_type may be a direction name (like "N") or name of a special
+value like "R" or "X".</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>parent_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The parent type.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The corresponding <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parent_type_to_index(self, parent_type: str) -&gt; int:
+  &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the parent type.
+
+  The parent_type may be a direction name (like &#34;N&#34;) or name of a special
+  value like &#34;R&#34; or &#34;X&#34;.
+
+  Args:
+    parent_type (str): The parent type.
+
+  Returns:
+    The corresponding `RegionConstrainer.parent_grid` value.
+  &#34;&#34;&#34;
+  return self.__parent_type_to_index[parent_type]</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.print_region_ids"><code class="name flex">
+<span>def <span class="ident">print_region_ids</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints a number identifying the region that owns each cell.</p>
+<p>Should be called only after the solver has been checked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_region_ids(self):
+  &#34;&#34;&#34;Prints a number identifying the region that owns each cell.
+
+  Should be called only after the solver has been checked.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  def print_function(p):
+    v = self.__region_id_grid[p]
+    value = model.eval(v).as_long()
+    return f&#34;{value:3}&#34;
+
+  self.__lattice.print(print_function, &#34;   &#34;)</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.print_region_sizes"><code class="name flex">
+<span>def <span class="ident">print_region_sizes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the size of the region that contains each cell.</p>
+<p>Should be called only after the solver has been checked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_region_sizes(self):
+  &#34;&#34;&#34;Prints the size of the region that contains each cell.
+
+  Should be called only after the solver has been checked.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  def print_function(p):
+    v = self.__region_size_grid[p]
+    value = model.eval(v).as_long()
+    return f&#34;{value:3}&#34;
+
+  self.__lattice.print(print_function, &#34;   &#34;)</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.print_subtree_sizes"><code class="name flex">
+<span>def <span class="ident">print_subtree_sizes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the region subtree size of each cell.</p>
+<p>Should be called only after the solver has been checked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_subtree_sizes(self):
+  &#34;&#34;&#34;Prints the region subtree size of each cell.
+
+  Should be called only after the solver has been checked.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  def print_function(p):
+    v = self.__subtree_size_grid[p]
+    value = model.eval(v).as_long()
+    return f&#34;{value:3}&#34;
+
+  self.__lattice.print(print_function, &#34;   &#34;)</code></pre>
+</details>
+</dd>
+<dt id="grilops.regions.RegionConstrainer.print_trees"><code class="name flex">
+<span>def <span class="ident">print_trees</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the region parent assigned to each cell.</p>
+<p>Should be called only after the solver has been checked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_trees(self):
+  &#34;&#34;&#34;Prints the region parent assigned to each cell.
+
+  Should be called only after the solver has been checked.
+  &#34;&#34;&#34;
+  labels = {
+      &#34;X&#34;: &#34; &#34;,
+      &#34;R&#34;: &#34;R&#34;,
+      &#34;N&#34;: chr(0x2B61),
+      &#34;E&#34;: chr(0x2B62),
+      &#34;S&#34;: chr(0x2B63),
+      &#34;W&#34;: chr(0x2B60),
+      &#34;NE&#34;: chr(0x2B67),
+      &#34;NW&#34;: chr(0x2B66),
+      &#34;SE&#34;: chr(0x2B68),
+      &#34;SW&#34;: chr(0x2B69),
+  }
+
+  model = self.__solver.model()
+
+  def print_function(p):
+    v = self.__parent_grid[p]
+    parent_index = model.eval(v).as_long()
+    parent_type = self.__parent_types[parent_index]
+    return labels[parent_type]
+
+  self.__lattice.print(print_function, &#34; &#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grilops" href="index.html">grilops</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="grilops.regions.R" href="#grilops.regions.R">R</a></code></li>
+<li><code><a title="grilops.regions.X" href="#grilops.regions.X">X</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="grilops.regions.RegionConstrainer" href="#grilops.regions.RegionConstrainer">RegionConstrainer</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.regions.RegionConstrainer.edge_sharing_direction_to_index" href="#grilops.regions.RegionConstrainer.edge_sharing_direction_to_index">edge_sharing_direction_to_index</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">parent_grid</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.parent_type_to_index" href="#grilops.regions.RegionConstrainer.parent_type_to_index">parent_type_to_index</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.print_region_ids" href="#grilops.regions.RegionConstrainer.print_region_ids">print_region_ids</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.print_region_sizes" href="#grilops.regions.RegionConstrainer.print_region_sizes">print_region_sizes</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.print_subtree_sizes" href="#grilops.regions.RegionConstrainer.print_subtree_sizes">print_subtree_sizes</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.print_trees" href="#grilops.regions.RegionConstrainer.print_trees">print_trees</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.region_id_grid" href="#grilops.regions.RegionConstrainer.region_id_grid">region_id_grid</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.region_size_grid" href="#grilops.regions.RegionConstrainer.region_size_grid">region_size_grid</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.solver" href="#grilops.regions.RegionConstrainer.solver">solver</a></code></li>
+<li><code><a title="grilops.regions.RegionConstrainer.subtree_size_grid" href="#grilops.regions.RegionConstrainer.subtree_size_grid">subtree_size_grid</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
+</body>
+</html>

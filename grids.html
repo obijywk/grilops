@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>grilops.grids API documentation</title>
+<meta name="description" content="This module supports constructing and working with grids of cells." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grilops.grids</code></h1>
+</header>
+<section id="section-intro">
+<p>This module supports constructing and working with grids of cells.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module supports constructing and working with grids of cells.&#34;&#34;&#34;
+
+from typing import Callable, Dict, List, Optional
+from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat
+
+from .symbols import SymbolSet
+from .geometry import Lattice, Neighbor, Point
+
+
+class SymbolGrid:
+  &#34;&#34;&#34;A grid of cells that can be solved to contain specific symbols.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    symbol_set (grilops.symbols.SymbolSet): The set of symbols to be filled
+      into the grid.
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
+      be constructed.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      lattice: Lattice,
+      symbol_set: SymbolSet,
+      solver: Optional[Solver] = None
+  ):
+    SymbolGrid._instance_index += 1
+    if solver:
+      self.__solver = solver
+    else:
+      self.__solver = Solver()
+    self.__lattice = lattice
+    self.__symbol_set = symbol_set
+    self.__grid: Dict[Point, ArithRef] = {}
+    for p in lattice.points:
+      v = Int(f&#34;sg-{SymbolGrid._instance_index}-{p.y}-{p.x}&#34;)
+      self.__solver.add(v &gt;= symbol_set.min_index())
+      self.__solver.add(v &lt;= symbol_set.max_index())
+      self.__grid[p] = v
+
+  @property
+  def solver(self) -&gt; Solver:
+    &#34;&#34;&#34;The `Solver` object associated with this `SymbolGrid`.&#34;&#34;&#34;
+    return self.__solver
+
+  @property
+  def symbol_set(self) -&gt; SymbolSet:
+    &#34;&#34;&#34;The `grilops.symbols.SymbolSet` associated with this `SymbolGrid`.&#34;&#34;&#34;
+    return self.__symbol_set
+
+  @property
+  def grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;The grid of cells.&#34;&#34;&#34;
+    return self.__grid
+
+  @property
+  def lattice(self) -&gt; Lattice:
+    &#34;&#34;&#34;The lattice of points in the grid.&#34;&#34;&#34;
+    return self.__lattice
+
+  def edge_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+    &#34;&#34;&#34;Returns a list of cells that share an edge with the given cell.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+
+    Returns:
+      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+        edge with the given cell.
+    &#34;&#34;&#34;
+    return self.__lattice.edge_sharing_neighbors(self.__grid, p)
+
+  def vertex_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+    &#34;&#34;&#34;Returns the cells that share a vertex with the given cell.
+
+    In other words, returns a list of cells orthogonally and diagonally
+    adjacent to the given cell.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+
+    Returns:
+      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+        vertex with the given cell.
+    &#34;&#34;&#34;
+    return self.__lattice.vertex_sharing_neighbors(self.__grid, p)
+
+  def cell_is(self, p: Point, value: int) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns an expression for whether this cell contains this value.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+      value (int): The value to satisfy the expression.
+
+    Returns:
+      An expression that&#39;s true if and only if the cell at p contains this
+        value.
+    &#34;&#34;&#34;
+    return self.__grid[p] == value
+
+  def cell_is_one_of(self, p: Point, values: List[int]) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns an expression for whether this cell contains one of these values.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+      values (List[int]): The list of values to satisfy the expression.
+
+    Returns:
+      An expression that&#39;s true if and only if the cell at p contains one of
+        these values.
+    &#34;&#34;&#34;
+    cell = self.__grid[p]
+    return Or(*[cell == value for value in values])
+
+  def solve(self) -&gt; bool:
+    &#34;&#34;&#34;Returns true if the puzzle has a solution, false otherwise.&#34;&#34;&#34;
+    result = self.__solver.check()
+    return result == sat
+
+  def is_unique(self) -&gt; bool:
+    &#34;&#34;&#34;Returns true if the solution to the puzzle is unique, false otherwise.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    or_terms = []
+    for cell in self.__grid.values():
+      or_terms.append(cell != model.eval(cell).as_long())
+    self.__solver.add(Or(*or_terms))
+    result = self.__solver.check()
+    return result == unsat
+
+  def solved_grid(self) -&gt; Dict[Point, int]:
+    &#34;&#34;&#34;Returns the solved symbol grid.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}
+
+  def print(self, hook_function: Callable[[Point, int], str] = None):
+    &#34;&#34;&#34;Prints the solved grid using symbol labels.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+
+    Args:
+      hook_function (Optional[Callable[[grilops.geometry.Point, int], str]]): A
+        function implementing custom symbol display behavior, or None. If
+        this function is provided, it will be called for each cell in the grid,
+        with the arguments p (`grilops.geometry.Point`) and the symbol index
+        for that cell (`int`). It may return a string to print for that cell,
+        or None to keep the default behavior.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
+
+    def print_function(p: Point) -&gt; str:
+      cell = self.__grid[p]
+      i = model.eval(cell).as_long()
+      label = None
+      if hook_function is not None:
+        label = hook_function(p, i)
+      if label is None:
+        label = f&#34;{self.__symbol_set.symbols[i].label:{label_width}}&#34;
+      return label
+
+    self.__lattice.print(print_function, &#34; &#34; * label_width)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="grilops.grids.SymbolGrid"><code class="flex name class">
+<span>class <span class="ident">SymbolGrid</span></span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, symbol_set: <a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a>, solver: Union[z3.z3.Solver, NoneType] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A grid of cells that can be solved to contain specific symbols.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lattice</code></strong> :&ensp;<code><a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
+<dd>The structure of the grid.</dd>
+<dt><strong><code>symbol_set</code></strong> :&ensp;<code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code></dt>
+<dd>The set of symbols to be filled
+into the grid.</dd>
+<dt><strong><code>solver</code></strong> :&ensp;<code>Optional[z3.Solver]</code></dt>
+<dd>A <code>Solver</code> object. If None, a <code>Solver</code> will
+be constructed.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SymbolGrid:
+  &#34;&#34;&#34;A grid of cells that can be solved to contain specific symbols.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    symbol_set (grilops.symbols.SymbolSet): The set of symbols to be filled
+      into the grid.
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
+      be constructed.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      lattice: Lattice,
+      symbol_set: SymbolSet,
+      solver: Optional[Solver] = None
+  ):
+    SymbolGrid._instance_index += 1
+    if solver:
+      self.__solver = solver
+    else:
+      self.__solver = Solver()
+    self.__lattice = lattice
+    self.__symbol_set = symbol_set
+    self.__grid: Dict[Point, ArithRef] = {}
+    for p in lattice.points:
+      v = Int(f&#34;sg-{SymbolGrid._instance_index}-{p.y}-{p.x}&#34;)
+      self.__solver.add(v &gt;= symbol_set.min_index())
+      self.__solver.add(v &lt;= symbol_set.max_index())
+      self.__grid[p] = v
+
+  @property
+  def solver(self) -&gt; Solver:
+    &#34;&#34;&#34;The `Solver` object associated with this `SymbolGrid`.&#34;&#34;&#34;
+    return self.__solver
+
+  @property
+  def symbol_set(self) -&gt; SymbolSet:
+    &#34;&#34;&#34;The `grilops.symbols.SymbolSet` associated with this `SymbolGrid`.&#34;&#34;&#34;
+    return self.__symbol_set
+
+  @property
+  def grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;The grid of cells.&#34;&#34;&#34;
+    return self.__grid
+
+  @property
+  def lattice(self) -&gt; Lattice:
+    &#34;&#34;&#34;The lattice of points in the grid.&#34;&#34;&#34;
+    return self.__lattice
+
+  def edge_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+    &#34;&#34;&#34;Returns a list of cells that share an edge with the given cell.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+
+    Returns:
+      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+        edge with the given cell.
+    &#34;&#34;&#34;
+    return self.__lattice.edge_sharing_neighbors(self.__grid, p)
+
+  def vertex_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+    &#34;&#34;&#34;Returns the cells that share a vertex with the given cell.
+
+    In other words, returns a list of cells orthogonally and diagonally
+    adjacent to the given cell.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+
+    Returns:
+      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+        vertex with the given cell.
+    &#34;&#34;&#34;
+    return self.__lattice.vertex_sharing_neighbors(self.__grid, p)
+
+  def cell_is(self, p: Point, value: int) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns an expression for whether this cell contains this value.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+      value (int): The value to satisfy the expression.
+
+    Returns:
+      An expression that&#39;s true if and only if the cell at p contains this
+        value.
+    &#34;&#34;&#34;
+    return self.__grid[p] == value
+
+  def cell_is_one_of(self, p: Point, values: List[int]) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns an expression for whether this cell contains one of these values.
+
+    Args:
+      p (grilops.geometry.Point): The location of the given cell.
+      values (List[int]): The list of values to satisfy the expression.
+
+    Returns:
+      An expression that&#39;s true if and only if the cell at p contains one of
+        these values.
+    &#34;&#34;&#34;
+    cell = self.__grid[p]
+    return Or(*[cell == value for value in values])
+
+  def solve(self) -&gt; bool:
+    &#34;&#34;&#34;Returns true if the puzzle has a solution, false otherwise.&#34;&#34;&#34;
+    result = self.__solver.check()
+    return result == sat
+
+  def is_unique(self) -&gt; bool:
+    &#34;&#34;&#34;Returns true if the solution to the puzzle is unique, false otherwise.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    or_terms = []
+    for cell in self.__grid.values():
+      or_terms.append(cell != model.eval(cell).as_long())
+    self.__solver.add(Or(*or_terms))
+    result = self.__solver.check()
+    return result == unsat
+
+  def solved_grid(self) -&gt; Dict[Point, int]:
+    &#34;&#34;&#34;Returns the solved symbol grid.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}
+
+  def print(self, hook_function: Callable[[Point, int], str] = None):
+    &#34;&#34;&#34;Prints the solved grid using symbol labels.
+
+    Should be called only after `SymbolGrid.solve` has already completed
+    successfully.
+
+    Args:
+      hook_function (Optional[Callable[[grilops.geometry.Point, int], str]]): A
+        function implementing custom symbol display behavior, or None. If
+        this function is provided, it will be called for each cell in the grid,
+        with the arguments p (`grilops.geometry.Point`) and the symbol index
+        for that cell (`int`). It may return a string to print for that cell,
+        or None to keep the default behavior.
+    &#34;&#34;&#34;
+    model = self.__solver.model()
+    label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
+
+    def print_function(p: Point) -&gt; str:
+      cell = self.__grid[p]
+      i = model.eval(cell).as_long()
+      label = None
+      if hook_function is not None:
+        label = hook_function(p, i)
+      if label is None:
+        label = f&#34;{self.__symbol_set.symbols[i].label:{label_width}}&#34;
+      return label
+
+    self.__lattice.print(print_function, &#34; &#34; * label_width)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.grids.SymbolGrid.grid"><code class="name">var <span class="ident">grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>The grid of cells.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;The grid of cells.&#34;&#34;&#34;
+  return self.__grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.lattice"><code class="name">var <span class="ident">lattice</span> : <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
+<dd>
+<div class="desc"><p>The lattice of points in the grid.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def lattice(self) -&gt; Lattice:
+  &#34;&#34;&#34;The lattice of points in the grid.&#34;&#34;&#34;
+  return self.__lattice</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.solver"><code class="name">var <span class="ident">solver</span> : z3.z3.Solver</code></dt>
+<dd>
+<div class="desc"><p>The <code>Solver</code> object associated with this <code><a title="grilops.grids.SymbolGrid" href="#grilops.grids.SymbolGrid">SymbolGrid</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def solver(self) -&gt; Solver:
+  &#34;&#34;&#34;The `Solver` object associated with this `SymbolGrid`.&#34;&#34;&#34;
+  return self.__solver</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.symbol_set"><code class="name">var <span class="ident">symbol_set</span> : <a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code> associated with this <code><a title="grilops.grids.SymbolGrid" href="#grilops.grids.SymbolGrid">SymbolGrid</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def symbol_set(self) -&gt; SymbolSet:
+  &#34;&#34;&#34;The `grilops.symbols.SymbolSet` associated with this `SymbolGrid`.&#34;&#34;&#34;
+  return self.__symbol_set</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.grids.SymbolGrid.cell_is"><code class="name flex">
+<span>def <span class="ident">cell_is</span></span>(<span>self, p: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, value: int) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an expression for whether this cell contains this value.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
+<dd>The location of the given cell.</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>int</code></dt>
+<dd>The value to satisfy the expression.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>An expression that's true if and only if the cell at p contains this
+value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cell_is(self, p: Point, value: int) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns an expression for whether this cell contains this value.
+
+  Args:
+    p (grilops.geometry.Point): The location of the given cell.
+    value (int): The value to satisfy the expression.
+
+  Returns:
+    An expression that&#39;s true if and only if the cell at p contains this
+      value.
+  &#34;&#34;&#34;
+  return self.__grid[p] == value</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.cell_is_one_of"><code class="name flex">
+<span>def <span class="ident">cell_is_one_of</span></span>(<span>self, p: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, values: List[int]) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an expression for whether this cell contains one of these values.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
+<dd>The location of the given cell.</dd>
+<dt><strong><code>values</code></strong> :&ensp;<code>List[int]</code></dt>
+<dd>The list of values to satisfy the expression.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>An expression that's true if and only if the cell at p contains one of
+these values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cell_is_one_of(self, p: Point, values: List[int]) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns an expression for whether this cell contains one of these values.
+
+  Args:
+    p (grilops.geometry.Point): The location of the given cell.
+    values (List[int]): The list of values to satisfy the expression.
+
+  Returns:
+    An expression that&#39;s true if and only if the cell at p contains one of
+      these values.
+  &#34;&#34;&#34;
+  cell = self.__grid[p]
+  return Or(*[cell == value for value in values])</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.edge_sharing_neighbors"><code class="name flex">
+<span>def <span class="ident">edge_sharing_neighbors</span></span>(<span>self, p: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>) ‑> List[<a title="grilops.geometry.Neighbor" href="geometry.html#grilops.geometry.Neighbor">Neighbor</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a list of cells that share an edge with the given cell.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
+<dd>The location of the given cell.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A <code>List[<a title="grilops.geometry.Neighbor" href="geometry.html#grilops.geometry.Neighbor">Neighbor</a>]</code> representing the cells sharing an
+edge with the given cell.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def edge_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+  &#34;&#34;&#34;Returns a list of cells that share an edge with the given cell.
+
+  Args:
+    p (grilops.geometry.Point): The location of the given cell.
+
+  Returns:
+    A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+      edge with the given cell.
+  &#34;&#34;&#34;
+  return self.__lattice.edge_sharing_neighbors(self.__grid, p)</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.is_unique"><code class="name flex">
+<span>def <span class="ident">is_unique</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if the solution to the puzzle is unique, false otherwise.</p>
+<p>Should be called only after <code><a title="grilops.grids.SymbolGrid.solve" href="#grilops.grids.SymbolGrid.solve">SymbolGrid.solve()</a></code> has already completed
+successfully.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_unique(self) -&gt; bool:
+  &#34;&#34;&#34;Returns true if the solution to the puzzle is unique, false otherwise.
+
+  Should be called only after `SymbolGrid.solve` has already completed
+  successfully.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  or_terms = []
+  for cell in self.__grid.values():
+    or_terms.append(cell != model.eval(cell).as_long())
+  self.__solver.add(Or(*or_terms))
+  result = self.__solver.check()
+  return result == unsat</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.print"><code class="name flex">
+<span>def <span class="ident">print</span></span>(<span>self, hook_function: Callable[[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, int], str] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the solved grid using symbol labels.</p>
+<p>Should be called only after <code><a title="grilops.grids.SymbolGrid.solve" href="#grilops.grids.SymbolGrid.solve">SymbolGrid.solve()</a></code> has already completed
+successfully.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hook_function</code></strong> :&ensp;<code>Optional[Callable[[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, int], str]]</code></dt>
+<dd>A
+function implementing custom symbol display behavior, or None. If
+this function is provided, it will be called for each cell in the grid,
+with the arguments p (<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code>) and the symbol index
+for that cell (<code>int</code>). It may return a string to print for that cell,
+or None to keep the default behavior.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print(self, hook_function: Callable[[Point, int], str] = None):
+  &#34;&#34;&#34;Prints the solved grid using symbol labels.
+
+  Should be called only after `SymbolGrid.solve` has already completed
+  successfully.
+
+  Args:
+    hook_function (Optional[Callable[[grilops.geometry.Point, int], str]]): A
+      function implementing custom symbol display behavior, or None. If
+      this function is provided, it will be called for each cell in the grid,
+      with the arguments p (`grilops.geometry.Point`) and the symbol index
+      for that cell (`int`). It may return a string to print for that cell,
+      or None to keep the default behavior.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())
+
+  def print_function(p: Point) -&gt; str:
+    cell = self.__grid[p]
+    i = model.eval(cell).as_long()
+    label = None
+    if hook_function is not None:
+      label = hook_function(p, i)
+    if label is None:
+      label = f&#34;{self.__symbol_set.symbols[i].label:{label_width}}&#34;
+    return label
+
+  self.__lattice.print(print_function, &#34; &#34; * label_width)</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.solve"><code class="name flex">
+<span>def <span class="ident">solve</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if the puzzle has a solution, false otherwise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def solve(self) -&gt; bool:
+  &#34;&#34;&#34;Returns true if the puzzle has a solution, false otherwise.&#34;&#34;&#34;
+  result = self.__solver.check()
+  return result == sat</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.solved_grid"><code class="name flex">
+<span>def <span class="ident">solved_grid</span></span>(<span>self) ‑> Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the solved symbol grid.</p>
+<p>Should be called only after <code><a title="grilops.grids.SymbolGrid.solve" href="#grilops.grids.SymbolGrid.solve">SymbolGrid.solve()</a></code> has already completed
+successfully.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def solved_grid(self) -&gt; Dict[Point, int]:
+  &#34;&#34;&#34;Returns the solved symbol grid.
+
+  Should be called only after `SymbolGrid.solve` has already completed
+  successfully.
+  &#34;&#34;&#34;
+  model = self.__solver.model()
+  return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}</code></pre>
+</details>
+</dd>
+<dt id="grilops.grids.SymbolGrid.vertex_sharing_neighbors"><code class="name flex">
+<span>def <span class="ident">vertex_sharing_neighbors</span></span>(<span>self, p: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>) ‑> List[<a title="grilops.geometry.Neighbor" href="geometry.html#grilops.geometry.Neighbor">Neighbor</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the cells that share a vertex with the given cell.</p>
+<p>In other words, returns a list of cells orthogonally and diagonally
+adjacent to the given cell.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
+<dd>The location of the given cell.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A <code>List[<a title="grilops.geometry.Neighbor" href="geometry.html#grilops.geometry.Neighbor">Neighbor</a>]</code> representing the cells sharing an
+vertex with the given cell.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def vertex_sharing_neighbors(self, p: Point) -&gt; List[Neighbor]:
+  &#34;&#34;&#34;Returns the cells that share a vertex with the given cell.
+
+  In other words, returns a list of cells orthogonally and diagonally
+  adjacent to the given cell.
+
+  Args:
+    p (grilops.geometry.Point): The location of the given cell.
+
+  Returns:
+    A `List[grilops.geometry.Neighbor]` representing the cells sharing an
+      vertex with the given cell.
+  &#34;&#34;&#34;
+  return self.__lattice.vertex_sharing_neighbors(self.__grid, p)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grilops" href="index.html">grilops</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="grilops.grids.SymbolGrid" href="#grilops.grids.SymbolGrid">SymbolGrid</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.grids.SymbolGrid.cell_is" href="#grilops.grids.SymbolGrid.cell_is">cell_is</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.cell_is_one_of" href="#grilops.grids.SymbolGrid.cell_is_one_of">cell_is_one_of</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.edge_sharing_neighbors" href="#grilops.grids.SymbolGrid.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.grid" href="#grilops.grids.SymbolGrid.grid">grid</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.is_unique" href="#grilops.grids.SymbolGrid.is_unique">is_unique</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.lattice" href="#grilops.grids.SymbolGrid.lattice">lattice</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.print" href="#grilops.grids.SymbolGrid.print">print</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.solve" href="#grilops.grids.SymbolGrid.solve">solve</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.solved_grid" href="#grilops.grids.SymbolGrid.solved_grid">solved_grid</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.solver" href="#grilops.grids.SymbolGrid.solver">solver</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.symbol_set" href="#grilops.grids.SymbolGrid.symbol_set">symbol_set</a></code></li>
+<li><code><a title="grilops.grids.SymbolGrid.vertex_sharing_neighbors" href="#grilops.grids.SymbolGrid.vertex_sharing_neighbors">vertex_sharing_neighbors</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
+</body>
+</html>

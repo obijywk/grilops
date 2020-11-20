@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>grilops.loops API documentation</title>
+<meta name="description" content="This module supports puzzles where closed loops are filled into a grid." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grilops.loops</code></h1>
+</header>
+<section id="section-intro">
+<p>This module supports puzzles where closed loops are filled into a grid.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module supports puzzles where closed loops are filled into a grid.&#34;&#34;&#34;
+
+import itertools
+from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Tuple
+from z3 import (
+    And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
+)
+
+from .geometry import Lattice, Point, Vector
+from .grids import SymbolGrid
+from .symbols import SymbolSet
+from .sightlines import reduce_cells
+
+
+L: int = 0
+&#34;&#34;&#34;The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell contains part of a loop.&#34;&#34;&#34;
+
+I: int = 1
+&#34;&#34;&#34;The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell is inside of a loop.&#34;&#34;&#34;
+
+O: int = 2
+&#34;&#34;&#34;The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell is outside of a loop.&#34;&#34;&#34;
+
+
+class LoopSymbolSet(SymbolSet):
+  &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form loops.
+
+  Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
+  space) may be added to this `grilops.symbols.SymbolSet` by calling
+  `grilops.symbols.SymbolSet.append` after it&#39;s constructed.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+  &#34;&#34;&#34;
+
+  def __init__(self, lattice: Lattice):
+    super().__init__([])
+
+    self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
+
+    dirs = lattice.edge_sharing_directions()
+    for idx, ((namei, di), (namej, dj)) in enumerate(
+        itertools.combinations(dirs, 2)):
+      lbl = lattice.label_for_direction_pair(namei, namej)
+      self.append(namei + namej, lbl)
+      self.__symbols_for_direction[di].append(idx)
+      self.__symbols_for_direction[dj].append(idx)
+      self.__symbol_for_direction_pair[(di, dj)] = idx
+      self.__symbol_for_direction_pair[(dj, di)] = idx
+      self.__max_loop_symbol_index = idx
+
+  def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents part of the loop.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_loop_symbol_index + 1
+
+  def symbols_for_direction(self, d: Vector) -&gt; List[int]:
+    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+    Args:
+      d (grilops.geometry.Vector): The given direction.
+
+    Returns:
+      A `List[int]` of symbol indices corresponding to symbols with one arm
+      going in the given direction.
+    &#34;&#34;&#34;
+    return self.__symbols_for_direction[d]
+
+  def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+    Args:
+      d1 (grilops.geometry.Vector): The first given direction.
+      d2 (grilops.geometry.Vector): The second given direction.
+
+    Returns:
+      The symbol index for the symbol with one arm going in each of the two
+      given directions.
+    &#34;&#34;&#34;
+    return self.__symbol_for_direction_pair[(d1, d2)]
+
+
+class LoopConstrainer:
+  &#34;&#34;&#34;Creates constraints for ensuring symbols form closed loops.
+
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
+    single_loop (bool): If true, constrain the grid to contain only a single loop.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      symbol_grid: SymbolGrid,
+      single_loop: bool = False,
+  ):
+    LoopConstrainer._instance_index += 1
+
+    self.__symbol_grid = symbol_grid
+    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
+    self.__loop_order_grid: Dict[Point, ArithRef] = {}
+
+    self.__add_loop_edge_constraints()
+    if single_loop:
+      self.__add_single_loop_constraints()
+
+  def __add_loop_edge_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, cell in self.__symbol_grid.grid.items():
+      for _, d in self.__symbol_grid.lattice.edge_sharing_directions():
+        np = p.translate(d)
+        dir_syms = sym.symbols_for_direction(d)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          opposite_syms = sym.symbols_for_direction(d.negate())
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
+          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
+        else:
+          for s in dir_syms:
+            solver.add(cell != s)
+
+  def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Vector, Vector]]:
+    dirs = self.__symbol_grid.lattice.edge_sharing_directions()
+    for idx, ((_, di), (_, dj)) in enumerate(itertools.combinations(dirs, 2)):
+      yield (idx, di, dj)
+
+  def __add_single_loop_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
+
+    cell_count = len(self.__symbol_grid.grid)
+
+    for p in self.__symbol_grid.grid:
+      v = Int(f&#34;log-{LoopConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      solver.add(v &gt;= -cell_count)
+      solver.add(v &lt; cell_count)
+      self.__loop_order_grid[p] = v
+
+    solver.add(Distinct(*self.__loop_order_grid.values()))
+
+    for p, cell in self.__symbol_grid.grid.items():
+      li = self.__loop_order_grid[p]
+
+      solver.add(If(sym.is_loop(cell), li &gt;= 0, li &lt; 0))
+
+      for idx, d1, d2 in self.__all_direction_pairs():
+        pi = p.translate(d1)
+        pj = p.translate(d2)
+        if pi in self.__loop_order_grid and pj in self.__loop_order_grid:
+          solver.add(Implies(
+              And(cell == idx, li &gt; 0),
+              Or(
+                  self.__loop_order_grid[pi] == li - 1,
+                  self.__loop_order_grid[pj] == li - 1
+              )
+          ))
+
+  def __make_inside_outside_grid(self):
+    grid = self.__symbol_grid.grid
+    sym: Any = self.__symbol_grid.symbol_set
+    lattice: Lattice = self.__symbol_grid.lattice
+
+    # Count the number of crossing directions.  If a direction
+    # pair consists of two crossing directions, they cancel out
+    # and so we don&#39;t need to count it.
+
+    look_dir, crossing_dirs = lattice.get_inside_outside_check_directions()
+    crossings = []
+    for idx, d1, d2 in self.__all_direction_pairs():
+      if (d1 in crossing_dirs) ^ (d2 in crossing_dirs):
+        crossings.append(idx)
+
+    def accumulate(a, c):
+      return Xor(a, Or(*[c == s for s in crossings]))
+
+    for p, v in grid.items():
+      a = reduce_cells(
+          self.__symbol_grid, p, look_dir,
+          False, accumulate
+      )
+      self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
+
+  @property
+  def loop_order_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of a loop traversal order.
+
+    Only populated if single_loop was true.
+    &#34;&#34;&#34;
+    return self.__loop_order_grid
+
+  @property
+  def inside_outside_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Whether cells are contained by loops.
+
+    Values are the `L`, `I`, and `O` attributes of this module. On the first
+    call to this property, the grid will be constructed.
+    &#34;&#34;&#34;
+    if not self.__inside_outside_grid:
+      self.__make_inside_outside_grid()
+    return self.__inside_outside_grid
+
+  def print_inside_outside_grid(self):
+    &#34;&#34;&#34;Prints which cells are contained by loops.&#34;&#34;&#34;
+    labels = {
+        L: &#34; &#34;,
+        I: &#34;I&#34;,
+        O: &#34;O&#34;,
+    }
+    model = self.__symbol_grid.solver.model()
+
+    def print_function(p: Point) -&gt; str:
+      cell = self.__inside_outside_grid[p]
+      return labels[model.eval(cell).as_long()]
+
+    self.__symbol_grid.lattice.print(print_function)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="grilops.loops.I"><code class="name">var <span class="ident">I</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.loops.LoopConstrainer.inside_outside_grid" href="#grilops.loops.LoopConstrainer.inside_outside_grid">LoopConstrainer.inside_outside_grid</a></code> value indicating that a
+cell is inside of a loop.</p></div>
+</dd>
+<dt id="grilops.loops.L"><code class="name">var <span class="ident">L</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.loops.LoopConstrainer.inside_outside_grid" href="#grilops.loops.LoopConstrainer.inside_outside_grid">LoopConstrainer.inside_outside_grid</a></code> value indicating that a
+cell contains part of a loop.</p></div>
+</dd>
+<dt id="grilops.loops.O"><code class="name">var <span class="ident">O</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="grilops.loops.LoopConstrainer.inside_outside_grid" href="#grilops.loops.LoopConstrainer.inside_outside_grid">LoopConstrainer.inside_outside_grid</a></code> value indicating that a
+cell is outside of a loop.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="grilops.loops.LoopConstrainer"><code class="flex name class">
+<span>class <span class="ident">LoopConstrainer</span></span>
+<span>(</span><span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, single_loop: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates constraints for ensuring symbols form closed loops.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol_grid</code></strong> :&ensp;<code><a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a></code></dt>
+<dd>The grid to constrain.</dd>
+<dt><strong><code>single_loop</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, constrain the grid to contain only a single loop.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LoopConstrainer:
+  &#34;&#34;&#34;Creates constraints for ensuring symbols form closed loops.
+
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
+    single_loop (bool): If true, constrain the grid to contain only a single loop.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      symbol_grid: SymbolGrid,
+      single_loop: bool = False,
+  ):
+    LoopConstrainer._instance_index += 1
+
+    self.__symbol_grid = symbol_grid
+    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
+    self.__loop_order_grid: Dict[Point, ArithRef] = {}
+
+    self.__add_loop_edge_constraints()
+    if single_loop:
+      self.__add_single_loop_constraints()
+
+  def __add_loop_edge_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, cell in self.__symbol_grid.grid.items():
+      for _, d in self.__symbol_grid.lattice.edge_sharing_directions():
+        np = p.translate(d)
+        dir_syms = sym.symbols_for_direction(d)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          opposite_syms = sym.symbols_for_direction(d.negate())
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
+          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
+        else:
+          for s in dir_syms:
+            solver.add(cell != s)
+
+  def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Vector, Vector]]:
+    dirs = self.__symbol_grid.lattice.edge_sharing_directions()
+    for idx, ((_, di), (_, dj)) in enumerate(itertools.combinations(dirs, 2)):
+      yield (idx, di, dj)
+
+  def __add_single_loop_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
+
+    cell_count = len(self.__symbol_grid.grid)
+
+    for p in self.__symbol_grid.grid:
+      v = Int(f&#34;log-{LoopConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      solver.add(v &gt;= -cell_count)
+      solver.add(v &lt; cell_count)
+      self.__loop_order_grid[p] = v
+
+    solver.add(Distinct(*self.__loop_order_grid.values()))
+
+    for p, cell in self.__symbol_grid.grid.items():
+      li = self.__loop_order_grid[p]
+
+      solver.add(If(sym.is_loop(cell), li &gt;= 0, li &lt; 0))
+
+      for idx, d1, d2 in self.__all_direction_pairs():
+        pi = p.translate(d1)
+        pj = p.translate(d2)
+        if pi in self.__loop_order_grid and pj in self.__loop_order_grid:
+          solver.add(Implies(
+              And(cell == idx, li &gt; 0),
+              Or(
+                  self.__loop_order_grid[pi] == li - 1,
+                  self.__loop_order_grid[pj] == li - 1
+              )
+          ))
+
+  def __make_inside_outside_grid(self):
+    grid = self.__symbol_grid.grid
+    sym: Any = self.__symbol_grid.symbol_set
+    lattice: Lattice = self.__symbol_grid.lattice
+
+    # Count the number of crossing directions.  If a direction
+    # pair consists of two crossing directions, they cancel out
+    # and so we don&#39;t need to count it.
+
+    look_dir, crossing_dirs = lattice.get_inside_outside_check_directions()
+    crossings = []
+    for idx, d1, d2 in self.__all_direction_pairs():
+      if (d1 in crossing_dirs) ^ (d2 in crossing_dirs):
+        crossings.append(idx)
+
+    def accumulate(a, c):
+      return Xor(a, Or(*[c == s for s in crossings]))
+
+    for p, v in grid.items():
+      a = reduce_cells(
+          self.__symbol_grid, p, look_dir,
+          False, accumulate
+      )
+      self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
+
+  @property
+  def loop_order_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of a loop traversal order.
+
+    Only populated if single_loop was true.
+    &#34;&#34;&#34;
+    return self.__loop_order_grid
+
+  @property
+  def inside_outside_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Whether cells are contained by loops.
+
+    Values are the `L`, `I`, and `O` attributes of this module. On the first
+    call to this property, the grid will be constructed.
+    &#34;&#34;&#34;
+    if not self.__inside_outside_grid:
+      self.__make_inside_outside_grid()
+    return self.__inside_outside_grid
+
+  def print_inside_outside_grid(self):
+    &#34;&#34;&#34;Prints which cells are contained by loops.&#34;&#34;&#34;
+    labels = {
+        L: &#34; &#34;,
+        I: &#34;I&#34;,
+        O: &#34;O&#34;,
+    }
+    model = self.__symbol_grid.solver.model()
+
+    def print_function(p: Point) -&gt; str:
+      cell = self.__inside_outside_grid[p]
+      return labels[model.eval(cell).as_long()]
+
+    self.__symbol_grid.lattice.print(print_function)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.loops.LoopConstrainer.inside_outside_grid"><code class="name">var <span class="ident">inside_outside_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>Whether cells are contained by loops.</p>
+<p>Values are the <code><a title="grilops.loops.L" href="#grilops.loops.L">L</a></code>, <code><a title="grilops.loops.I" href="#grilops.loops.I">I</a></code>, and <code><a title="grilops.loops.O" href="#grilops.loops.O">O</a></code> attributes of this module. On the first
+call to this property, the grid will be constructed.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def inside_outside_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;Whether cells are contained by loops.
+
+  Values are the `L`, `I`, and `O` attributes of this module. On the first
+  call to this property, the grid will be constructed.
+  &#34;&#34;&#34;
+  if not self.__inside_outside_grid:
+    self.__make_inside_outside_grid()
+  return self.__inside_outside_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.loops.LoopConstrainer.loop_order_grid"><code class="name">var <span class="ident">loop_order_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>Constants of a loop traversal order.</p>
+<p>Only populated if single_loop was true.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def loop_order_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;Constants of a loop traversal order.
+
+  Only populated if single_loop was true.
+  &#34;&#34;&#34;
+  return self.__loop_order_grid</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.loops.LoopConstrainer.print_inside_outside_grid"><code class="name flex">
+<span>def <span class="ident">print_inside_outside_grid</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints which cells are contained by loops.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_inside_outside_grid(self):
+  &#34;&#34;&#34;Prints which cells are contained by loops.&#34;&#34;&#34;
+  labels = {
+      L: &#34; &#34;,
+      I: &#34;I&#34;,
+      O: &#34;O&#34;,
+  }
+  model = self.__symbol_grid.solver.model()
+
+  def print_function(p: Point) -&gt; str:
+    cell = self.__inside_outside_grid[p]
+    return labels[model.eval(cell).as_long()]
+
+  self.__symbol_grid.lattice.print(print_function)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="grilops.loops.LoopSymbolSet"><code class="flex name class">
+<span>class <span class="ident">LoopSymbolSet</span></span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A <code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code> consisting of symbols that may form loops.</p>
+<p>Additional symbols (e.g. a <code><a title="grilops.symbols.Symbol" href="symbols.html#grilops.symbols.Symbol">Symbol</a></code> representing an empty
+space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code> by calling
+<code><a title="grilops.symbols.SymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">SymbolSet.append()</a></code> after it's constructed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lattice</code></strong> :&ensp;<code><a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
+<dd>The structure of the grid.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LoopSymbolSet(SymbolSet):
+  &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form loops.
+
+  Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
+  space) may be added to this `grilops.symbols.SymbolSet` by calling
+  `grilops.symbols.SymbolSet.append` after it&#39;s constructed.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+  &#34;&#34;&#34;
+
+  def __init__(self, lattice: Lattice):
+    super().__init__([])
+
+    self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
+
+    dirs = lattice.edge_sharing_directions()
+    for idx, ((namei, di), (namej, dj)) in enumerate(
+        itertools.combinations(dirs, 2)):
+      lbl = lattice.label_for_direction_pair(namei, namej)
+      self.append(namei + namej, lbl)
+      self.__symbols_for_direction[di].append(idx)
+      self.__symbols_for_direction[dj].append(idx)
+      self.__symbol_for_direction_pair[(di, dj)] = idx
+      self.__symbol_for_direction_pair[(dj, di)] = idx
+      self.__max_loop_symbol_index = idx
+
+  def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents part of the loop.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_loop_symbol_index + 1
+
+  def symbols_for_direction(self, d: Vector) -&gt; List[int]:
+    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+    Args:
+      d (grilops.geometry.Vector): The given direction.
+
+    Returns:
+      A `List[int]` of symbol indices corresponding to symbols with one arm
+      going in the given direction.
+    &#34;&#34;&#34;
+    return self.__symbols_for_direction[d]
+
+  def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+    Args:
+      d1 (grilops.geometry.Vector): The first given direction.
+      d2 (grilops.geometry.Vector): The second given direction.
+
+    Returns:
+      The symbol index for the symbol with one arm going in each of the two
+      given directions.
+    &#34;&#34;&#34;
+    return self.__symbol_for_direction_pair[(d1, d2)]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.loops.LoopSymbolSet.is_loop"><code class="name flex">
+<span>def <span class="ident">is_loop</span></span>(<span>self, symbol: z3.z3.ArithRef) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if #symbol represents part of the loop.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>ArithRef</code></dt>
+<dd>An <code>ArithRef</code> expression representing a symbol.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A true <code>BoolRef</code> if the symbol represents part of the loop.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+
+  Args:
+    symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+  Returns:
+    A true `BoolRef` if the symbol represents part of the loop.
+  &#34;&#34;&#34;
+  return symbol &lt; self.__max_loop_symbol_index + 1</code></pre>
+</details>
+</dd>
+<dt id="grilops.loops.LoopSymbolSet.symbol_for_direction_pair"><code class="name flex">
+<span>def <span class="ident">symbol_for_direction_pair</span></span>(<span>self, d1: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, d2: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the symbol with arms going in the two given directions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d1</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
+<dd>The first given direction.</dd>
+<dt><strong><code>d2</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
+<dd>The second given direction.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The symbol index for the symbol with one arm going in each of the two
+given directions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -&gt; int:
+  &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+  Args:
+    d1 (grilops.geometry.Vector): The first given direction.
+    d2 (grilops.geometry.Vector): The second given direction.
+
+  Returns:
+    The symbol index for the symbol with one arm going in each of the two
+    given directions.
+  &#34;&#34;&#34;
+  return self.__symbol_for_direction_pair[(d1, d2)]</code></pre>
+</details>
+</dd>
+<dt id="grilops.loops.LoopSymbolSet.symbols_for_direction"><code class="name flex">
+<span>def <span class="ident">symbols_for_direction</span></span>(<span>self, d: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>) ‑> List[int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the symbols with one arm going in the given direction.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
+<dd>The given direction.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A <code>List[int]</code> of symbol indices corresponding to symbols with one arm
+going in the given direction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def symbols_for_direction(self, d: Vector) -&gt; List[int]:
+  &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+  Args:
+    d (grilops.geometry.Vector): The given direction.
+
+  Returns:
+    A `List[int]` of symbol indices corresponding to symbols with one arm
+    going in the given direction.
+  &#34;&#34;&#34;
+  return self.__symbols_for_direction[d]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></b></code>:
+<ul class="hlist">
+<li><code><a title="grilops.symbols.SymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">append</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.max_index" href="symbols.html#grilops.symbols.SymbolSet.max_index">max_index</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.min_index" href="symbols.html#grilops.symbols.SymbolSet.min_index">min_index</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.symbols" href="symbols.html#grilops.symbols.SymbolSet.symbols">symbols</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grilops" href="index.html">grilops</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="grilops.loops.I" href="#grilops.loops.I">I</a></code></li>
+<li><code><a title="grilops.loops.L" href="#grilops.loops.L">L</a></code></li>
+<li><code><a title="grilops.loops.O" href="#grilops.loops.O">O</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="grilops.loops.LoopConstrainer" href="#grilops.loops.LoopConstrainer">LoopConstrainer</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.loops.LoopConstrainer.inside_outside_grid" href="#grilops.loops.LoopConstrainer.inside_outside_grid">inside_outside_grid</a></code></li>
+<li><code><a title="grilops.loops.LoopConstrainer.loop_order_grid" href="#grilops.loops.LoopConstrainer.loop_order_grid">loop_order_grid</a></code></li>
+<li><code><a title="grilops.loops.LoopConstrainer.print_inside_outside_grid" href="#grilops.loops.LoopConstrainer.print_inside_outside_grid">print_inside_outside_grid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="grilops.loops.LoopSymbolSet" href="#grilops.loops.LoopSymbolSet">LoopSymbolSet</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.loops.LoopSymbolSet.is_loop" href="#grilops.loops.LoopSymbolSet.is_loop">is_loop</a></code></li>
+<li><code><a title="grilops.loops.LoopSymbolSet.symbol_for_direction_pair" href="#grilops.loops.LoopSymbolSet.symbol_for_direction_pair">symbol_for_direction_pair</a></code></li>
+<li><code><a title="grilops.loops.LoopSymbolSet.symbols_for_direction" href="#grilops.loops.LoopSymbolSet.symbols_for_direction">symbols_for_direction</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
+</body>
+</html>

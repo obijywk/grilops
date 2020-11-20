@@ -1,321 +1,121 @@
-<!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="None">
-  
-  <link rel="shortcut icon" href="img/favicon.ico">
-  <title>Home - grilops API documentation</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
-
-  <link rel="stylesheet" href="css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Home";
-    var mkdocs_page_input_path = "index.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="js/jquery-2.1.1.min.js" defer></script>
-  <script src="js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.1" />
+<title>grilops API documentation</title>
+<meta name="description" content="a GRId LOgic Puzzle Solver library, using Python 3 and z3 …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
-
-<body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-      <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> grilops API documentation</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
-  </form>
-</div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1 current">
-		
-    <a class="current" href=".">Home</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l2"><a href="#grilops">grilops</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#installation">Installation</a></li>
-        
-            <li><a class="toctree-l3" href="#basic-concepts-and-usage">Basic Concepts and Usage</a></li>
-        
-        </ul>
-    
-
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">API</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="symbols/">Symbols</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="geometry/">Geometry</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="grids/">Grids</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="loops/">Loops</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="regions/">Regions</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="shapes/">Shapes</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="sightlines/">Sightlines</a>
-                </li>
-    </ul>
-	    </li>
-          
-        </ul>
-      </div>
-      &nbsp;
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">grilops API documentation</a>
-      </nav>
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Home</li>
-    <li class="wy-breadcrumbs-aside">
-      
-    </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main">
-            <div class="section">
-              
-                <h1 id="grilops">grilops</h1>
-<p>a GRId LOgic Puzzle Solver library, using Python 3 and
-<a href="https://github.com/Z3Prover/z3">z3</a>.</p>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>grilops</code></h1>
+</header>
+<section id="section-intro">
+<p>a GRId LOgic Puzzle Solver library, using Python 3 and z3.</p>
 <p>This package contains a collection of libraries and helper functions that are
 useful for solving and checking
 <a href="https://en.wikipedia.org/wiki/Nikoli_(publisher)">Nikoli</a>-style logic puzzles
 using z3.</p>
-<p>To get a feel for how to use this package to model and solve puzzles, try
-working through the <a href="https://github.com/obijywk/grilops/blob/master/examples/tutorial.ipynb">tutorial IPython
-notebook</a>,
-and refer to the
-<a href="https://github.com/obijywk/grilops/tree/master/examples">examples</a> and the
-<a href="https://obijywk.github.io/grilops/">API Documentation</a>.</p>
-<h2 id="installation">Installation</h2>
-<p>grilops requires Python 3.6 or later.</p>
-<p>To install grilops for use in your own programs:</p>
-<pre><code>$ pip3 install grilops
-</code></pre>
+<p>See <a href="https://github.com/obijywk/grilops">https://github.com/obijywk/grilops</a> to learn more.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;a GRId LOgic Puzzle Solver library, using Python 3 and z3.
 
-<p>To install the source code (to run the examples and/or work with the code):</p>
-<pre><code>$ git clone https://github.com/obijywk/grilops.git
-$ cd grilops
-$ pip3 install -e .
-</code></pre>
+This package contains a collection of libraries and helper functions that are
+useful for solving and checking
+[Nikoli](https://en.wikipedia.org/wiki/Nikoli_(publisher))-style logic puzzles
+using z3.
 
-<h2 id="basic-concepts-and-usage">Basic Concepts and Usage</h2>
-<p>The <code>symbols</code>, <code>geometry</code>, and <code>grids</code> modules contain the core functionality
-needed for modeling most puzzles. For convenience, their attributes can be
-accessed directly from the top-level <code>grilops</code> module.</p>
-<p>Symbols represent the marks that are determined and written into a grid by a
-solver while solving a puzzle. For example, the symbol set of a
-<a href="https://en.wikipedia.org/wiki/Sudoku">Sudoku</a> puzzle would be the digits 1
-through 9. The symbol set of a binary determination puzzle such as
-<a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> could contain two
-symbols, one representing a black cell and the other representing a white cell.</p>
-<p>The geometry module defines Lattice classes that are used to manage the shapes
-of grids and relationships between cells. Rectangular and hexagonal grids are
-supported, as well as grids with empty spaces in them.</p>
-<p>A symbol grid is used to keep track of the assignment of symbols to grid
-cells. Generally, setting up a program to solve a puzzle using grilops involves:</p>
-<ul>
-<li>Constructing a symbol set</li>
-<li>Constructing a lattice for the grid</li>
-<li>Constructing a symbol grid in the shape of the lattice, limited to contain
-  symbols from the symbol set</li>
-<li>Adding puzzle-specific constraints to cells in the symbol grid</li>
-<li>Checking for satisfying assignments of symbols to symbol grid cells</li>
-</ul>
-<p>Grid cells are exposed as z3 constants, so built-in z3 operators can and should
-be used when adding puzzle-specific constraints. In addition, grilops provides
-several modules to help automate and abstract away the introduction of common
-kinds of constraints.</p>
-<h3 id="loops">Loops</h3>
-<p>The <code>grilops.loops</code> module is helpful for adding constraints that ensure symbols
-connect to form closed loops. Some examples of puzzle types for which this is
-useful are <a href="https://en.wikipedia.org/wiki/Masyu">Masyu</a> and
-<a href="https://en.wikipedia.org/wiki/Slitherlink">Slitherlink</a>.</p>
-<pre><code>$ python3 examples/masyu.py             $ python3 examples/slitherlink.py 
- ┌───┐┌──┐                              ┌──┐                              
-┌┘ ┌─┘└─┐│                              │┌┐│ ┌┐                           
-└─┐│┌──┐││                              └┘│└┐││                           
-  │││┌─┘││                                │ └┘│                           
-┌─┘└┘│ ┌┘│                                └┐  │                           
-│┌──┐│ │┌┘                              ┌──┘┌┐│                           
-││┌─┘└─┘└┐                              └───┘└┘                           
-│││ ┌───┐│                                                                
-└┘│ │┌──┘│                              Unique solution
-  └─┘└───┘
+See https://github.com/obijywk/grilops to learn more.
+&#34;&#34;&#34;
 
-Unique solution
-</code></pre>
 
-<h3 id="regions">Regions</h3>
-<p>The <code>grilops.regions</code> module is helpful for adding constraints that ensure
-cells are grouped into orthogonally contiguous regions (polyominos) of variable
-shapes and sizes. Some examples of puzzle types for which this is useful are
-<a href="https://en.wikipedia.org/wiki/Nurikabe_(puzzle)">Nurikabe</a> and
-<a href="https://en.wikipedia.org/wiki/Fillomino">Fillomino</a>.</p>
-<pre><code>$ python3 examples/nurikabe.py          $ python3 examples/fillomino.py 
-2 █   ██ 2                              8 8 3 3 101010105               
-███  █2███                              8 8 8 3 1010105 5               
-█2█ 7█ █ █                              3 3 8 10104 4 4 5               
-█ ██████ █                              1 3 8 3 102 2 4 5               
-██ █  3█3█                              2 2 8 3 3 1 3 2 2               
- █2████3██                              6 6 2 2 1 3 3 1 3               
-2██4 █  █                               6 4 4 4 2 2 1 3 3               
-██  █████                               6 4 2 2 4 3 3 4 4               
-█1███ 2█4                               6 6 4 4 4 1 3 4 4               
+__pdoc__ = {
+  &#34;fastz3&#34;: False,
+  &#34;quadtree&#34;: False,
+}
 
-Unique solution                         Unique solution
-</code></pre>
 
-<h3 id="shapes">Shapes</h3>
-<p>The <code>grilops.shapes</code> module is helpful for adding constraints that ensure
-cells are grouped into orthogonally contiguous regions (polyominos) of fixed
-shapes and sizes. Some examples of puzzle types for which this is useful are
-<a href="https://en.wikipedia.org/wiki/Battleship_(puzzle)">Battleship</a> and
-<a href="https://en.wikipedia.org/wiki/LITS">LITS</a>.</p>
-<pre><code>$ python3 examples/battleship.py        $ python3 examples/lits.py
-     ▴                                        IIII
-◂▪▸  ▪ •                                   SS  L  
-     ▾                                   LSS   L I
-◂▪▪▸   •                                 L IIIILLI
-                                         LL   L  I
- ▴    ◂▸                                  TTT L  I
- ▾ ▴                                    SS T LL  T
-   ▾ •                                   SSLL   TT
-                                            L T  T
-Unique solution                         IIIILTTT
-
-                                        Unique solution
-</code></pre>
-
-<h3 id="sightlines">Sightlines</h3>
-<p>The <code>grilops.sightlines</code> module is helpful for adding constraints that ensure
-properties hold along straight lines through the grid. These "sightlines" may
-terminate before reaching the edge of the grid if certain conditions are met
-(e.g. if a certain symbol, such as one representing a wall, is
-encountered). Some examples of puzzle types for which this is useful are
-<a href="https://en.wikipedia.org/wiki/Light_Up_(puzzle)">Akari</a> and
-<a href="https://www.puzzlemix.com/Skyscraper">Skyscraper</a>.</p>
-<pre><code>$ python3 examples/akari.py             $ python3 examples/skyscraper.py 
-█* █*    █                              23541                            
-   *   █                                15432                            
-*█*   █  *                              34215                            
- *█  █   █                              42153                            
-   ███*                                 51324                            
-   *███*                                                                 
-█ * █* █*                               Unique solution
-*  █*   █*
-  █     * 
-█ *   █* █
-
-Unique solution
-</code></pre>
-              
-            </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="symbols/" class="btn btn-neutral float-right" title="Symbols">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-    
-  </div>
-
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-      
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-
-  <div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-      
-      
-        <span style="margin-left: 15px"><a href="symbols/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+from .geometry import *
+from .grids import *
+from .symbols import *</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="grilops.geometry" href="geometry.html">grilops.geometry</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports geometric objects useful in modeling grids of cells.</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.grids" href="grids.html">grilops.grids</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports constructing and working with grids of cells.</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.loops" href="loops.html">grilops.loops</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports puzzles where closed loops are filled into a grid.</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.regions" href="regions.html">grilops.regions</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports puzzles that group cells into contiguous regions …</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.shapes" href="shapes.html">grilops.shapes</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports puzzles that place fixed shape regions into the grid.</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.sightlines" href="sightlines.html">grilops.sightlines</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports puzzles that must check sightlines through grids …</p></div>
+</dd>
+<dt><code class="name"><a title="grilops.symbols" href="symbols.html">grilops.symbols</a></code></dt>
+<dd>
+<div class="desc"><p>This module supports defining symbols that may be filled into grid cells.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
 </div>
-    <script>var base_url = '.';</script>
-    <script src="js/theme.js" defer></script>
-      <script src="search/main.js" defer></script>
-
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="grilops.geometry" href="geometry.html">grilops.geometry</a></code></li>
+<li><code><a title="grilops.grids" href="grids.html">grilops.grids</a></code></li>
+<li><code><a title="grilops.loops" href="loops.html">grilops.loops</a></code></li>
+<li><code><a title="grilops.regions" href="regions.html">grilops.regions</a></code></li>
+<li><code><a title="grilops.shapes" href="shapes.html">grilops.shapes</a></code></li>
+<li><code><a title="grilops.sightlines" href="sightlines.html">grilops.sightlines</a></code></li>
+<li><code><a title="grilops.symbols" href="symbols.html">grilops.symbols</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+</footer>
 </body>
 </html>
-
-<!--
-MkDocs version : 1.0.4
-Build Date UTC : 2020-02-10 03:31:35
--->
