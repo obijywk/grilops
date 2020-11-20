@@ -27,7 +27,6 @@ OPPOSITE_DIRECTION = {
 SIZE = 9
 LATTICE = grilops.get_square_lattice(SIZE)
 DOT = "DOT"
-# pylint: disable=C0326
 CELL_PROPERTIES = [
     [[E,S], [E,W], [E,S,W], [S,W], [N,E,S], [E,S,W], [E,S,W], [E,W], [S,W]],
     [[N,E,S], [E,W], [N,E,W], [N,E,W], [N,E,W], [N,E,S,W,DOT], [N,S,W], [E,S], [N,S,W]],
@@ -39,7 +38,6 @@ CELL_PROPERTIES = [
     [[N,E,S,DOT], [N,W], [N,E,S], [N,E,S,W], [E,W], [N,E,S,W], [E,S,W,DOT], [N,E,S,W,DOT], [N,S,W]],
     [[N,E], [E,W], [N,W], [N,E], [E,S,W], [N,E,W], [N,E,W,DOT], [N,E,W,DOT], [N,W]],
 ]
-# pylint: enable=C0326
 STUDIO_LOCATIONS = [Point(5, 4), Point(6, 5)]
 GATE_LOCATION_TO_DIRECTION = {
     Point(0, 4): N,
