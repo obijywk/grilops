@@ -1,0 +1,19 @@
+name: Validate documentation
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pdoc3
+    - name: Run pdoc
+      run: |
+        PYTHONWARNINGS='error::UserWarning' pdoc --html --output-dir docs grilops
