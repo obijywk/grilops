@@ -24,23 +24,26 @@ def count_cells(
     direction: Vector,
     count: Callable[[ArithRef], ArithRef] = lambda c: IntVal(1),
     stop: Callable[[ArithRef], BoolRef] = lambda c: BoolVal(False)
-):
+) -> ArithRef:
   """Returns a count of cells along a sightline through a grid.
 
-  # Arguments
-  symbol_grid (SymbolGrid): The SymbolGrid to check against.
-  start (Point): The location of the cell where the sightline should begin.
-      This is the first cell checked.
-  direction (Vector): The direction to advance to reach the next cell in the
-      sightline.
-  count (Callable[[ArithRef], ArithRef]): A function that accepts a symbol as
-      an argument and returns the integer value to add to the count when this
-      symbol is encountered. By default, each symbol will count with a value of
-      one.
-  stop (Callable[[ArithRef], BoolRef]): A function that accepts a symbol as
-      an argument and returns True if we should stop following the sightline
-      when this symbol is encountered. By default, the sightline will continue
-      to the edge of the grid.
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
+    start (grilops.geometry.Point): The location of the cell where the
+      sightline should begin. This is the first cell checked.
+    direction (grilops.geometry.Vector): The direction to advance to reach the
+      next cell in the sightline.
+    count (Callable[[ArithRef], ArithRef]): A function that accepts
+      a symbol as an argument and returns the integer value to add to the count
+      when this symbol is encountered. By default, each symbol will count with
+      a value of one.
+    stop (Callable[[ArithRef], BoolRef]): A function that accepts a
+      symbol as an argument and returns True if we should stop following the
+      sightline when this symbol is encountered. By default, the sightline will
+      continue to the edge of the grid.
+
+  Returns:
+    An `ArithRef` for the count of cells along the sightline through the grid.
   """
   return reduce_cells(
       symbol_grid,
@@ -62,26 +65,29 @@ def reduce_cells(  # pylint: disable=R0913
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, ArithRef], Accumulator],
     stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
-):
+) -> Accumulator:
   """Returns a computation of a sightline through a grid.
 
-  # Arguments
-  symbol_grid (SymbolGrid): The SymbolGrid to check against.
-  start (Point): The location of the cell where the sightline should begin.
-      This is the first cell checked.
-  direction (Vector): The direction to advance to reach the next cell in the
-      sightline.
-  initializer (Accumulator): The initial value for the accumulator.
-  accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function that
-      accepts an accumulated value and a symbol as arguments, and returns a new
-      accumulated value. This function is used to determine a new accumulated
-      value for each cell along the sightline, based on the accumulated value
-      from the previously encountered cells as well as the symbol in the
-      current cell.
-  stop (Callable[[Accumulator, ArithRef], BoolRef]): A function that accepts an
-      accumulated value and a symbol as arguments, and returns True if we
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
+    start (grilops.geometry.Point): The location of the cell where the
+      sightline should begin. This is the first cell checked.
+    direction (grilops.geometry.Vector): The direction to advance to reach the
+      next cell in the sightline.
+    initializer (Accumulator): The initial value for the accumulator.
+    accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
+      that accepts an accumulated value and a symbol as arguments, and returns
+      a new accumulated value. This function is used to determine a new
+      accumulated value for each cell along the sightline, based on the
+      accumulated value from the previously encountered cells as well as the
+      symbol in the current cell.
+    stop (Callable[[Accumulator, ArithRef], BoolRef]): A function that accepts
+      an accumulated value and a symbol as arguments, and returns True if we
       should stop following the sightline when this symbol is encountered. By
       default, the sightline will continue to the edge of the grid.
+
+  Returns:
+    The accumulated value.
   """
   stop_terms = []
   acc_terms = [initializer]

@@ -1,13 +1,4 @@
-"""This module supports puzzles where closed loops are filled into a grid.
-
-# Attributes
-L (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
-    contains part of a loop.
-I (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
-    is inside of a loop.
-O (int): The #LoopConstrainer.inside_outside_grid value indicating that a cell
-    is outside of a loop.
-"""
+"""This module supports puzzles where closed loops are filled into a grid."""
 
 import itertools
 from collections import defaultdict
@@ -22,13 +13,28 @@ from .symbols import SymbolSet
 from .sightlines import reduce_cells
 
 
-L, I, O = range(3)
+L: int = 0
+"""The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell contains part of a loop."""
+
+I: int = 1
+"""The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell is inside of a loop."""
+
+O: int = 2
+"""The `LoopConstrainer.inside_outside_grid` value indicating that a
+  cell is outside of a loop."""
+
 
 class LoopSymbolSet(SymbolSet):
-  """A #SymbolSet consisting of symbols that may form loops.
+  """A `grilops.symbols.SymbolSet` consisting of symbols that may form loops.
 
-  Additional symbols (e.g. a #Symbol representing an empty space) may be added
-  to this #SymbolSet by calling #SymbolSet.append() after it's constructed.
+  Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
+  space) may be added to this `grilops.symbols.SymbolSet` by calling
+  `grilops.symbols.SymbolSet.append` after it's constructed.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
   """
 
   def __init__(self, lattice: Lattice):
@@ -51,36 +57,36 @@ class LoopSymbolSet(SymbolSet):
   def is_loop(self, symbol: ArithRef) -> BoolRef:
     """Returns true if #symbol represents part of the loop.
 
-    # Arguments
-    symbol (z3.ArithRef): A z3 expression representing a symbol.
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
 
-    # Returns
-    (z3.BoolRef): true if the symbol represents part of the loop.
+    Returns:
+      A true `BoolRef` if the symbol represents part of the loop.
     """
     return symbol < self.__max_loop_symbol_index + 1
 
   def symbols_for_direction(self, d: Vector) -> List[int]:
     """Returns the symbols with one arm going in the given direction.
 
-    # Arguments
-    d (Vector): The given direction.
+    Args:
+      d (grilops.geometry.Vector): The given direction.
 
-    # Returns
-    (List[int]): A list of symbol indices corresponding to symbols
-        with one arm going in the given direction.
+    Returns:
+      A `List[int]` of symbol indices corresponding to symbols with one arm
+      going in the given direction.
     """
     return self.__symbols_for_direction[d]
 
   def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -> int:
     """Returns the symbol with arms going in the two given directions.
 
-    # Arguments
-    d1 (Vector): The first given direction.
-    d2 (Vector): The second given direction.
+    Args:
+      d1 (grilops.geometry.Vector): The first given direction.
+      d2 (grilops.geometry.Vector): The second given direction.
 
-    # Returns
-    (int): The symbol index for the symbol with one arm going in
-        each of the two given directions.
+    Returns:
+      The symbol index for the symbol with one arm going in each of the two
+      given directions.
     """
     return self.__symbol_for_direction_pair[(d1, d2)]
 
@@ -88,9 +94,9 @@ class LoopSymbolSet(SymbolSet):
 class LoopConstrainer:
   """Creates constraints for ensuring symbols form closed loops.
 
-  # Arguments
-  symbol_grid (SymbolGrid): The #SymbolGrid to constrain.
-  single_loop (bool): If true, constrain the grid to contain only a single loop.
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
+    single_loop (bool): If true, constrain the grid to contain only a single loop.
   """
   _instance_index = 0
 
@@ -190,7 +196,7 @@ class LoopConstrainer:
 
   @property
   def loop_order_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): Constants of a loop traversal order.
+    """Constants of a loop traversal order.
 
     Only populated if single_loop was true.
     """
@@ -198,10 +204,10 @@ class LoopConstrainer:
 
   @property
   def inside_outside_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): Whether cells are contained by loops.
+    """Whether cells are contained by loops.
 
-    Values are the L, I, and O attributes of this module. On the first call
-    to this property, the grid will be constructed.
+    Values are the `L`, `I`, and `O` attributes of this module. On the first
+    call to this property, the grid will be constructed.
     """
     if not self.__inside_outside_grid:
       self.__make_inside_outside_grid()

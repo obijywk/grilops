@@ -4,12 +4,12 @@ from typing import cast, Dict, List, Optional, Tuple, Union
 
 
 class Symbol:
-  """A marking that may be filled into a single #SymbolGrid cell.
+  """A marking that may be filled into a `grilops.grids.SymbolGrid` cell.
 
-  # Arguments
-  index (int): The index value assigned to the symbol.
-  name (str, None): The Python-safe name of the symbol.
-  label (str, None): The printable label of the symbol.
+  Args:
+    index (int): The index value assigned to the symbol.
+    name (Optional[str]): The Python-safe name of the symbol.
+    label (Optional[str]): The printable label of the symbol.
   """
   def __init__(
       self,
@@ -23,12 +23,12 @@ class Symbol:
 
   @property
   def index(self) -> int:
-    """(int): The index value assigned to the symbol."""
+    """The index value assigned to the symbol."""
     return self.__index
 
   @property
   def name(self) -> str:
-    """(str): The Python-safe name of the symbol."""
+    """The Python-safe name of the symbol."""
     if self.__name:
       return self.__name
     if self.__label:
@@ -37,7 +37,7 @@ class Symbol:
 
   @property
   def label(self) -> str:
-    """(str): The printable label of the symbol."""
+    """The printable label of the symbol."""
     if self.__label:
       return self.__label
     if self.__name:
@@ -49,11 +49,11 @@ class Symbol:
 
 
 class SymbolSet:
-  """The complete set of markings allowed to be filled into a #SymbolGrid.
+  """A set of markings that may be filled into a `grilops.grids.SymbolGrid`.
 
-  # Arguments
-  symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]]): A list of
-      specifications for the symbols. Each specification may be a
+  Args:
+    symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]]): A list
+      of specifications for the symbols. Each specification may be a
       Python-safe name, a (Python-safe name, printable label) tuple, or a
       (Python-safe name, printable label, index value) tuple.
   """
@@ -97,12 +97,12 @@ class SymbolSet:
       return 0
     return max(self.__index_to_symbol.keys()) + 1
 
-  def append(self, name: str = None, label: str = None):
+  def append(self, name: Optional[str] = None, label: Optional[str] = None):
     """Appends an additional symbol to this symbol set.
 
-    # Arguments
-    name (str, None): The Python-safe name of the symbol.
-    label (str, None): The printable label of the symbol.
+    Args:
+      name (Optional[str]): The Python-safe name of the symbol.
+      label (Optional[str]): The printable label of the symbol.
     """
     index = self.__next_unused_index()
     symbol = Symbol(index, name, label)
@@ -110,17 +110,17 @@ class SymbolSet:
     setattr(self, symbol.name, symbol.index)
     self.__label_to_symbol_index[symbol.label] = symbol.index
 
-  def min_index(self):
+  def min_index(self) -> int:
     """Returns the minimum index value of all of the symbols."""
     return min(self.__index_to_symbol.keys())
 
-  def max_index(self):
+  def max_index(self) -> int:
     """Returns the maximum index value of all of the symbols."""
     return max(self.__index_to_symbol.keys())
 
   @property
   def symbols(self) -> Dict[int, Symbol]:
-    """(Dict[int, Symbol]): The map of all symbols."""
+    """The map of all symbols."""
     return self.__index_to_symbol
 
   def __getitem__(self, index):
@@ -134,14 +134,14 @@ def make_letter_range_symbol_set(
     min_letter: str,
     max_letter: str
 ) -> SymbolSet:
-  """Returns a #SymbolSet consisting of consecutive letters.
+  """Returns a `SymbolSet` consisting of consecutive letters.
 
-  # Arguments
-  min_letter (str): The lowest letter to include in the set.
-  max_letter (str): The highest letter to include in the set.
+  Args:
+    min_letter (str): The lowest letter to include in the set.
+    max_letter (str): The highest letter to include in the set.
 
-  # Returns
-  (SymbolSet): A #SymbolSet consisting of consecutive letters.
+  Returns:
+    A `SymbolSet` consisting of consecutive letters.
   """
   return SymbolSet(
       [chr(v) for v in range(ord(min_letter), ord(max_letter) + 1)]
@@ -152,17 +152,17 @@ def make_number_range_symbol_set(
     min_number: int,
     max_number: int
 ) -> SymbolSet:
-  """Returns a #SymbolSet consisting of consecutive numbers.
+  """Returns a `SymbolSet` consisting of consecutive numbers.
 
   The names of the symbols will be prefixed with S so that they may be
   referred to directly in Python code.
 
-  # Arguments
-  min_number (int): The lowest number to include in the set.
-  max_number (int): The highest number to include in the set.
+  Args:
+    min_number (int): The lowest number to include in the set.
+    max_number (int): The highest number to include in the set.
 
-  # Returns
-  (SymbolSet): A #SymbolSet consisting of consecutive numbers.
+  Returns:
+    A `SymbolSet` consisting of consecutive numbers.
   """
   return SymbolSet(
       [(f"S{v}", str(v), v) for v in range(min_number, max_number + 1)]

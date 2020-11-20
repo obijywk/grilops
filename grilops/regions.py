@@ -1,14 +1,8 @@
 """This module supports puzzles that group cells into contiguous regions.
 
-Internally, the #RegionConstrainer constructs subtrees, each spanning the cells
+Internally, the `RegionConstrainer` constructs subtrees, each spanning the cells
 contained within a region. Aspects of a cell's relationship to the other cells
-in its subtree are exposed by properties of the #RegionConstrainer.
-
-# Attributes
-X (int): The #RegionConstrainer.parent_grid value indicating that a cell is not
-    part of a region.
-R (int): The #RegionConstrainer.parent_grid value indicating that a cell is the
-    root of its region's subtree.
+in its subtree are exposed by properties of the `RegionConstrainer`.
 """
 
 from typing import Dict, Optional
@@ -16,20 +10,27 @@ from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
 
 from .geometry import Lattice, Point, Vector
 
-X = 0
-R = 1
+
+X: int = 0
+"""The `RegionConstrainer.parent_grid` value indicating that a cell is not
+  part of a region."""
+
+R: int = 1
+"""The `RegionConstrainer.parent_grid` value indicating that a cell is the
+  root of its region's subtree."""
+
 
 class RegionConstrainer:  # pylint: disable=R0902
   """Creates constraints for grouping cells into contiguous regions.
 
-  # Arguments
-  lattice (Lattice): The structure of the grid.
-  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will be
       constructed.
-  complete (bool): If true, every cell must be part of a region. Defaults to
+    complete (bool): If true, every cell must be part of a region. Defaults to
       true.
-  min_region_size(int, None): The minimum possible size of a region.
-  max_region_size(int, None): The maximum possible size of a region.
+    min_region_size (Optional[int]): The minimum possible size of a region.
+    max_region_size (Optional[int]): The maximum possible size of a region.
   """
   _instance_index = 0
 
@@ -168,38 +169,41 @@ class RegionConstrainer:  # pylint: disable=R0902
       )
 
   def edge_sharing_direction_to_index(self, direction: Vector) -> int:
-    """Returns the parent_grid value corresponding to the given direction.
+    """Returns the `RegionConstrainer.parent_grid` value for the direction.
 
     For instance, if direction is (-1, 0), return the index for N.
 
-    # Arguments
-    direction (Vector): The direction to an edge-sharing cell.
+    Args:
+      direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
 
-    # Returns
-    (int): The parent_grid value that means that the parent in its region's
-        subtree is the cell offset by that direction.
+    Returns:
+      The `RegionConstrainer.parent_grid` value that means that the parent
+        in its region's subtree is the cell offset by that direction.
     """
     return self.__edge_sharing_direction_to_index[direction]
 
   def parent_type_to_index(self, parent_type: str) -> int:
-    """Returns the parent_grid value corresponding to the given parent type.
+    """Returns the `RegionConstrainer.parent_grid` value for the parent type.
 
-    # Arguments
-    parent_type (str): The parent type.
+    The parent_type may be a direction name (like "N") or name of a special
+    value like "R" or "X".
 
-    # Returns
-    (int): The corresponding parent_grid value.
+    Args:
+      parent_type (str): The parent type.
+
+    Returns:
+      The corresponding `RegionConstrainer.parent_grid` value.
     """
     return self.__parent_type_to_index[parent_type]
 
   @property
   def solver(self) -> Solver:
-    """(z3.Solver): The #Solver associated with this #RegionConstrainer."""
+    """The `Solver` associated with this `RegionConstrainer`."""
     return self.__solver
 
   @property
   def region_id_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of numbers identifying regions.
+    """A dictionary of numbers identifying regions.
 
     A region's identifier is the position in the grid (going in order from left
     to right, top to bottom) of the root of that region's subtree. It is the
@@ -209,17 +213,17 @@ class RegionConstrainer:  # pylint: disable=R0902
 
   @property
   def region_size_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of region sizes."""
+    """A dictionary of region sizes."""
     return self.__region_size_grid
 
   @property
   def parent_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of region subtree parent pointers."""
+    """A dictionary of region subtree parent pointers."""
     return self.__parent_grid
 
   @property
   def subtree_size_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of cell subtree sizes.
+    """A dictionary of cell subtree sizes.
 
     A cell's subtree size is one plus the number of cells that are descendents
     of the cell in its region's subtree.

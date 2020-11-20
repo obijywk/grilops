@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional
 from z3 import ArithRef, Int, IntVal, Or, Solver, PbEq
 
 from .fastz3 import fast_and, fast_eq, fast_ne
@@ -18,17 +18,17 @@ HAS_INSTANCE_ID, NOT_HAS_INSTANCE_ID, HAS_SHAPE_TYPE = range(3)
 def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
   """Returns a new shape that's canonicalized.
 
-  A canonicalized shape is in sorted order and its first offset is Vector(0, 0).
-  This helps with deduplication, since equivalent shapes will be canonicalized
-  identically.
+  A canonicalized shape is in sorted order and its first offset is
+  `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
+  equivalent shapes will be canonicalized identically.
 
-  # Arguments
-  shape (List[Vector]): A list of offsets defining a shape.
+  Args:
+    shape (List[grilops.geometry.Vector]): A list of offsets defining a shape.
 
-  # Returns
-  (List[Vector]): A list of offsets defining the canonicalized version
-      of the shape, i.e., in sorted order and with first offset equal
-      to Vector(0, 0).
+  Returns:
+    A `List[grilops.geometry.Vector]` of offsets defining the canonicalized
+      version of the shape, i.e., in sorted order and with first offset equal
+      to `grilops.geometry.Vector`(0, 0).
   """
   shape = sorted(shape)
   first_negated = shape[0].negate()
@@ -38,23 +38,23 @@ def canonicalize_shape(shape: List[Vector]) -> List[Vector]:
 class ShapeConstrainer:
   """Creates constraints for placing fixed shape regions into the grid.
 
-  # Arguments
-  lattice (Lattice): The structure of the grid.
-  shapes (List[List[Vector]]): A list of region shape definitions.
-      Each region shape definition should be a list of offsets.
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+    shapes (List[List[grilops.geometry.Vector]]): A list of region shape
+      definitions. Each region shape definition should be a list of offsets.
       The same region shape definition may be included multiple times to
-      indicate the number of times that shape may appear (if allow_copies
-      is false).
-  solver (z3.Solver, None): A #Solver object. If None, a #Solver will be
-      constructed.
-  complete (bool): If true, every cell must be part of a shape region. Defaults
-      to false.
-  allow_rotations (bool): If true, allow rotations of the shapes to be placed
+      indicate the number of times that shape may appear (if allow_copies is
+      false).
+    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
+      be constructed.
+    complete (bool): If true, every cell must be part of a shape region.
+      Defaults to false.
+    allow_rotations (bool): If true, allow rotations of the shapes to be placed
       in the grid. Defaults to false.
-  allow_reflections (bool): If true, allow reflections of the shapes to be
+    allow_reflections (bool): If true, allow reflections of the shapes to be
       placed in the grid. Defaults to false.
-  allow_copies (bool): If true, allow any number of copies of the shapes to be
-      placed in the grid. Defaults to false.
+    allow_copies (bool): If true, allow any number of copies of the shapes to
+      be placed in the grid. Defaults to false.
   """
   _instance_index = 0
 
@@ -62,7 +62,7 @@ class ShapeConstrainer:
       self,
       lattice: Lattice,
       shapes: List[List[Vector]],
-      solver: Solver = None,
+      solver: Optional[Solver] = None,
       complete: bool = False,
       allow_rotations: bool = False,
       allow_reflections: bool = False,
@@ -199,22 +199,22 @@ class ShapeConstrainer:
 
   @property
   def solver(self) -> Solver:
-    """(z3.Solver): The #Solver associated with this #ShapeConstrainer."""
+    """The `Solver` associated with this `ShapeConstrainer`."""
     return self.__solver
 
   @property
   def shape_type_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): A dictionary of z3 constants of shape types.
+    """A dictionary of z3 constants of shape types.
 
     Each cell contains the index of the shape type placed in that cell (as
-    indexed by the shapes list passed in to the #ShapeConstrainer constructor),
-    or -1 if no shape is placed within that cell.
+    indexed by the shapes list passed in to the `ShapeConstrainer`
+    constructor), or -1 if no shape is placed within that cell.
     """
     return self.__shape_type_grid
 
   @property
   def shape_instance_grid(self) -> Dict[Point, ArithRef]:
-    """(Dict[Point, ArithRef]): z3 constants of shape instance IDs.
+    """z3 constants of shape instance IDs.
 
     Each cell contains a number shared among all cells containing the same
     instance of the shape, or -1 if no shape is placed within that cell.
