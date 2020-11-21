@@ -51,14 +51,14 @@ holes should be treated as part of the grid, e.g., as black cells.
 from typing import cast, Callable, TypeVar
 from z3 import ArithRef, BoolRef, BoolVal, ExprRef, If, IntVal
 
-from .geometry import Point, Vector
+from .geometry import Point, Direction
 from .grids import SymbolGrid
 
 
 def count_cells(
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     count: Callable[[ArithRef], ArithRef] = lambda c: IntVal(1),
     stop: Callable[[ArithRef], BoolRef] = lambda c: BoolVal(False)
 ) -&gt; ArithRef:
@@ -68,8 +68,8 @@ def count_cells(
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     count (Callable[[ArithRef], ArithRef]): A function that accepts
       a symbol as an argument and returns the integer value to add to the count
       when this symbol is encountered. By default, each symbol will count with
@@ -98,7 +98,7 @@ Accumulator = TypeVar(&#34;Accumulator&#34;, bound=ExprRef)
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, ArithRef], Accumulator],
     stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
@@ -109,8 +109,8 @@ def reduce_cells(  # pylint: disable=R0913
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
     accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
       that accepts an accumulated value and a symbol as arguments, and returns
@@ -134,7 +134,7 @@ def reduce_cells(  # pylint: disable=R0913
     acc_term = accumulate(acc_terms[-1], cell)
     acc_terms.append(acc_term)
     stop_terms.append(stop(acc_term, cell))
-    p = p.translate(direction)
+    p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
     expr = If(stop_term, acc_term, expr)
@@ -149,7 +149,7 @@ def reduce_cells(  # pylint: disable=R0913
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="grilops.sightlines.count_cells"><code class="name flex">
-<span>def <span class="ident">count_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, count: Callable[[z3.z3.ArithRef], z3.z3.ArithRef] = &lt;function &lt;lambda&gt;&gt;, stop: Callable[[z3.z3.ArithRef], z3.z3.BoolRef] = &lt;function &lt;lambda&gt;&gt;) ‑> z3.z3.ArithRef</span>
+<span>def <span class="ident">count_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, count: Callable[[z3.z3.ArithRef], z3.z3.ArithRef] = &lt;function &lt;lambda&gt;&gt;, stop: Callable[[z3.z3.ArithRef], z3.z3.BoolRef] = &lt;function &lt;lambda&gt;&gt;) ‑> z3.z3.ArithRef</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a count of cells along a sightline through a grid.</p>
@@ -160,9 +160,9 @@ def reduce_cells(  # pylint: disable=R0913
 <dt><strong><code>start</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
 <dd>The location of the cell where the
 sightline should begin. This is the first cell checked.</dd>
-<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
-<dd>The direction to advance to reach the
-next cell in the sightline.</dd>
+<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The direction to advance to reach
+the next cell in the sightline.</dd>
 <dt><strong><code>count</code></strong> :&ensp;<code>Callable[[ArithRef], ArithRef]</code></dt>
 <dd>A function that accepts
 a symbol as an argument and returns the integer value to add to the count
@@ -183,7 +183,7 @@ continue to the edge of the grid.</dd>
 <pre><code class="python">def count_cells(
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     count: Callable[[ArithRef], ArithRef] = lambda c: IntVal(1),
     stop: Callable[[ArithRef], BoolRef] = lambda c: BoolVal(False)
 ) -&gt; ArithRef:
@@ -193,8 +193,8 @@ continue to the edge of the grid.</dd>
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     count (Callable[[ArithRef], ArithRef]): A function that accepts
       a symbol as an argument and returns the integer value to add to the count
       when this symbol is encountered. By default, each symbol will count with
@@ -218,7 +218,7 @@ continue to the edge of the grid.</dd>
 </details>
 </dd>
 <dt id="grilops.sightlines.reduce_cells"><code class="name flex">
-<span>def <span class="ident">reduce_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, initializer: ~Accumulator, accumulate: Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], stop: Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef] = &lt;function &lt;lambda&gt;&gt;) ‑> ~Accumulator</span>
+<span>def <span class="ident">reduce_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, initializer: ~Accumulator, accumulate: Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], stop: Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef] = &lt;function &lt;lambda&gt;&gt;) ‑> ~Accumulator</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a computation of a sightline through a grid.</p>
@@ -229,9 +229,9 @@ continue to the edge of the grid.</dd>
 <dt><strong><code>start</code></strong> :&ensp;<code><a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a></code></dt>
 <dd>The location of the cell where the
 sightline should begin. This is the first cell checked.</dd>
-<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
-<dd>The direction to advance to reach the
-next cell in the sightline.</dd>
+<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The direction to advance to reach
+the next cell in the sightline.</dd>
 <dt><strong><code>initializer</code></strong> :&ensp;<code>Accumulator</code></dt>
 <dd>The initial value for the accumulator.</dd>
 <dt><strong><code>accumulate</code></strong> :&ensp;<code>Callable[[Accumulator, ArithRef], Accumulator]</code></dt>
@@ -256,7 +256,7 @@ default, the sightline will continue to the edge of the grid.</dd>
 <pre><code class="python">def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, ArithRef], Accumulator],
     stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
@@ -267,8 +267,8 @@ default, the sightline will continue to the edge of the grid.</dd>
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
     accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
       that accepts an accumulated value and a symbol as arguments, and returns
@@ -292,7 +292,7 @@ default, the sightline will continue to the edge of the grid.</dd>
     acc_term = accumulate(acc_terms[-1], cell)
     acc_terms.append(acc_term)
     stop_terms.append(stop(acc_term, cell))
-    p = p.translate(direction)
+    p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
     expr = If(stop_term, acc_term, expr)

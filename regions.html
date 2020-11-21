@@ -40,7 +40,7 @@ in its subtree are exposed by properties of the `RegionConstrainer`.
 from typing import Dict, Optional
 from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
 
-from .geometry import Lattice, Point, Vector
+from .geometry import Direction, Lattice, Point
 
 
 X: int = 0
@@ -102,11 +102,11 @@ class RegionConstrainer:  # pylint: disable=R0902
     self.__edge_sharing_direction_to_index = {}
     self.__parent_type_to_index = {&#34;X&#34;: X, &#34;R&#34;: R}
     self.__parent_types = [&#34;X&#34;, &#34;R&#34;]
-    for name, d in self.__lattice.edge_sharing_directions():
+    for d in self.__lattice.edge_sharing_directions():
       index = len(self.__parent_types)
-      self.__parent_type_to_index[name] = index
+      self.__parent_type_to_index[d.name] = index
       self.__edge_sharing_direction_to_index[d] = index
-      self.__parent_types.append(name)
+      self.__parent_types.append(d.name)
 
   def __create_grids(self):
     &#34;&#34;&#34;Create the grids used to model region constraints.&#34;&#34;&#34;
@@ -186,10 +186,11 @@ class RegionConstrainer:  # pylint: disable=R0902
       parent = self.__parent_grid[p]
       subtree_size_terms = [If(parent != X, 1, 0)]
 
-      for _, d in self.__lattice.edge_sharing_directions():
-        sp = p.translate(d)
+      for d in self.__lattice.edge_sharing_directions():
+        sp = p.translate(d.vector)
         if sp in self.__parent_grid:
-          opposite_index = self.__edge_sharing_direction_to_index[d.negate()]
+          opposite_index = self.__edge_sharing_direction_to_index[
+              self.__lattice.opposite_direction(d)]
           constrain_side(p, sp, opposite_index)
           subtree_size_terms.append(subtree_size_term(sp, opposite_index))
         else:
@@ -200,13 +201,13 @@ class RegionConstrainer:  # pylint: disable=R0902
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
 
-  def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+  def edge_sharing_direction_to_index(self, direction: Direction) -&gt; int:
     &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
 
     For instance, if direction is (-1, 0), return the index for N.
 
     Args:
-      direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+      direction (grilops.geometry.Direction): The direction to an edge-sharing cell.
 
     Returns:
       The `RegionConstrainer.parent_grid` value that means that the parent
@@ -427,11 +428,11 @@ true.</dd>
     self.__edge_sharing_direction_to_index = {}
     self.__parent_type_to_index = {&#34;X&#34;: X, &#34;R&#34;: R}
     self.__parent_types = [&#34;X&#34;, &#34;R&#34;]
-    for name, d in self.__lattice.edge_sharing_directions():
+    for d in self.__lattice.edge_sharing_directions():
       index = len(self.__parent_types)
-      self.__parent_type_to_index[name] = index
+      self.__parent_type_to_index[d.name] = index
       self.__edge_sharing_direction_to_index[d] = index
-      self.__parent_types.append(name)
+      self.__parent_types.append(d.name)
 
   def __create_grids(self):
     &#34;&#34;&#34;Create the grids used to model region constraints.&#34;&#34;&#34;
@@ -511,10 +512,11 @@ true.</dd>
       parent = self.__parent_grid[p]
       subtree_size_terms = [If(parent != X, 1, 0)]
 
-      for _, d in self.__lattice.edge_sharing_directions():
-        sp = p.translate(d)
+      for d in self.__lattice.edge_sharing_directions():
+        sp = p.translate(d.vector)
         if sp in self.__parent_grid:
-          opposite_index = self.__edge_sharing_direction_to_index[d.negate()]
+          opposite_index = self.__edge_sharing_direction_to_index[
+              self.__lattice.opposite_direction(d)]
           constrain_side(p, sp, opposite_index)
           subtree_size_terms.append(subtree_size_term(sp, opposite_index))
         else:
@@ -525,13 +527,13 @@ true.</dd>
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
 
-  def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+  def edge_sharing_direction_to_index(self, direction: Direction) -&gt; int:
     &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
 
     For instance, if direction is (-1, 0), return the index for N.
 
     Args:
-      direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+      direction (grilops.geometry.Direction): The direction to an edge-sharing cell.
 
     Returns:
       The `RegionConstrainer.parent_grid` value that means that the parent
@@ -739,14 +741,14 @@ def subtree_size_grid(self) -&gt; Dict[Point, ArithRef]:
 <h3>Methods</h3>
 <dl>
 <dt id="grilops.regions.RegionConstrainer.edge_sharing_direction_to_index"><code class="name flex">
-<span>def <span class="ident">edge_sharing_direction_to_index</span></span>(<span>self, direction: <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>) ‑> int</span>
+<span>def <span class="ident">edge_sharing_direction_to_index</span></span>(<span>self, direction: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns the <code><a title="grilops.regions.RegionConstrainer.parent_grid" href="#grilops.regions.RegionConstrainer.parent_grid">RegionConstrainer.parent_grid</a></code> value for the direction.</p>
 <p>For instance, if direction is (-1, 0), return the index for N.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code></dt>
+<dt><strong><code>direction</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
 <dd>The direction to an edge-sharing cell.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -756,13 +758,13 @@ in its region's subtree is the cell offset by that direction.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def edge_sharing_direction_to_index(self, direction: Vector) -&gt; int:
+<pre><code class="python">def edge_sharing_direction_to_index(self, direction: Direction) -&gt; int:
   &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
 
   For instance, if direction is (-1, 0), return the index for N.
 
   Args:
-    direction (grilops.geometry.Vector): The direction to an edge-sharing cell.
+    direction (grilops.geometry.Direction): The direction to an edge-sharing cell.
 
   Returns:
     The `RegionConstrainer.parent_grid` value that means that the parent

@@ -30,7 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;This module supports geometric objects useful in modeling grids of cells.&#34;&#34;&#34;
 
 import sys
-from typing import Callable, Dict, IO, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, IO, Iterable, List, NamedTuple, Optional, Tuple, Union
 from z3 import ArithRef
 
 
@@ -52,6 +52,16 @@ class Vector(NamedTuple):
     return Vector(self.dy + d.dy, self.dx + d.dx)
 
 
+class Direction(NamedTuple):
+  &#34;&#34;&#34;A named direction vector that offsets by one space in the grid.&#34;&#34;&#34;
+
+  name: str
+  &#34;&#34;&#34;The name of the direction.&#34;&#34;&#34;
+
+  vector: Vector
+  &#34;&#34;&#34;The vector of the direction.&#34;&#34;&#34;
+
+
 class Point(NamedTuple):
   &#34;&#34;&#34;A point, generally corresponding to the center of a grid cell.&#34;&#34;&#34;
 
@@ -61,9 +71,11 @@ class Point(NamedTuple):
   x: int
   &#34;&#34;&#34;The location in the x dimension.&#34;&#34;&#34;
 
-  def translate(self, d: Vector) -&gt; &#34;Point&#34;:
-    &#34;&#34;&#34;Translates this point in the given direction.&#34;&#34;&#34;
-    return Point(self.y + d.dy, self.x + d.dx)
+  def translate(self, v: Union[Vector, Direction]) -&gt; &#34;Point&#34;:
+    &#34;&#34;&#34;Translates this point by the given `Vector` or `Direction`.&#34;&#34;&#34;
+    if isinstance(v, Direction):
+      v = v.vector
+    return Point(self.y + v.dy, self.x + v.dx)
 
 
 class Neighbor(NamedTuple):
@@ -72,7 +84,7 @@ class Neighbor(NamedTuple):
   location: Point
   &#34;&#34;&#34;The location of the cell.&#34;&#34;&#34;
 
-  direction: Vector
+  direction: Direction
   &#34;&#34;&#34;The direction from the original cell.&#34;&#34;&#34;
 
   symbol: ArithRef
@@ -80,7 +92,12 @@ class Neighbor(NamedTuple):
 
 
 class Lattice:
-  &#34;&#34;&#34;A set of points corresponding to a lattice.&#34;&#34;&#34;
+  &#34;&#34;&#34;A base class for defining the structure of a grid.&#34;&#34;&#34;
+  def __init__(self):
+    self.__vector_direction = {
+        d.vector: d for d in self.vertex_sharing_directions()
+    }
+
   @property
   def points(self) -&gt; List[Point]:
     &#34;&#34;&#34;The points in the lattice, sorted.&#34;&#34;&#34;
@@ -98,27 +115,38 @@ class Lattice:
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def vertex_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of vertex-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of a vertex-sharing direction
-      and the vector representing that direction. Vertex sharing (also known as
-      touching adjacency) is the relationship between grid cells that share a
-      vertex.
+      A list of `Direction`s, each including the name of a vertex-sharing
+      direction and the vector representing that direction. Vertex sharing
+      (also known as touching adjacency) is the relationship between grid cells
+      that share a vertex.
     &#34;&#34;&#34;
     raise NotImplementedError()
+
+  def opposite_direction(self, d: Direction) -&gt; Direction:
+    &#34;&#34;&#34;Given a direction, return the opposite direction.
+
+    Args:
+      d: The given `Direction`.
+
+    Returns:
+      The `Direction` opposite the given direction.
+    &#34;&#34;&#34;
+    return self.__vector_direction[d.vector.negate()]
 
   def edge_sharing_points(self, point: Point) -&gt; List[Point]:
     &#34;&#34;&#34;Returns a list of points that share an edge with the given cell.
@@ -130,7 +158,7 @@ class Lattice:
       A list of `Point`s in the lattice that correspond to cells that share an
       edge with the given cell.
     &#34;&#34;&#34;
-    return [point.translate(v) for _, v in self.edge_sharing_directions()]
+    return [point.translate(d.vector) for d in self.edge_sharing_directions()]
 
   def vertex_sharing_points(self, point: Point) -&gt; List[Point]:
     &#34;&#34;&#34;Returns a list of points that share a vertex with the given cell.
@@ -142,18 +170,18 @@ class Lattice:
       A list of `Point`s in the lattice corresponding to cells that share a
       vertex with the given cell.
     &#34;&#34;&#34;
-    return [point.translate(v) for _, v in self.vertex_sharing_directions()]
+    return [point.translate(d.vector) for d in self.vertex_sharing_directions()]
 
   @staticmethod
   def __get_neighbors(cell_map: Dict[Point, ArithRef], p: Point,
-                      directions: List[Tuple[str, Vector]]) -&gt; List[Neighbor]:
+                      directions: List[Direction]) -&gt; List[Neighbor]:
     &#34;&#34;&#34;Returns a list of neighbors in the given directions of the given cell.
 
     Args:
       cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
         the lattice to z3 constants.
       p (Point): Point of the given cell.
-      directions (List[Tuple[str, Vector]]): The given list of directions to
+      directions (List[Direction]): The given list of directions to
         find neighbors with.
 
     Returns:
@@ -161,8 +189,8 @@ class Lattice:
       directions from the given cell.
     &#34;&#34;&#34;
     cells = []
-    for _, d in directions:
-      np = p.translate(d)
+    for d in directions:
+      np = p.translate(d.vector)
       cell = cell_map.get(np, None)
       if cell is not None:
         cells.append(Neighbor(np, d, cell))
@@ -198,15 +226,15 @@ class Lattice:
     &#34;&#34;&#34;
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
-  def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-    &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+  def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
     Args:
-      d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-      d2 (str): The second direction.
+      d1 (Direction): The first direction.
+      d2 (Direction): The second direction.
 
     Returns:
-      The label representing both directions.
+      A label representing both directions.
 
     Raises:
       ValueError: If there&#39;s no character defined for the direction pair.
@@ -235,16 +263,16 @@ class Lattice:
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     For instance, on a rectangular grid, a valid return value would
-    be (`Vector`(0, -1), [`Vector`(-1, 0)]).  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you&#39;re inside or outside the loop.
+    be (north, [west]). This means that if you look north and count how many
+    west-going lines you cross, you can tell from its parity if you&#39;re inside
+    or outside the loop.
 
     Returns:
       A tuple, the first component of which indicates the direction to look,
@@ -329,6 +357,7 @@ class RectangularLattice(Lattice):
   Note that these points need not fill a complete rectangle.
   &#34;&#34;&#34;
   def __init__(self, points: List[Point]):
+    super().__init__()
     self.__points = sorted(points)
     self.__point_indices = {
         p: i for i, p in enumerate(self.__points)
@@ -351,62 +380,62 @@ class RectangularLattice(Lattice):
     &#34;&#34;&#34;
     return self.__point_indices.get(point)
 
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;N&#34;, Vector(-1, 0)),
-        (&#34;S&#34;, Vector(1, 0)),
-        (&#34;E&#34;, Vector(0, 1)),
-        (&#34;W&#34;, Vector(0, -1)),
+        Direction(&#34;N&#34;, Vector(-1, 0)),
+        Direction(&#34;S&#34;, Vector(1, 0)),
+        Direction(&#34;E&#34;, Vector(0, 1)),
+        Direction(&#34;W&#34;, Vector(0, -1)),
     ]
 
-  def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def vertex_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of vertex-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of a vertex-sharing direction
-      and the vector representing that direction. Vertex sharing (also known as
-      touching adjacency) is the relationship between grid cells that share a
-      vertex.
+      A list of `Direction`s, each including the name of a vertex-sharing
+      direction and the vector representing that direction. Vertex sharing
+      (also known as touching adjacency) is the relationship between grid cells
+      that share a vertex.
     &#34;&#34;&#34;
     return self.edge_sharing_directions() + [
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
-  def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-    &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+  def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
     Args:
-      d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-      d2 (str): The second direction.
+      d1 (Direction): The first direction.
+      d2 (Direction): The second direction.
 
     Returns:
-      The label representing both directions.
+      A label representing both directions.
 
     Raises:
       ValueError: If there&#39;s no character defined for the direction pair.
     &#34;&#34;&#34;
-    if {d1, d2} == {&#34;N&#34;, &#34;S&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;S&#34;}:
       return chr(0x2502)
-    if {d1, d2} == {&#34;E&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;E&#34;, &#34;W&#34;}:
       return chr(0x2500)
-    if {d1, d2} == {&#34;N&#34;, &#34;E&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;E&#34;}:
       return chr(0x2514)
-    if {d1, d2} == {&#34;S&#34;, &#34;E&#34;}:
+    if {d1.name, d2.name} == {&#34;S&#34;, &#34;E&#34;}:
       return chr(0x250C)
-    if {d1, d2} == {&#34;S&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;S&#34;, &#34;W&#34;}:
       return chr(0x2510)
-    if {d1, d2} == {&#34;N&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;W&#34;}:
       return chr(0x2518)
     raise ValueError(&#34;No single-character symbol for direction pair&#34;)
 
@@ -458,23 +487,24 @@ class RectangularLattice(Lattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     For instance, on a rectangular grid, a valid return value would
-    be (`Vector`(0, -1), [`Vector`(-1, 0)]).  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you&#39;re inside or outside the loop.
+    be (north, [west]). This means that if you look north and count how many
+    west-going lines you cross, you can tell from its parity if you&#39;re inside
+    or outside the loop.
 
     Returns:
       A tuple, the first component of which indicates the direction to look,
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(0, -1), [Vector(-1, 0)])
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;N&#34;], [ds[&#34;W&#34;]])
 
 
 class _HexagonalLattice(Lattice):
@@ -488,6 +518,7 @@ class _HexagonalLattice(Lattice):
   the row and x describes the column, so x + y is always even.
   &#34;&#34;&#34;
   def __init__(self, points: List[Point]):
+    super().__init__()
     for p in points:
       if (p.y + p.x) % 2 == 1:
         raise ValueError(&#34;Hexagonal coordinates must have an even sum.&#34;)
@@ -513,38 +544,38 @@ class _HexagonalLattice(Lattice):
     &#34;&#34;&#34;
     return self.__point_indices.get(point)
 
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;Explicitly included in base class to force it to be abstract.&#34;&#34;&#34;
     raise NotImplementedError()
 
-  def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def vertex_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of vertex-sharing directions.
 
     Since this is a hexagonal grid, the vertex-sharing directions are
     the same as the edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of a vertex-sharing direction
-      and the vector representing that direction. Vertex sharing (also known as
-      touching adjacency) is the relationship between grid cells that share a
-      vertex.
+      A list of `Direction`s, each including the name of a vertex-sharing
+      direction and the vector representing that direction. Vertex sharing
+      (also known as touching adjacency) is the relationship between grid cells
+      that share a vertex.
     &#34;&#34;&#34;
     return self.edge_sharing_directions()
 
-  def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-    &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+  def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
     Args:
-      d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-      d2 (str): The second direction.
+      d1 (Direction): The first direction.
+      d2 (Direction): The second direction.
 
     Returns:
-      The label representing both directions.
+      A label representing both directions.
 
     Raises:
       ValueError: If there&#39;s no character defined for the direction pair.
     &#34;&#34;&#34;
-    ds = {d1, d2}
+    ds = {d1.name, d2.name}
 
     def char_for_pos(dirs, chars):
       for d, c in zip(dirs, chars):
@@ -569,22 +600,22 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
   the row and x describes the column, so hexagons that are vertically
   adjacent have their y coordinates differ by 2.
   &#34;&#34;&#34;
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;N&#34;, Vector(-2, 0)),
-        (&#34;S&#34;, Vector(2, 0)),
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;N&#34;, Vector(-2, 0)),
+        Direction(&#34;S&#34;, Vector(2, 0)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
   def transformation_functions(
@@ -645,14 +676,14 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
-    Since this is a flat-topped hexagonal grid, we return (Vector(-2,
-    0), [Vector(-1, -1), Vector(1, -1)]).  This means that if you look
+    Since this is a flat-topped hexagonal grid, we return (north,
+    [northwest, southwest]). This means that if you look
     north and count how many northwest-going and/or southwest-going
     lines you cross, you can tell from its parity if you&#39;re inside or
     outside the loop.
@@ -662,7 +693,8 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(-2, 0), [Vector(-1, -1), Vector(1, -1)])
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;N&#34;], [ds[&#34;NW&#34;], ds[&#34;SW&#34;]])
 
 
 class PointyToppedHexagonalLattice(_HexagonalLattice):
@@ -674,22 +706,22 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
   the row and x describes the column, so hexagons that are horizontally
   adjacent have their x coordinates differ by 2.
   &#34;&#34;&#34;
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;E&#34;, Vector(0, 2)),
-        (&#34;W&#34;, Vector(0, -2)),
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;E&#34;, Vector(0, 2)),
+        Direction(&#34;W&#34;, Vector(0, -2)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
   def transformation_functions(
@@ -749,14 +781,14 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     Since this is a pointy-topped hexagonal grid, we return
-    (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)]).  This means
+    (east, [northwest, northeast]).  This means
     that if you look east and count how many northwest-going
     and/or northeast-going lines you cross, you can tell from
     its parity if you&#39;re inside or outside the loop.
@@ -766,7 +798,8 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)])
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;E&#34;], [ds[&#34;NW&#34;], ds[&#34;NE&#34;]])
 
 
 def get_rectangle_lattice(height: int, width: int) -&gt; RectangularLattice:
@@ -867,6 +900,41 @@ def get_square_lattice(height: int) -&gt; RectangularLattice:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="grilops.geometry.Direction"><code class="flex name class">
+<span>class <span class="ident">Direction</span></span>
+<span>(</span><span>name: str, vector: <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A named direction vector that offsets by one space in the grid.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Direction(NamedTuple):
+  &#34;&#34;&#34;A named direction vector that offsets by one space in the grid.&#34;&#34;&#34;
+
+  name: str
+  &#34;&#34;&#34;The name of the direction.&#34;&#34;&#34;
+
+  vector: Vector
+  &#34;&#34;&#34;The vector of the direction.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.geometry.Direction.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The name of the direction.</p></div>
+</dd>
+<dt id="grilops.geometry.Direction.vector"><code class="name">var <span class="ident">vector</span> : <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a></code></dt>
+<dd>
+<div class="desc"><p>The vector of the direction.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="grilops.geometry.FlatToppedHexagonalLattice"><code class="flex name class">
 <span>class <span class="ident">FlatToppedHexagonalLattice</span></span>
 <span>(</span><span>points: List[<a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>])</span>
@@ -891,22 +959,22 @@ adjacent have their y coordinates differ by 2.</p></div>
   the row and x describes the column, so hexagons that are vertically
   adjacent have their y coordinates differ by 2.
   &#34;&#34;&#34;
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;N&#34;, Vector(-2, 0)),
-        (&#34;S&#34;, Vector(2, 0)),
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;N&#34;, Vector(-2, 0)),
+        Direction(&#34;S&#34;, Vector(2, 0)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
   def transformation_functions(
@@ -967,14 +1035,14 @@ adjacent have their y coordinates differ by 2.</p></div>
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
-    Since this is a flat-topped hexagonal grid, we return (Vector(-2,
-    0), [Vector(-1, -1), Vector(1, -1)]).  This means that if you look
+    Since this is a flat-topped hexagonal grid, we return (north,
+    [northwest, southwest]). This means that if you look
     north and count how many northwest-going and/or southwest-going
     lines you cross, you can tell from its parity if you&#39;re inside or
     outside the loop.
@@ -984,7 +1052,8 @@ adjacent have their y coordinates differ by 2.</p></div>
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(-2, 0), [Vector(-1, -1), Vector(1, -1)])</code></pre>
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;N&#34;], [ds[&#34;NW&#34;], ds[&#34;SW&#34;]])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -994,15 +1063,14 @@ adjacent have their y coordinates differ by 2.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="grilops.geometry.FlatToppedHexagonalLattice.get_inside_outside_check_directions"><code class="name flex">
-<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>, List[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>]]</span>
+<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, List[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns directions for use in a loop inside-outside check.</p>
 <p>The first direction returned is the direction to look, and the
 remaining directions are the directions to check for crossings.</p>
-<p>Since this is a flat-topped hexagonal grid, we return (Vector(-2,
-0), [Vector(-1, -1), Vector(1, -1)]).
-This means that if you look
+<p>Since this is a flat-topped hexagonal grid, we return (north,
+[northwest, southwest]). This means that if you look
 north and count how many northwest-going and/or southwest-going
 lines you cross, you can tell from its parity if you're inside or
 outside the loop.</p>
@@ -1014,14 +1082,14 @@ count.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
   &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
   The first direction returned is the direction to look, and the
   remaining directions are the directions to check for crossings.
 
-  Since this is a flat-topped hexagonal grid, we return (Vector(-2,
-  0), [Vector(-1, -1), Vector(1, -1)]).  This means that if you look
+  Since this is a flat-topped hexagonal grid, we return (north,
+  [northwest, southwest]). This means that if you look
   north and count how many northwest-going and/or southwest-going
   lines you cross, you can tell from its parity if you&#39;re inside or
   outside the loop.
@@ -1031,7 +1099,8 @@ count.</p></div>
     and the second component of which indicates what types of crossings to
     count.
   &#34;&#34;&#34;
-  return (Vector(-2, 0), [Vector(-1, -1), Vector(1, -1)])</code></pre>
+  ds = {d.name: d for d in self.edge_sharing_directions()}
+  return (ds[&#34;N&#34;], [ds[&#34;NW&#34;], ds[&#34;SW&#34;]])</code></pre>
 </details>
 </dd>
 </dl>
@@ -1043,6 +1112,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.points" href="#grilops.geometry.Lattice.points">points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.print" href="#grilops.geometry.Lattice.print">print</a></code></li>
@@ -1058,13 +1128,18 @@ count.</p></div>
 <span>class <span class="ident">Lattice</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>A set of points corresponding to a lattice.</p></div>
+<div class="desc"><p>A base class for defining the structure of a grid.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Lattice:
-  &#34;&#34;&#34;A set of points corresponding to a lattice.&#34;&#34;&#34;
+  &#34;&#34;&#34;A base class for defining the structure of a grid.&#34;&#34;&#34;
+  def __init__(self):
+    self.__vector_direction = {
+        d.vector: d for d in self.vertex_sharing_directions()
+    }
+
   @property
   def points(self) -&gt; List[Point]:
     &#34;&#34;&#34;The points in the lattice, sorted.&#34;&#34;&#34;
@@ -1082,27 +1157,38 @@ count.</p></div>
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def vertex_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of vertex-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of a vertex-sharing direction
-      and the vector representing that direction. Vertex sharing (also known as
-      touching adjacency) is the relationship between grid cells that share a
-      vertex.
+      A list of `Direction`s, each including the name of a vertex-sharing
+      direction and the vector representing that direction. Vertex sharing
+      (also known as touching adjacency) is the relationship between grid cells
+      that share a vertex.
     &#34;&#34;&#34;
     raise NotImplementedError()
+
+  def opposite_direction(self, d: Direction) -&gt; Direction:
+    &#34;&#34;&#34;Given a direction, return the opposite direction.
+
+    Args:
+      d: The given `Direction`.
+
+    Returns:
+      The `Direction` opposite the given direction.
+    &#34;&#34;&#34;
+    return self.__vector_direction[d.vector.negate()]
 
   def edge_sharing_points(self, point: Point) -&gt; List[Point]:
     &#34;&#34;&#34;Returns a list of points that share an edge with the given cell.
@@ -1114,7 +1200,7 @@ count.</p></div>
       A list of `Point`s in the lattice that correspond to cells that share an
       edge with the given cell.
     &#34;&#34;&#34;
-    return [point.translate(v) for _, v in self.edge_sharing_directions()]
+    return [point.translate(d.vector) for d in self.edge_sharing_directions()]
 
   def vertex_sharing_points(self, point: Point) -&gt; List[Point]:
     &#34;&#34;&#34;Returns a list of points that share a vertex with the given cell.
@@ -1126,18 +1212,18 @@ count.</p></div>
       A list of `Point`s in the lattice corresponding to cells that share a
       vertex with the given cell.
     &#34;&#34;&#34;
-    return [point.translate(v) for _, v in self.vertex_sharing_directions()]
+    return [point.translate(d.vector) for d in self.vertex_sharing_directions()]
 
   @staticmethod
   def __get_neighbors(cell_map: Dict[Point, ArithRef], p: Point,
-                      directions: List[Tuple[str, Vector]]) -&gt; List[Neighbor]:
+                      directions: List[Direction]) -&gt; List[Neighbor]:
     &#34;&#34;&#34;Returns a list of neighbors in the given directions of the given cell.
 
     Args:
       cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
         the lattice to z3 constants.
       p (Point): Point of the given cell.
-      directions (List[Tuple[str, Vector]]): The given list of directions to
+      directions (List[Direction]): The given list of directions to
         find neighbors with.
 
     Returns:
@@ -1145,8 +1231,8 @@ count.</p></div>
       directions from the given cell.
     &#34;&#34;&#34;
     cells = []
-    for _, d in directions:
-      np = p.translate(d)
+    for d in directions:
+      np = p.translate(d.vector)
       cell = cell_map.get(np, None)
       if cell is not None:
         cells.append(Neighbor(np, d, cell))
@@ -1182,15 +1268,15 @@ count.</p></div>
     &#34;&#34;&#34;
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
-  def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-    &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+  def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
     Args:
-      d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-      d2 (str): The second direction.
+      d1 (Direction): The first direction.
+      d2 (Direction): The second direction.
 
     Returns:
-      The label representing both directions.
+      A label representing both directions.
 
     Raises:
       ValueError: If there&#39;s no character defined for the direction pair.
@@ -1219,16 +1305,16 @@ count.</p></div>
     &#34;&#34;&#34;
     raise NotImplementedError()
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     For instance, on a rectangular grid, a valid return value would
-    be (`Vector`(0, -1), [`Vector`(-1, 0)]).  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you&#39;re inside or outside the loop.
+    be (north, [west]). This means that if you look north and count how many
+    west-going lines you cross, you can tell from its parity if you&#39;re inside
+    or outside the loop.
 
     Returns:
       A tuple, the first component of which indicates the direction to look,
@@ -1330,27 +1416,27 @@ def points(self) -&gt; List[Point]:
 <h3>Methods</h3>
 <dl>
 <dt id="grilops.geometry.Lattice.edge_sharing_directions"><code class="name flex">
-<span>def <span class="ident">edge_sharing_directions</span></span>(<span>self) ‑> List[Tuple[str, <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>]]</span>
+<span>def <span class="ident">edge_sharing_directions</span></span>(<span>self) ‑> List[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A list of edge-sharing directions.</p>
 <h2 id="returns">Returns</h2>
-<p>A list of tuples, each including the name of an edge-sharing direction
-and the vector representing that direction. Edge sharing (also known as
-orthogonal adjacency) is the relationship between grid cells that share
-an edge.</p></div>
+<p>A list of <code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code>s, each including the name of an edge-sharing
+direction and the vector representing that direction. Edge sharing (also
+known as orthogonal adjacency) is the relationship between grid cells
+that share an edge.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+<pre><code class="python">def edge_sharing_directions(self) -&gt; List[Direction]:
   &#34;&#34;&#34;A list of edge-sharing directions.
 
   Returns:
-    A list of tuples, each including the name of an edge-sharing direction
-    and the vector representing that direction. Edge sharing (also known as
-    orthogonal adjacency) is the relationship between grid cells that share
-    an edge.
+    A list of `Direction`s, each including the name of an edge-sharing
+    direction and the vector representing that direction. Edge sharing (also
+    known as orthogonal adjacency) is the relationship between grid cells
+    that share an edge.
   &#34;&#34;&#34;
   raise NotImplementedError()</code></pre>
 </details>
@@ -1418,21 +1504,20 @@ edge with the given cell.</p></div>
     A list of `Point`s in the lattice that correspond to cells that share an
     edge with the given cell.
   &#34;&#34;&#34;
-  return [point.translate(v) for _, v in self.edge_sharing_directions()]</code></pre>
+  return [point.translate(d.vector) for d in self.edge_sharing_directions()]</code></pre>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.get_inside_outside_check_directions"><code class="name flex">
-<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>, List[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>]]</span>
+<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, List[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns directions for use in a loop inside-outside check.</p>
 <p>The first direction returned is the direction to look, and the
 remaining directions are the directions to check for crossings.</p>
 <p>For instance, on a rectangular grid, a valid return value would
-be (<code><a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a></code>(0, -1), [<code>Vector</code>(-1, 0)]).
-This means that if you look
-north and count how many west-going lines you cross, you can
-tell from its parity if you're inside or outside the loop.</p>
+be (north, [west]). This means that if you look north and count how many
+west-going lines you cross, you can tell from its parity if you're inside
+or outside the loop.</p>
 <h2 id="returns">Returns</h2>
 <p>A tuple, the first component of which indicates the direction to look,
 and the second component of which indicates what types of crossings to
@@ -1441,16 +1526,16 @@ count.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
   &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
   The first direction returned is the direction to look, and the
   remaining directions are the directions to check for crossings.
 
   For instance, on a rectangular grid, a valid return value would
-  be (`Vector`(0, -1), [`Vector`(-1, 0)]).  This means that if you look
-  north and count how many west-going lines you cross, you can
-  tell from its parity if you&#39;re inside or outside the loop.
+  be (north, [west]). This means that if you look north and count how many
+  west-going lines you cross, you can tell from its parity if you&#39;re inside
+  or outside the loop.
 
   Returns:
     A tuple, the first component of which indicates the direction to look,
@@ -1461,19 +1546,19 @@ count.</p></div>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.label_for_direction_pair"><code class="name flex">
-<span>def <span class="ident">label_for_direction_pair</span></span>(<span>self, d1: str, d2: str) ‑> str</span>
+<span>def <span class="ident">label_for_direction_pair</span></span>(<span>self, d1: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, d2: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns the label for a pair of edge-sharing direction names.</p>
+<div class="desc"><p>Returns the label for a pair of edge-sharing directions.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>d1</code></strong> :&ensp;<code>str</code></dt>
-<dd>The first direction (e.g., "N", "S", etc.)</dd>
-<dt><strong><code>d2</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>d1</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The first direction.</dd>
+<dt><strong><code>d2</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code></dt>
 <dd>The second direction.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>The label representing both directions.</p>
+<p>A label representing both directions.</p>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
@@ -1483,20 +1568,48 @@ count.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-  &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+<pre><code class="python">def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+  &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
   Args:
-    d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-    d2 (str): The second direction.
+    d1 (Direction): The first direction.
+    d2 (Direction): The second direction.
 
   Returns:
-    The label representing both directions.
+    A label representing both directions.
 
   Raises:
     ValueError: If there&#39;s no character defined for the direction pair.
   &#34;&#34;&#34;
   raise NotImplementedError()</code></pre>
+</details>
+</dd>
+<dt id="grilops.geometry.Lattice.opposite_direction"><code class="name flex">
+<span>def <span class="ident">opposite_direction</span></span>(<span>self, d: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>) ‑> <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a direction, return the opposite direction.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d</code></strong></dt>
+<dd>The given <code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The <code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code> opposite the given direction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def opposite_direction(self, d: Direction) -&gt; Direction:
+  &#34;&#34;&#34;Given a direction, return the opposite direction.
+
+  Args:
+    d: The given `Direction`.
+
+  Returns:
+    The `Direction` opposite the given direction.
+  &#34;&#34;&#34;
+  return self.__vector_direction[d.vector.negate()]</code></pre>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.point_to_index"><code class="name flex">
@@ -1639,27 +1752,27 @@ transformation.</dd>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.vertex_sharing_directions"><code class="name flex">
-<span>def <span class="ident">vertex_sharing_directions</span></span>(<span>self) ‑> List[Tuple[str, <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>]]</span>
+<span>def <span class="ident">vertex_sharing_directions</span></span>(<span>self) ‑> List[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A list of vertex-sharing directions.</p>
 <h2 id="returns">Returns</h2>
-<p>A list of tuples, each including the name of a vertex-sharing direction
-and the vector representing that direction. Vertex sharing (also known as
-touching adjacency) is the relationship between grid cells that share a
-vertex.</p></div>
+<p>A list of <code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code>s, each including the name of a vertex-sharing
+direction and the vector representing that direction. Vertex sharing
+(also known as touching adjacency) is the relationship between grid cells
+that share a vertex.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+<pre><code class="python">def vertex_sharing_directions(self) -&gt; List[Direction]:
   &#34;&#34;&#34;A list of vertex-sharing directions.
 
   Returns:
-    A list of tuples, each including the name of a vertex-sharing direction
-    and the vector representing that direction. Vertex sharing (also known as
-    touching adjacency) is the relationship between grid cells that share a
-    vertex.
+    A list of `Direction`s, each including the name of a vertex-sharing
+    direction and the vector representing that direction. Vertex sharing
+    (also known as touching adjacency) is the relationship between grid cells
+    that share a vertex.
   &#34;&#34;&#34;
   raise NotImplementedError()</code></pre>
 </details>
@@ -1727,14 +1840,14 @@ vertex with the given cell.</p></div>
     A list of `Point`s in the lattice corresponding to cells that share a
     vertex with the given cell.
   &#34;&#34;&#34;
-  return [point.translate(v) for _, v in self.vertex_sharing_directions()]</code></pre>
+  return [point.translate(d.vector) for d in self.vertex_sharing_directions()]</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="grilops.geometry.Neighbor"><code class="flex name class">
 <span>class <span class="ident">Neighbor</span></span>
-<span>(</span><span>location: <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>, symbol: z3.z3.ArithRef)</span>
+<span>(</span><span>location: <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, symbol: z3.z3.ArithRef)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Properties of a cell that is a neighbor of another.</p></div>
@@ -1748,7 +1861,7 @@ vertex with the given cell.</p></div>
   location: Point
   &#34;&#34;&#34;The location of the cell.&#34;&#34;&#34;
 
-  direction: Vector
+  direction: Direction
   &#34;&#34;&#34;The direction from the original cell.&#34;&#34;&#34;
 
   symbol: ArithRef
@@ -1760,7 +1873,7 @@ vertex with the given cell.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="grilops.geometry.Neighbor.direction"><code class="name">var <span class="ident">direction</span> : <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a></code></dt>
+<dt id="grilops.geometry.Neighbor.direction"><code class="name">var <span class="ident">direction</span> : <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code></dt>
 <dd>
 <div class="desc"><p>The direction from the original cell.</p></div>
 </dd>
@@ -1793,9 +1906,11 @@ vertex with the given cell.</p></div>
   x: int
   &#34;&#34;&#34;The location in the x dimension.&#34;&#34;&#34;
 
-  def translate(self, d: Vector) -&gt; &#34;Point&#34;:
-    &#34;&#34;&#34;Translates this point in the given direction.&#34;&#34;&#34;
-    return Point(self.y + d.dy, self.x + d.dx)</code></pre>
+  def translate(self, v: Union[Vector, Direction]) -&gt; &#34;Point&#34;:
+    &#34;&#34;&#34;Translates this point by the given `Vector` or `Direction`.&#34;&#34;&#34;
+    if isinstance(v, Direction):
+      v = v.vector
+    return Point(self.y + v.dy, self.x + v.dx)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1815,17 +1930,19 @@ vertex with the given cell.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="grilops.geometry.Point.translate"><code class="name flex">
-<span>def <span class="ident">translate</span></span>(<span>self, d: <a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>) ‑> <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a></span>
+<span>def <span class="ident">translate</span></span>(<span>self, v: Union[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>, <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]) ‑> <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Translates this point in the given direction.</p></div>
+<div class="desc"><p>Translates this point by the given <code><a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a></code> or <code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def translate(self, d: Vector) -&gt; &#34;Point&#34;:
-  &#34;&#34;&#34;Translates this point in the given direction.&#34;&#34;&#34;
-  return Point(self.y + d.dy, self.x + d.dx)</code></pre>
+<pre><code class="python">def translate(self, v: Union[Vector, Direction]) -&gt; &#34;Point&#34;:
+  &#34;&#34;&#34;Translates this point by the given `Vector` or `Direction`.&#34;&#34;&#34;
+  if isinstance(v, Direction):
+    v = v.vector
+  return Point(self.y + v.dy, self.x + v.dx)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1854,22 +1971,22 @@ adjacent have their x coordinates differ by 2.</p></div>
   the row and x describes the column, so hexagons that are horizontally
   adjacent have their x coordinates differ by 2.
   &#34;&#34;&#34;
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;E&#34;, Vector(0, 2)),
-        (&#34;W&#34;, Vector(0, -2)),
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;E&#34;, Vector(0, 2)),
+        Direction(&#34;W&#34;, Vector(0, -2)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
   def transformation_functions(
@@ -1929,14 +2046,14 @@ adjacent have their x coordinates differ by 2.</p></div>
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     Since this is a pointy-topped hexagonal grid, we return
-    (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)]).  This means
+    (east, [northwest, northeast]).  This means
     that if you look east and count how many northwest-going
     and/or northeast-going lines you cross, you can tell from
     its parity if you&#39;re inside or outside the loop.
@@ -1946,7 +2063,8 @@ adjacent have their x coordinates differ by 2.</p></div>
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)])</code></pre>
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;E&#34;], [ds[&#34;NW&#34;], ds[&#34;NE&#34;]])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1956,14 +2074,14 @@ adjacent have their x coordinates differ by 2.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="grilops.geometry.PointyToppedHexagonalLattice.get_inside_outside_check_directions"><code class="name flex">
-<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>, List[<a title="grilops.geometry.Vector" href="#grilops.geometry.Vector">Vector</a>]]</span>
+<span>def <span class="ident">get_inside_outside_check_directions</span></span>(<span>self) ‑> Tuple[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, List[<a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns directions for use in a loop inside-outside check.</p>
 <p>The first direction returned is the direction to look, and the
 remaining directions are the directions to check for crossings.</p>
 <p>Since this is a pointy-topped hexagonal grid, we return
-(Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)]).
+(east, [northwest, northeast]).
 This means
 that if you look east and count how many northwest-going
 and/or northeast-going lines you cross, you can tell from
@@ -1976,14 +2094,14 @@ count.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+<pre><code class="python">def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
   &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
   The first direction returned is the direction to look, and the
   remaining directions are the directions to check for crossings.
 
   Since this is a pointy-topped hexagonal grid, we return
-  (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)]).  This means
+  (east, [northwest, northeast]).  This means
   that if you look east and count how many northwest-going
   and/or northeast-going lines you cross, you can tell from
   its parity if you&#39;re inside or outside the loop.
@@ -1993,7 +2111,8 @@ count.</p></div>
     and the second component of which indicates what types of crossings to
     count.
   &#34;&#34;&#34;
-  return (Vector(0, 2), [Vector(-1, -1), Vector(-1, 1)])</code></pre>
+  ds = {d.name: d for d in self.edge_sharing_directions()}
+  return (ds[&#34;E&#34;], [ds[&#34;NW&#34;], ds[&#34;NE&#34;]])</code></pre>
 </details>
 </dd>
 </dl>
@@ -2005,6 +2124,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.points" href="#grilops.geometry.Lattice.points">points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.print" href="#grilops.geometry.Lattice.print">print</a></code></li>
@@ -2033,6 +2153,7 @@ count.</p></div>
   Note that these points need not fill a complete rectangle.
   &#34;&#34;&#34;
   def __init__(self, points: List[Point]):
+    super().__init__()
     self.__points = sorted(points)
     self.__point_indices = {
         p: i for i, p in enumerate(self.__points)
@@ -2055,62 +2176,62 @@ count.</p></div>
     &#34;&#34;&#34;
     return self.__point_indices.get(point)
 
-  def edge_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def edge_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of edge-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of an edge-sharing direction
-      and the vector representing that direction. Edge sharing (also known as
-      orthogonal adjacency) is the relationship between grid cells that share
-      an edge.
+      A list of `Direction`s, each including the name of an edge-sharing
+      direction and the vector representing that direction. Edge sharing (also
+      known as orthogonal adjacency) is the relationship between grid cells
+      that share an edge.
     &#34;&#34;&#34;
     return [
-        (&#34;N&#34;, Vector(-1, 0)),
-        (&#34;S&#34;, Vector(1, 0)),
-        (&#34;E&#34;, Vector(0, 1)),
-        (&#34;W&#34;, Vector(0, -1)),
+        Direction(&#34;N&#34;, Vector(-1, 0)),
+        Direction(&#34;S&#34;, Vector(1, 0)),
+        Direction(&#34;E&#34;, Vector(0, 1)),
+        Direction(&#34;W&#34;, Vector(0, -1)),
     ]
 
-  def vertex_sharing_directions(self) -&gt; List[Tuple[str, Vector]]:
+  def vertex_sharing_directions(self) -&gt; List[Direction]:
     &#34;&#34;&#34;A list of vertex-sharing directions.
 
     Returns:
-      A list of tuples, each including the name of a vertex-sharing direction
-      and the vector representing that direction. Vertex sharing (also known as
-      touching adjacency) is the relationship between grid cells that share a
-      vertex.
+      A list of `Direction`s, each including the name of a vertex-sharing
+      direction and the vector representing that direction. Vertex sharing
+      (also known as touching adjacency) is the relationship between grid cells
+      that share a vertex.
     &#34;&#34;&#34;
     return self.edge_sharing_directions() + [
-        (&#34;NE&#34;, Vector(-1, 1)),
-        (&#34;NW&#34;, Vector(-1, -1)),
-        (&#34;SE&#34;, Vector(1, 1)),
-        (&#34;SW&#34;, Vector(1, -1)),
+        Direction(&#34;NE&#34;, Vector(-1, 1)),
+        Direction(&#34;NW&#34;, Vector(-1, -1)),
+        Direction(&#34;SE&#34;, Vector(1, 1)),
+        Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
-  def label_for_direction_pair(self, d1: str, d2: str) -&gt; str:
-    &#34;&#34;&#34;Returns the label for a pair of edge-sharing direction names.
+  def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
     Args:
-      d1 (str): The first direction (e.g., &#34;N&#34;, &#34;S&#34;, etc.)
-      d2 (str): The second direction.
+      d1 (Direction): The first direction.
+      d2 (Direction): The second direction.
 
     Returns:
-      The label representing both directions.
+      A label representing both directions.
 
     Raises:
       ValueError: If there&#39;s no character defined for the direction pair.
     &#34;&#34;&#34;
-    if {d1, d2} == {&#34;N&#34;, &#34;S&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;S&#34;}:
       return chr(0x2502)
-    if {d1, d2} == {&#34;E&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;E&#34;, &#34;W&#34;}:
       return chr(0x2500)
-    if {d1, d2} == {&#34;N&#34;, &#34;E&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;E&#34;}:
       return chr(0x2514)
-    if {d1, d2} == {&#34;S&#34;, &#34;E&#34;}:
+    if {d1.name, d2.name} == {&#34;S&#34;, &#34;E&#34;}:
       return chr(0x250C)
-    if {d1, d2} == {&#34;S&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;S&#34;, &#34;W&#34;}:
       return chr(0x2510)
-    if {d1, d2} == {&#34;N&#34;, &#34;W&#34;}:
+    if {d1.name, d2.name} == {&#34;N&#34;, &#34;W&#34;}:
       return chr(0x2518)
     raise ValueError(&#34;No single-character symbol for direction pair&#34;)
 
@@ -2162,23 +2283,24 @@ count.</p></div>
 
     return [lambda v: v]
 
-  def get_inside_outside_check_directions(self) -&gt; Tuple[Vector, List[Vector]]:
+  def get_inside_outside_check_directions(self) -&gt; Tuple[Direction, List[Direction]]:
     &#34;&#34;&#34;Returns directions for use in a loop inside-outside check.
 
     The first direction returned is the direction to look, and the
     remaining directions are the directions to check for crossings.
 
     For instance, on a rectangular grid, a valid return value would
-    be (`Vector`(0, -1), [`Vector`(-1, 0)]).  This means that if you look
-    north and count how many west-going lines you cross, you can
-    tell from its parity if you&#39;re inside or outside the loop.
+    be (north, [west]). This means that if you look north and count how many
+    west-going lines you cross, you can tell from its parity if you&#39;re inside
+    or outside the loop.
 
     Returns:
       A tuple, the first component of which indicates the direction to look,
       and the second component of which indicates what types of crossings to
       count.
     &#34;&#34;&#34;
-    return (Vector(0, -1), [Vector(-1, 0)])</code></pre>
+    ds = {d.name: d for d in self.edge_sharing_directions()}
+    return (ds[&#34;N&#34;], [ds[&#34;W&#34;]])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2193,6 +2315,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.get_inside_outside_check_directions" href="#grilops.geometry.Lattice.get_inside_outside_check_directions">get_inside_outside_check_directions</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.points" href="#grilops.geometry.Lattice.points">points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.print" href="#grilops.geometry.Lattice.print">print</a></code></li>
@@ -2301,6 +2424,13 @@ count.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.geometry.Direction.name" href="#grilops.geometry.Direction.name">name</a></code></li>
+<li><code><a title="grilops.geometry.Direction.vector" href="#grilops.geometry.Direction.vector">vector</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="grilops.geometry.FlatToppedHexagonalLattice" href="#grilops.geometry.FlatToppedHexagonalLattice">FlatToppedHexagonalLattice</a></code></h4>
 <ul class="">
 <li><code><a title="grilops.geometry.FlatToppedHexagonalLattice.get_inside_outside_check_directions" href="#grilops.geometry.FlatToppedHexagonalLattice.get_inside_outside_check_directions">get_inside_outside_check_directions</a></code></li>
@@ -2314,6 +2444,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.get_inside_outside_check_directions" href="#grilops.geometry.Lattice.get_inside_outside_check_directions">get_inside_outside_check_directions</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.points" href="#grilops.geometry.Lattice.points">points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.print" href="#grilops.geometry.Lattice.print">print</a></code></li>
