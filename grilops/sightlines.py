@@ -14,14 +14,14 @@ holes should be treated as part of the grid, e.g., as black cells.
 from typing import cast, Callable, TypeVar
 from z3 import ArithRef, BoolRef, BoolVal, ExprRef, If, IntVal
 
-from .geometry import Point, Vector
+from .geometry import Point, Direction
 from .grids import SymbolGrid
 
 
 def count_cells(
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     count: Callable[[ArithRef], ArithRef] = lambda c: IntVal(1),
     stop: Callable[[ArithRef], BoolRef] = lambda c: BoolVal(False)
 ) -> ArithRef:
@@ -31,8 +31,8 @@ def count_cells(
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     count (Callable[[ArithRef], ArithRef]): A function that accepts
       a symbol as an argument and returns the integer value to add to the count
       when this symbol is encountered. By default, each symbol will count with
@@ -61,7 +61,7 @@ Accumulator = TypeVar("Accumulator", bound=ExprRef)
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Point,
-    direction: Vector,
+    direction: Direction,
     initializer: Accumulator,
     accumulate: Callable[[Accumulator, ArithRef], Accumulator],
     stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
@@ -72,8 +72,8 @@ def reduce_cells(  # pylint: disable=R0913
     symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
     start (grilops.geometry.Point): The location of the cell where the
       sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Vector): The direction to advance to reach the
-      next cell in the sightline.
+    direction (grilops.geometry.Direction): The direction to advance to reach
+      the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
     accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
       that accepts an accumulated value and a symbol as arguments, and returns
@@ -97,7 +97,7 @@ def reduce_cells(  # pylint: disable=R0913
     acc_term = accumulate(acc_terms[-1], cell)
     acc_terms.append(acc_term)
     stop_terms.append(stop(acc_term, cell))
-    p = p.translate(direction)
+    p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
     expr = If(stop_term, acc_term, expr)

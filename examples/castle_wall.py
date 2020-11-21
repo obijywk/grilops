@@ -9,35 +9,41 @@ from z3 import If, Or
 import grilops
 from grilops.loops import I, O, LoopSymbolSet, LoopConstrainer
 import grilops.sightlines
-from grilops.geometry import Point, Vector
+from grilops.geometry import Point
 
 
 HEIGHT, WIDTH = 7, 7
+
+LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+SYM = LoopSymbolSet(LATTICE)
+SYM.append("EMPTY", " ")
+
+DIRECTIONS = {d.name: d for d in LATTICE.edge_sharing_directions()}
+N = DIRECTIONS["N"]
+E = DIRECTIONS["E"]
+S = DIRECTIONS["S"]
+W = DIRECTIONS["W"]
 
 # Map from (y, x) location of each given cell to:
 #     whether the cell is inside or outside of the loop
 #     the number of loop segments in the given direction
 #     the given direction (+/-1 y, +/-1 x)
 GIVENS = {
-    Point(1, 5): (I, 1, Vector(1, 0)),
-    Point(2, 1): (I, 0, Vector(-1, 0)),
+    Point(1, 5): (I, 1, S),
+    Point(2, 1): (I, 0, N),
     Point(2, 3): (O, None, None),
-    Point(3, 3): (O, 2, Vector(0, -1)),
+    Point(3, 3): (O, 2, W),
     Point(4, 3): (O, None, None),
-    Point(4, 5): (I, 2, Vector(0, -1)),
-    Point(5, 1): (I, 3, Vector(0, 1)),
+    Point(4, 5): (I, 2, W),
+    Point(5, 1): (I, 3, E),
 }
-
-LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
-SYM = LoopSymbolSet(LATTICE)
-SYM.append("EMPTY", " ")
 
 # The set of symbols to count as loop segments when traveling in each direction.
 DIRECTION_SEGMENT_SYMBOLS = {
-    (-1, 0): [SYM.NS, SYM.NE, SYM.NW],
-    (0, 1): [SYM.EW, SYM.NE, SYM.SE],
-    (1, 0): [SYM.NS, SYM.SE, SYM.SW],
-    (0, -1): [SYM.EW, SYM.SW, SYM.NW],
+    N: [SYM.NS, SYM.NE, SYM.NW],
+    E: [SYM.EW, SYM.NE, SYM.SE],
+    S: [SYM.NS, SYM.SE, SYM.SW],
+    W: [SYM.EW, SYM.SW, SYM.NW],
 }
 
 

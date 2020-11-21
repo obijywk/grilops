@@ -52,12 +52,16 @@ terrain_grid = [
   [WH, WH, B3, TR, WH, WH, WH, WH, WH, WH],
 ]
 
+lattice = get_rectangle_lattice(len(terrain_grid), len(terrain_grid[0]))
+directions = {d.name: d for d in lattice.edge_sharing_directions()}
+N, E, S, W = [directions[l] for l in ["N", "E", "S", "W"]]
+
 # A map from a location on one side of a log to the direction that log blocks
 # from that location.
 logs = {
-  Point(3, 3): Vector(1, 0),
-  Point(7, 2): Vector(1, 0),
-  Point(9, 5): Vector(0, 1),
+  Point(3, 3): S,
+  Point(7, 2): S,
+  Point(9, 5): E,
 }
 
 letter_grid = [
@@ -74,9 +78,7 @@ letter_grid = [
 ]
 
 start_point = Point(4, 3)
-start_direction = Vector(0, 1)
-
-lattice = get_rectangle_lattice(len(terrain_grid), len(terrain_grid[0]))
+start_direction = E
 
 sym = SymbolSet([
   ("X", " "),
@@ -89,15 +91,12 @@ sym = SymbolSet([
   ("NESW", "┼"),
 ])
 
-# A map from direction vector to the set of symbol values that contain that
+# A map from direction to the set of symbol values that contain that
 # direction.
 direction_syms = {
-  d_vector: {s.index for s in sym.symbols.values() if d_name in s.name}
-  for d_name, d_vector in lattice.edge_sharing_directions()
+  d: {s.index for s in sym.symbols.values() if d.name in s.name}
+  for d in lattice.edge_sharing_directions()
 }
-
-# A map from direction string name to direction vector.
-direction_name_vector = dict(lattice.edge_sharing_directions())
 
 def create_path_grid():
   """Create the grid and constraints to determine the path."""
@@ -128,19 +127,19 @@ def create_path_grid():
       solver.add(
         Implies(
           path_grid.cell_is_one_of(p, direction_syms[d]),
-          Or(*[n.symbol == s for s in direction_syms[d.negate()]])
+          Or(*[n.symbol == s for s in direction_syms[lattice.opposite_direction(d)]])
         )
       )
     # Ensure that the path does not leave the grid.
-    for d in direction_name_vector.values():
+    for d in directions.values():
       if d not in direction_neighbor:
         allowed_syms -= direction_syms[d]
 
     solver.add(path_grid.cell_is_one_of(p, allowed_syms))
 
   # Avoid logs.
-  for p, v in logs.items():
-    solver.add(Not(path_grid.cell_is_one_of(p, direction_syms[v])))
+  for p, d in logs.items():
+    solver.add(Not(path_grid.cell_is_one_of(p, direction_syms[d])))
 
   return path_grid
 
@@ -177,14 +176,14 @@ def extract_answer(solved_path):
   while p != start_point:
     s = sym.symbols[solved_path[p]]
     if s.index not in direction_syms[d]:
-      sym_directions = {direction_name_vector[d] for d in s.name}
-      sym_directions.remove(d.negate())
+      sym_directions = {directions[c] for c in s.name}
+      sym_directions.remove(lattice.opposite_direction(d))
       assert len(sym_directions) == 1
       d = next(iter(sym_directions))
       turns += 1
       bullet = p
       while bullet in lattice.points:
-        if bullet in logs and logs[bullet] in {d, d.negate()}:
+        if bullet in logs and logs[bullet] in {d, lattice.opposite_direction(d)}:
           break
         t = terrain_grid[bullet.y][bullet.x]
         if t in buffalo and t not in dead_buffalo:

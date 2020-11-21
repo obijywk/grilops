@@ -7,7 +7,7 @@ from z3 import Datatype, Distinct, If, IntSort
 
 import grilops
 import grilops.sightlines
-from grilops.geometry import Point, Vector
+from grilops.geometry import Point
 
 
 SIZE = 5
@@ -21,6 +21,7 @@ GIVEN_BOTTOM = [1, 4, 3, 2, 2]
 def main():
   """Skyscraper solver example."""
   lattice = grilops.get_square_lattice(SIZE)
+  directions = {d.name: d for d in lattice.edge_sharing_directions()}
   sg = grilops.SymbolGrid(lattice, SYM)
 
   # Each row and each column contains each building height exactly once.
@@ -43,16 +44,16 @@ def main():
 
   for x, c in enumerate(GIVEN_TOP):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, Point(0, x), Vector(1, 0), Acc.acc(0, 0), accumulate)))
+        sg, Point(0, x), directions["S"], Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_LEFT):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, Point(y, 0), Vector(0, 1), Acc.acc(0, 0), accumulate)))
+        sg, Point(y, 0), directions["E"], Acc.acc(0, 0), accumulate)))
   for y, c in enumerate(GIVEN_RIGHT):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, Point(y, SIZE - 1), Vector(0, -1), Acc.acc(0, 0), accumulate)))
+        sg, Point(y, SIZE - 1), directions["W"], Acc.acc(0, 0), accumulate)))
   for x, c in enumerate(GIVEN_BOTTOM):
     sg.solver.add(c == Acc.num_visible(grilops.sightlines.reduce_cells(
-        sg, Point(SIZE - 1, x), Vector(-1, 0), Acc.acc(0, 0), accumulate)))
+        sg, Point(SIZE - 1, x), directions["N"], Acc.acc(0, 0), accumulate)))
 
   if sg.solve():
     sg.print()

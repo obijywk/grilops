@@ -7,6 +7,9 @@ import grilops.shapes
 from grilops.geometry import Point, Vector
 
 
+HEIGHT, WIDTH = 8, 8
+LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
+DIRECTIONS = {d.name: d for d in LATTICE.edge_sharing_directions()}
 SYM = grilops.SymbolSet([
     ("X", " "),
     ("N", chr(0x25B4)),
@@ -17,13 +20,11 @@ SYM = grilops.SymbolSet([
     ("O", chr(0x2022)),
 ])
 DIR_TO_OPPOSITE_SYM = {
-    Vector(-1, 0): SYM.S,
-    Vector(0, 1): SYM.W,
-    Vector(1, 0): SYM.N,
-    Vector(0, -1): SYM.E,
+    DIRECTIONS["N"]: SYM.S,
+    DIRECTIONS["E"]: SYM.W,
+    DIRECTIONS["S"]: SYM.N,
+    DIRECTIONS["W"]: SYM.E,
 }
-HEIGHT, WIDTH = 8, 8
-LATTICE = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
 GIVENS_Y = [1, 5, 1, 5, 0, 3, 2, 2]
 GIVENS_X = [2, 4, 2, 3, 0, 4, 1, 3]
 GIVENS = {

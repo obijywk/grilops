@@ -7,7 +7,7 @@ from z3 import Distinct
 
 import grilops
 import grilops.sightlines
-from grilops.geometry import Point, PointyToppedHexagonalLattice, Vector
+from grilops.geometry import Point, PointyToppedHexagonalLattice
 
 SUMS = [
     ((2, -2), "NW", 4),
@@ -44,7 +44,7 @@ def main():
   sym = grilops.make_number_range_symbol_set(1, 9)
   sg = grilops.SymbolGrid(lattice, sym)
 
-  dirs_by_name = dict(sg.lattice.edge_sharing_directions())
+  dirs_by_name = {d.name: d for d in lattice.edge_sharing_directions()}
   for entry in SUMS:
     (y, x), dirname, given = entry
     d = dirs_by_name[dirname]
@@ -52,8 +52,8 @@ def main():
     sg.solver.add(given == s)
 
   for p in lattice.points:
-    for d in [Vector(0, 2), Vector(1, 1), Vector(1, -1)]:
-      if p.translate(d.negate()) not in sg.grid:
+    for d in [dirs_by_name["E"], dirs_by_name["SE"], dirs_by_name["SW"]]:
+      if p.translate(d.vector.negate()) not in sg.grid:
         q = p
         ps = []
         while q in sg.grid:

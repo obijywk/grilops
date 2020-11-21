@@ -7,7 +7,7 @@ from z3 import (
     And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
 )
 
-from .geometry import Lattice, Point, Vector
+from .geometry import Direction, Lattice, Point
 from .grids import SymbolGrid
 from .symbols import SymbolSet
 from .sightlines import reduce_cells
@@ -40,14 +40,13 @@ class LoopSymbolSet(SymbolSet):
   def __init__(self, lattice: Lattice):
     super().__init__([])
 
-    self.__symbols_for_direction: Dict[Vector, List[int]] = defaultdict(list)
-    self.__symbol_for_direction_pair: Dict[Tuple[Vector, Vector], int] = {}
+    self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
 
     dirs = lattice.edge_sharing_directions()
-    for idx, ((namei, di), (namej, dj)) in enumerate(
-        itertools.combinations(dirs, 2)):
-      lbl = lattice.label_for_direction_pair(namei, namej)
-      self.append(namei + namej, lbl)
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
+      lbl = lattice.label_for_direction_pair(di, dj)
+      self.append(di.name + dj.name, lbl)
       self.__symbols_for_direction[di].append(idx)
       self.__symbols_for_direction[dj].append(idx)
       self.__symbol_for_direction_pair[(di, dj)] = idx
@@ -65,11 +64,11 @@ class LoopSymbolSet(SymbolSet):
     """
     return symbol < self.__max_loop_symbol_index + 1
 
-  def symbols_for_direction(self, d: Vector) -> List[int]:
+  def symbols_for_direction(self, d: Direction) -> List[int]:
     """Returns the symbols with one arm going in the given direction.
 
     Args:
-      d (grilops.geometry.Vector): The given direction.
+      d (grilops.geometry.Direction): The given direction.
 
     Returns:
       A `List[int]` of symbol indices corresponding to symbols with one arm
@@ -77,12 +76,12 @@ class LoopSymbolSet(SymbolSet):
     """
     return self.__symbols_for_direction[d]
 
-  def symbol_for_direction_pair(self, d1: Vector, d2: Vector) -> int:
+  def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -> int:
     """Returns the symbol with arms going in the two given directions.
 
     Args:
-      d1 (grilops.geometry.Vector): The first given direction.
-      d2 (grilops.geometry.Vector): The second given direction.
+      d1 (grilops.geometry.Direction): The first given direction.
+      d2 (grilops.geometry.Direction): The second given direction.
 
     Returns:
       The symbol index for the symbol with one arm going in each of the two
@@ -120,12 +119,13 @@ class LoopConstrainer:
     sym: LoopSymbolSet = self.__symbol_grid.symbol_set
 
     for p, cell in self.__symbol_grid.grid.items():
-      for _, d in self.__symbol_grid.lattice.edge_sharing_directions():
-        np = p.translate(d)
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        np = p.translate(d.vector)
         dir_syms = sym.symbols_for_direction(d)
         ncell = self.__symbol_grid.grid.get(np, None)
         if ncell is not None:
-          opposite_syms = sym.symbols_for_direction(d.negate())
+          opposite_syms = sym.symbols_for_direction(
+              self.__symbol_grid.lattice.opposite_direction(d))
           cell_points_dir = Or(*[cell == s for s in dir_syms])
           neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
           solver.add(Implies(cell_points_dir, neighbor_points_opposite))
@@ -133,9 +133,9 @@ class LoopConstrainer:
           for s in dir_syms:
             solver.add(cell != s)
 
-  def __all_direction_pairs(self) -> Iterable[Tuple[int, Vector, Vector]]:
+  def __all_direction_pairs(self) -> Iterable[Tuple[int, Direction, Direction]]:
     dirs = self.__symbol_grid.lattice.edge_sharing_directions()
-    for idx, ((_, di), (_, dj)) in enumerate(itertools.combinations(dirs, 2)):
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
       yield (idx, di, dj)
 
   def __add_single_loop_constraints(self):
@@ -158,8 +158,8 @@ class LoopConstrainer:
       solver.add(If(sym.is_loop(cell), li >= 0, li < 0))
 
       for idx, d1, d2 in self.__all_direction_pairs():
-        pi = p.translate(d1)
-        pj = p.translate(d2)
+        pi = p.translate(d1.vector)
+        pj = p.translate(d2.vector)
         if pi in self.__loop_order_grid and pj in self.__loop_order_grid:
           solver.add(Implies(
               And(cell == idx, li > 0),

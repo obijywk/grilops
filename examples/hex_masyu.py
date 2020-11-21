@@ -7,7 +7,7 @@ from z3 import Implies, Or
 
 import grilops
 import grilops.loops
-from grilops.geometry import Point, PointyToppedHexagonalLattice, Vector
+from grilops.geometry import Point, PointyToppedHexagonalLattice
 
 E, W, B = " ", chr(0x25e6), chr(0x2022)
 GIVENS = [
@@ -57,6 +57,7 @@ def main():
       for r in range(len(GIVENS))
       for c in range(len(GIVENS[r]))
   ])
+  directions = {d.name: d for d in lattice.edge_sharing_directions()}
   sym = grilops.loops.LoopSymbolSet(lattice)
   sym.append("EMPTY", ". \n  ")
   sg = grilops.SymbolGrid(lattice, sym)
@@ -80,12 +81,14 @@ def main():
       sg.solver.add(sg.cell_is_one_of(p, turns))
 
       # All connected adjacent cells must contain straight loop segments.
-      for _, d in lattice.edge_sharing_directions():
+      for d in lattice.edge_sharing_directions():
         np = p.translate(d)
         if np in sg.grid:
+          straight_sym = sym.symbol_for_direction_pair(
+              d, lattice.opposite_direction(d))
           sg.solver.add(Implies(
               sg.cell_is_one_of(p, sym.symbols_for_direction(d)),
-              sg.cell_is(np, sym.symbol_for_direction_pair(d, d.negate()))
+              sg.cell_is(np, straight_sym)
           ))
 
     elif GIVENS[r][c] == W:
@@ -93,12 +96,14 @@ def main():
       sg.solver.add(sg.cell_is_one_of(p, [sym.NESW, sym.EW, sym.NWSE]))
 
       # At least one connected adjacent cell must turn.
-      for d in [Vector(-1, 1), Vector(0, 2), Vector(1, 1)]:
+      for d in [directions[n] for n in ["NE", "E", "SE"]]:
         np1 = p.translate(d)
-        np2 = p.translate(d.negate())
+        np2 = p.translate(lattice.opposite_direction(d))
         if np1 in sg.grid and np2 in sg.grid:
+          straight_sym = sym.symbol_for_direction_pair(
+              d, lattice.opposite_direction(d))
           sg.solver.add(Implies(
-              sg.cell_is(p, sym.symbol_for_direction_pair(d, d.negate())),
+              sg.cell_is(p, straight_sym),
               Or(
                   sg.cell_is_one_of(np1, turns),
                   sg.cell_is_one_of(np2, turns)
