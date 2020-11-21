@@ -1,6 +1,6 @@
 """This module supports constructing and working with grids of cells."""
 
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional
 from z3 import ArithRef, BoolRef, Int, Or, Solver, sat, unsat
 
 from .symbols import SymbolSet
@@ -99,12 +99,12 @@ class SymbolGrid:
     """
     return self.__grid[p] == value
 
-  def cell_is_one_of(self, p: Point, values: List[int]) -> BoolRef:
+  def cell_is_one_of(self, p: Point, values: Iterable[int]) -> BoolRef:
     """Returns an expression for whether this cell contains one of these values.
 
     Args:
       p (grilops.geometry.Point): The location of the given cell.
-      values (List[int]): The list of values to satisfy the expression.
+      values (Iterable[int]): The set of values to satisfy the expression.
 
     Returns:
       An expression that's true if and only if the cell at p contains one of
