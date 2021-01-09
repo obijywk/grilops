@@ -5,6 +5,8 @@ contained within a region. Aspects of a cell's relationship to the other cells
 in its subtree are exposed by properties of the `RegionConstrainer`.
 """
 
+import itertools
+
 from typing import Dict, Optional
 from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
 
@@ -29,6 +31,10 @@ class RegionConstrainer:  # pylint: disable=R0902
       constructed.
     complete (bool): If true, every cell must be part of a region. Defaults to
       true.
+    rectangular (bool): If true, every region must be "rectangular"; for each
+      cell in a region, ensure that pairs of its neighbors that are part of
+      the same region each share an additional neighbor that's part of the
+      same region when possible.
     min_region_size (Optional[int]): The minimum possible size of a region.
     max_region_size (Optional[int]): The maximum possible size of a region.
   """
@@ -39,6 +45,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       lattice: Lattice,
       solver: Solver = None,
       complete: bool = True,
+      rectangular: bool = False,
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
@@ -60,6 +67,8 @@ class RegionConstrainer:  # pylint: disable=R0902
     self.__manage_edge_sharing_directions()
     self.__create_grids()
     self.__add_constraints()
+    if rectangular:
+      self.__add_rectangular_constraints()
 
   def __manage_edge_sharing_directions(self):
     """Creates the structures used for managing edge-sharing directions.
@@ -168,6 +177,34 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__solver.add(
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
+
+  def __add_rectangular_constraints(self):
+    for p in self.__lattice.points:
+      neighbors = self.__lattice.edge_sharing_neighbors(
+          self.__region_id_grid, p)
+      for n1, n2 in itertools.combinations(neighbors, 2):
+        n1_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n1.location)
+        n2_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n2.location)
+        common_points = (
+            set(n.location for n in n1_neighbors) &
+            set(n.location for n in n2_neighbors) -
+            {p}
+        )
+        if common_points:
+          self.__solver.add(
+              Implies(
+                  And(
+                      n1.symbol == self.__region_id_grid[p],
+                      n2.symbol == self.__region_id_grid[p]
+                  ),
+                  And(*[
+                      self.__region_id_grid[cp] == self.__region_id_grid[p]
+                      for cp in common_points
+                  ])
+              )
+          )
 
   def edge_sharing_direction_to_index(self, direction: Direction) -> int:
     """Returns the `RegionConstrainer.parent_grid` value for the direction.
