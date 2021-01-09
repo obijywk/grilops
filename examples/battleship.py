@@ -3,8 +3,8 @@
 from z3 import And, Not, Implies, Or, PbEq
 
 import grilops
-import grilops.shapes
 from grilops.geometry import Point, Vector
+from grilops.shapes import Shape, ShapeConstrainer
 
 
 HEIGHT, WIDTH = 8, 8
@@ -36,18 +36,18 @@ GIVENS = {
 def main():
   """Battleship solver example."""
   sg = grilops.SymbolGrid(LATTICE, SYM)
-  sc = grilops.shapes.ShapeConstrainer(
+  sc = ShapeConstrainer(
       LATTICE,
       [
-          [Vector(0, i) for i in range(4)],
-          [Vector(0, i) for i in range(3)],
-          [Vector(0, i) for i in range(3)],
-          [Vector(0, i) for i in range(2)],
-          [Vector(0, i) for i in range(2)],
-          [Vector(0, i) for i in range(2)],
-          [Vector(0, i) for i in range(1)],
-          [Vector(0, i) for i in range(1)],
-          [Vector(0, i) for i in range(1)],
+          Shape([Vector(0, i) for i in range(4)]),
+          Shape([Vector(0, i) for i in range(3)]),
+          Shape([Vector(0, i) for i in range(3)]),
+          Shape([Vector(0, i) for i in range(2)]),
+          Shape([Vector(0, i) for i in range(2)]),
+          Shape([Vector(0, i) for i in range(2)]),
+          Shape([Vector(0, i) for i in range(1)]),
+          Shape([Vector(0, i) for i in range(1)]),
+          Shape([Vector(0, i) for i in range(1)]),
       ],
       solver=sg.solver,
       allow_rotations=True

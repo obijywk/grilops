@@ -8,8 +8,8 @@ from z3 import And, If, Implies, Int, Or, PbEq
 
 import grilops
 import grilops.regions
-import grilops.shapes
 from grilops.geometry import Point, PointyToppedHexagonalLattice, Vector
+from grilops.shapes import Shape, ShapeConstrainer
 
 
 AREAS = [
@@ -169,16 +169,16 @@ def main():
   ])
   sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver, complete=True)
-  sc = grilops.shapes.ShapeConstrainer(
+  sc = ShapeConstrainer(
       lattice,
       [
           # Note that the example shapes are shown as flat-topped hexagons, so
           # you need to turn the page sideways to see them as pointy-topped ones.
-          [Vector(0, 0), Vector(1, 1), Vector(1, 3), Vector(2, 4)],  # S
-          [Vector(0, 0), Vector(0, 2), Vector(0, 4), Vector(-1, 5)], # L
-          [Vector(0, 0), Vector(0, 2), Vector(0, 4), Vector(0, 6)],  # I
-          [Vector(0, 0), Vector(1, 1), Vector(1, 3), Vector(0, 4)],  # C
-          [Vector(0, 0), Vector(2, 0), Vector(1, 1), Vector(1, 3)],  # Y
+          Shape([Vector(0, 0), Vector(1, 1), Vector(1, 3), Vector(2, 4)]),  # S
+          Shape([Vector(0, 0), Vector(0, 2), Vector(0, 4), Vector(-1, 5)]), # L
+          Shape([Vector(0, 0), Vector(0, 2), Vector(0, 4), Vector(0, 6)]),  # I
+          Shape([Vector(0, 0), Vector(1, 1), Vector(1, 3), Vector(0, 4)]),  # C
+          Shape([Vector(0, 0), Vector(2, 0), Vector(1, 1), Vector(1, 3)]),  # Y
       ],
       solver=sg.solver,
       allow_rotations=True,

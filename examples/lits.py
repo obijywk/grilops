@@ -8,9 +8,8 @@ from z3 import And, If, Implies, Int, Not, Or, PbEq
 
 import grilops
 import grilops.regions
-import grilops.shapes
 from grilops.geometry import Point, Vector
-
+from grilops.shapes import Shape, ShapeConstrainer
 
 HEIGHT, WIDTH = 10, 10
 AREAS = [
@@ -125,13 +124,13 @@ def main():
   lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(lattice, sym)
   rc = grilops.regions.RegionConstrainer(lattice, solver=sg.solver)
-  sc = grilops.shapes.ShapeConstrainer(
+  sc = ShapeConstrainer(
       lattice,
       [
-          [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)],  # L
-          [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)],  # I
-          [Vector(0, 0), Vector(0, 1), Vector(0, 2), Vector(1, 1)],  # T
-          [Vector(0, 0), Vector(1, 0), Vector(1, 1), Vector(2, 1)],  # S
+          Shape([Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)]),  # L
+          Shape([Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)]),  # I
+          Shape([Vector(0, 0), Vector(0, 1), Vector(0, 2), Vector(1, 1)]),  # T
+          Shape([Vector(0, 0), Vector(1, 0), Vector(1, 1), Vector(2, 1)]),  # S
       ],
       solver=sg.solver,
       allow_rotations=True,

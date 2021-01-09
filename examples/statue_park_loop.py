@@ -9,8 +9,8 @@ from z3 import And, Implies
 
 import grilops
 import grilops.loops
-import grilops.shapes
 from grilops.geometry import Point, RectangularLattice, Vector
+from grilops.shapes import Shape, ShapeConstrainer
 
 
 E, W, B, X = " ", chr(0x25e6), chr(0x2022), "X"
@@ -53,9 +53,9 @@ def main():
 
   sg = grilops.SymbolGrid(lattice, sym)
   grilops.loops.LoopConstrainer(sg, single_loop=True)
-  sc = grilops.shapes.ShapeConstrainer(
+  sc = ShapeConstrainer(
       lattice,
-      [[Vector(y, x) for y, x in shape] for shape in SHAPES],
+      [Shape([Vector(y, x) for y, x in shape]) for shape in SHAPES],
       solver=sg.solver,
       allow_rotations=True,
       allow_reflections=True,

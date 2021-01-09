@@ -8,8 +8,8 @@ in the Shape instructions.
 from z3 import And, Implies
 
 import grilops
-import grilops.shapes
 from grilops.geometry import Point, RectangularLattice, Vector
+from grilops.shapes import Shape, ShapeConstrainer
 
 GRID = [
     "OOOO",
@@ -29,14 +29,14 @@ def main():
   lattice = RectangularLattice(points)
 
   shapes = [
-      [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)], # I
-      [Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)], # L
-      [Vector(0, 1), Vector(0, 2), Vector(1, 0), Vector(1, 1)], # S
+      Shape([Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(3, 0)]), # I
+      Shape([Vector(0, 0), Vector(1, 0), Vector(2, 0), Vector(2, 1)]), # L
+      Shape([Vector(0, 1), Vector(0, 2), Vector(1, 0), Vector(1, 1)]), # S
   ]
 
   sym = grilops.SymbolSet([("B", chr(0x2588) * 2), ("W", "  ")])
   sg = grilops.SymbolGrid(lattice, sym)
-  sc = grilops.shapes.ShapeConstrainer(
+  sc = ShapeConstrainer(
       lattice, shapes, sg.solver,
       complete=False,
       allow_rotations=True,
