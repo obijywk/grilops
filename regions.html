@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>grilops.regions API documentation</title>
 <meta name="description" content="This module supports puzzles that group cells into contiguous regions …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -37,6 +37,8 @@ contained within a region. Aspects of a cell&#39;s relationship to the other cel
 in its subtree are exposed by properties of the `RegionConstrainer`.
 &#34;&#34;&#34;
 
+import itertools
+
 from typing import Dict, Optional
 from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
 
@@ -61,6 +63,10 @@ class RegionConstrainer:  # pylint: disable=R0902
       constructed.
     complete (bool): If true, every cell must be part of a region. Defaults to
       true.
+    rectangular (bool): If true, every region must be &#34;rectangular&#34;; for each
+      cell in a region, ensure that pairs of its neighbors that are part of
+      the same region each share an additional neighbor that&#39;s part of the
+      same region when possible.
     min_region_size (Optional[int]): The minimum possible size of a region.
     max_region_size (Optional[int]): The maximum possible size of a region.
   &#34;&#34;&#34;
@@ -71,6 +77,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       lattice: Lattice,
       solver: Solver = None,
       complete: bool = True,
+      rectangular: bool = False,
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
@@ -92,6 +99,8 @@ class RegionConstrainer:  # pylint: disable=R0902
     self.__manage_edge_sharing_directions()
     self.__create_grids()
     self.__add_constraints()
+    if rectangular:
+      self.__add_rectangular_constraints()
 
   def __manage_edge_sharing_directions(self):
     &#34;&#34;&#34;Creates the structures used for managing edge-sharing directions.
@@ -200,6 +209,34 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__solver.add(
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
+
+  def __add_rectangular_constraints(self):
+    for p in self.__lattice.points:
+      neighbors = self.__lattice.edge_sharing_neighbors(
+          self.__region_id_grid, p)
+      for n1, n2 in itertools.combinations(neighbors, 2):
+        n1_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n1.location)
+        n2_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n2.location)
+        common_points = (
+            set(n.location for n in n1_neighbors) &amp;
+            set(n.location for n in n2_neighbors) -
+            {p}
+        )
+        if common_points:
+          self.__solver.add(
+              Implies(
+                  And(
+                      n1.symbol == self.__region_id_grid[p],
+                      n2.symbol == self.__region_id_grid[p]
+                  ),
+                  And(*[
+                      self.__region_id_grid[cp] == self.__region_id_grid[p]
+                      for cp in common_points
+                  ])
+              )
+          )
 
   def edge_sharing_direction_to_index(self, direction: Direction) -&gt; int:
     &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
@@ -355,7 +392,7 @@ part of a region.</p></div>
 <dl>
 <dt id="grilops.regions.RegionConstrainer"><code class="flex name class">
 <span>class <span class="ident">RegionConstrainer</span></span>
-<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, solver: z3.z3.Solver = None, complete: bool = True, min_region_size: Union[int, NoneType] = None, max_region_size: Union[int, NoneType] = None)</span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, solver: z3.z3.Solver = None, complete: bool = True, rectangular: bool = False, min_region_size: Union[int, NoneType] = None, max_region_size: Union[int, NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates constraints for grouping cells into contiguous regions.</p>
@@ -369,6 +406,11 @@ constructed.</dd>
 <dt><strong><code>complete</code></strong> :&ensp;<code>bool</code></dt>
 <dd>If true, every cell must be part of a region. Defaults to
 true.</dd>
+<dt><strong><code>rectangular</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, every region must be "rectangular"; for each
+cell in a region, ensure that pairs of its neighbors that are part of
+the same region each share an additional neighbor that's part of the
+same region when possible.</dd>
 <dt><strong><code>min_region_size</code></strong> :&ensp;<code>Optional[int]</code></dt>
 <dd>The minimum possible size of a region.</dd>
 <dt><strong><code>max_region_size</code></strong> :&ensp;<code>Optional[int]</code></dt>
@@ -387,6 +429,10 @@ true.</dd>
       constructed.
     complete (bool): If true, every cell must be part of a region. Defaults to
       true.
+    rectangular (bool): If true, every region must be &#34;rectangular&#34;; for each
+      cell in a region, ensure that pairs of its neighbors that are part of
+      the same region each share an additional neighbor that&#39;s part of the
+      same region when possible.
     min_region_size (Optional[int]): The minimum possible size of a region.
     max_region_size (Optional[int]): The maximum possible size of a region.
   &#34;&#34;&#34;
@@ -397,6 +443,7 @@ true.</dd>
       lattice: Lattice,
       solver: Solver = None,
       complete: bool = True,
+      rectangular: bool = False,
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
@@ -418,6 +465,8 @@ true.</dd>
     self.__manage_edge_sharing_directions()
     self.__create_grids()
     self.__add_constraints()
+    if rectangular:
+      self.__add_rectangular_constraints()
 
   def __manage_edge_sharing_directions(self):
     &#34;&#34;&#34;Creates the structures used for managing edge-sharing directions.
@@ -526,6 +575,34 @@ true.</dd>
       self.__solver.add(
           self.__subtree_size_grid[p] == Sum(*subtree_size_terms)
       )
+
+  def __add_rectangular_constraints(self):
+    for p in self.__lattice.points:
+      neighbors = self.__lattice.edge_sharing_neighbors(
+          self.__region_id_grid, p)
+      for n1, n2 in itertools.combinations(neighbors, 2):
+        n1_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n1.location)
+        n2_neighbors = self.__lattice.edge_sharing_neighbors(
+            self.__region_id_grid, n2.location)
+        common_points = (
+            set(n.location for n in n1_neighbors) &amp;
+            set(n.location for n in n2_neighbors) -
+            {p}
+        )
+        if common_points:
+          self.__solver.add(
+              Implies(
+                  And(
+                      n1.symbol == self.__region_id_grid[p],
+                      n2.symbol == self.__region_id_grid[p]
+                  ),
+                  And(*[
+                      self.__region_id_grid[cp] == self.__region_id_grid[p]
+                      for cp in common_points
+                  ])
+              )
+          )
 
   def edge_sharing_direction_to_index(self, direction: Direction) -&gt; int:
     &#34;&#34;&#34;Returns the `RegionConstrainer.parent_grid` value for the direction.
@@ -963,7 +1040,7 @@ value like "R" or "X".</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>grilops.shapes API documentation</title>
 <meta name="description" content="This module supports puzzles that place fixed shape regions into the grid." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -31,8 +31,8 @@
 
 from collections import defaultdict
 import sys
-from typing import Dict, List, Optional
-from z3 import ArithRef, Int, IntVal, Or, Solver, PbEq
+from typing import Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from z3 import ArithRef, Const, ExprRef, Int, IntSort, IntVal, Or, Solver, PbEq, eq
 
 from .fastz3 import fast_and, fast_eq, fast_ne
 from .geometry import Lattice, Point, Vector
@@ -44,24 +44,80 @@ from .quadtree import ExpressionQuadTree
 HAS_INSTANCE_ID, NOT_HAS_INSTANCE_ID, HAS_SHAPE_TYPE = range(3)
 
 
-def canonicalize_shape(shape: List[Vector]) -&gt; List[Vector]:
-  &#34;&#34;&#34;Returns a new shape that&#39;s canonicalized.
+Payload = TypeVar(&#34;Payload&#34;, bound=ExprRef)
 
-  A canonicalized shape is in sorted order and its first offset is
-  `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
-  equivalent shapes will be canonicalized identically.
+
+Offset = Union[Vector, Tuple[Vector, Optional[Payload]]]
+
+
+class Shape(Generic[Payload]):
+  &#34;&#34;&#34;A shape defined by a list of `grilops.geometry.Vector` offsets.
+
+  Each offset may optionally have an associated payload value.
 
   Args:
-    shape (List[grilops.geometry.Vector]): A list of offsets defining a shape.
-
-  Returns:
-    A `List[grilops.geometry.Vector]` of offsets defining the canonicalized
-      version of the shape, i.e., in sorted order and with first offset equal
-      to `grilops.geometry.Vector`(0, 0).
+    offsets (List[Offset]): A list of offsets that define the shape. An offset
+      may be a `grilops.geometry.Vector`; or, to optionally associate a payload
+      value with the offset, it may be a
+      `Tuple[grilops.geometry.Vector, Payload]`. A payload may be any z3
+      expression.
   &#34;&#34;&#34;
-  shape = sorted(shape)
-  first_negated = shape[0].negate()
-  return [v.translate(first_negated) for v in shape]
+  def __init__(self, offsets: List[Offset]):
+    self.__offset_tuples: List[Tuple[Vector, Optional[Payload]]] = []
+    for offset in offsets:
+      if isinstance(offset, Vector):
+        self.__offset_tuples.append((offset, None))
+      elif isinstance(offset, tuple) and len(offset) == 2:
+        self.__offset_tuples.append(offset)
+      else:
+        raise Exception(f&#34;Invalid shape offset: {offset}&#34;)
+
+  @property
+  def offset_vectors(self) -&gt; List[Vector]:
+    &#34;&#34;&#34;The offset vectors that define this shape.&#34;&#34;&#34;
+    return [t[0] for t in self.__offset_tuples]
+
+  @property
+  def offsets_with_payloads(self) -&gt; List[Tuple[Vector, Optional[Payload]]]:
+    &#34;&#34;&#34;The offset vector and payload value tuples for this shape.&#34;&#34;&#34;
+    return self.__offset_tuples
+
+  def transform(self, f: Callable[[Vector], Vector]) -&gt; &#34;Shape&#34;:
+    &#34;&#34;&#34;Returns a new shape with each offset transformed by `f`.&#34;&#34;&#34;
+    return Shape([(f(v), p) for v, p in self.__offset_tuples])
+
+  def canonicalize(self) -&gt; &#34;Shape&#34;:
+    &#34;&#34;&#34;Returns a new shape that&#39;s canonicalized.
+
+    A canonicalized shape is in sorted order and its first offset is
+    `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
+    equivalent shapes will be canonicalized identically.
+
+    Returns:
+      A `Shape` of offsets defining the canonicalized version of the shape,
+        i.e., in sorted order and with first offset equal to
+        `grilops.geometry.Vector`(0, 0).
+    &#34;&#34;&#34;
+    offset_tuples = sorted(self.__offset_tuples, key=lambda t: t[0])
+    first_negated = offset_tuples[0][0].negate()
+    return Shape([(v.translate(first_negated), p) for v, p in offset_tuples])
+
+  def equivalent(self, shape: &#34;Shape&#34;) -&gt; bool:
+    &#34;&#34;&#34;Returns true iff the given shape is equivalent to this shape.&#34;&#34;&#34;
+    if len(self.offsets_with_payloads) != len(shape.offsets_with_payloads):
+      return False
+    for (v1, p1), (v2, p2) in zip(
+        self.offsets_with_payloads,  # type: ignore[arg-type]
+        shape.offsets_with_payloads  # type: ignore[arg-type]
+    ):
+      if v1 != v2:
+        return False
+      if isinstance(p1, ExprRef) and isinstance(p2, ExprRef):
+        if not eq(p1, p2):
+          return False
+      elif p1 != p2:
+        return False
+    return True
 
 
 class ShapeConstrainer:
@@ -69,11 +125,9 @@ class ShapeConstrainer:
 
   Args:
     lattice (grilops.geometry.Lattice): The structure of the grid.
-    shapes (List[List[grilops.geometry.Vector]]): A list of region shape
-      definitions. Each region shape definition should be a list of offsets.
-      The same region shape definition may be included multiple times to
-      indicate the number of times that shape may appear (if allow_copies is
-      false).
+    shapes (List[Shape]): A list of region shape definitions. The same
+      region shape definition may be included multiple times to indicate the
+      number of times that shape may appear (if allow_copies is false).
     solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
       be constructed.
     complete (bool): If true, every cell must be part of a shape region.
@@ -84,13 +138,14 @@ class ShapeConstrainer:
       placed in the grid. Defaults to false.
     allow_copies (bool): If true, allow any number of copies of the shapes to
       be placed in the grid. Defaults to false.
+
   &#34;&#34;&#34;
   _instance_index = 0
 
   def __init__(  # pylint: disable=R0913
       self,
       lattice: Lattice,
-      shapes: List[List[Vector]],
+      shapes: List[Shape],
       solver: Optional[Solver] = None,
       complete: bool = False,
       allow_rotations: bool = False,
@@ -116,16 +171,14 @@ class ShapeConstrainer:
   def __make_variants(self, allow_rotations, allow_reflections):
     fs = self.__lattice.transformation_functions(
         allow_rotations, allow_reflections)
-    self.__variants = [
-        [
-            list(shape_tuple)
-            for shape_tuple in {
-                tuple(canonicalize_shape([f(v) for v in s]))
-                for f in fs
-            }
-        ]
-        for s in self.__shapes
-    ]
+    self.__variants = []
+    for shape in self.__shapes:
+      shape_variants = []
+      for f in fs:
+        variant = shape.transform(f).canonicalize()
+        if not any(variant.equivalent(v) for v in shape_variants):
+          shape_variants.append(variant)
+      self.__variants.append(shape_variants)
 
   def __create_grids(self):
     &#34;&#34;&#34;Create the grids used to model shape region constraints.&#34;&#34;&#34;
@@ -148,6 +201,21 @@ class ShapeConstrainer:
         self.__solver.add(v &gt;= -1)
       self.__solver.add(v &lt; len(self.__lattice.points))
       self.__shape_instance_grid[p] = v
+
+    sample_payload = self.__shapes[0].offsets_with_payloads[0][1]
+    if sample_payload is None:
+      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = None
+    else:
+      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = {}
+      if isinstance(sample_payload, ExprRef):
+        sort = sample_payload.sort()
+      elif isinstance(sample_payload, int):
+        sort = IntSort()
+      else:
+        raise Exception(f&#34;Could not determine z3 sort for {sample_payload}&#34;)
+      for p in self.__lattice.points:
+        v = Const(f&#34;scsp-{ShapeConstrainer._instance_index}-{p.y}-{p.x}&#34;, sort)
+        self.__shape_payload_grid[p] = v
 
   def __add_constraints(self):
     self.__add_grid_agreement_constraints()
@@ -194,20 +262,36 @@ class ShapeConstrainer:
       for variant in variants:
         for root_point in self.__lattice.points:
           instance_id = self.__lattice.point_to_index(root_point)
-          offset_points = set()
-          for offset_vector in variant:
+          point_payload_tuples = []
+          for offset_vector, payload in variant.offsets_with_payloads:
             point = root_point.translate(offset_vector)
             if point not in self.__shape_instance_grid:
-              offset_points = None
+              point_payload_tuples = None
               break
-            offset_points.add(point)
-          if offset_points:
+            point_payload_tuples.append((point, payload))
+          if point_payload_tuples:
             and_terms = []
-            for p in offset_points:
-              and_terms.append(quadtree.get_point_expr((HAS_INSTANCE_ID, instance_id), p))
-              and_terms.append(quadtree.get_point_expr((HAS_SHAPE_TYPE, shape_index), p))
-            and_terms.append(quadtree.get_other_points_expr(
-                (NOT_HAS_INSTANCE_ID, instance_id), offset_points))
+            for point, payload in point_payload_tuples:
+              and_terms.append(
+                  quadtree.get_point_expr(
+                      (HAS_INSTANCE_ID, instance_id),
+                      point
+                  )
+              )
+              and_terms.append(
+                  quadtree.get_point_expr(
+                      (HAS_SHAPE_TYPE, shape_index),
+                      point
+                  )
+              )
+              if self.__shape_payload_grid:
+                and_terms.append(self.__shape_payload_grid[point] == payload)
+            and_terms.append(
+                quadtree.get_other_points_expr(
+                    (NOT_HAS_INSTANCE_ID, instance_id),
+                    [t[0] for t in point_payload_tuples]
+                )
+            )
             root_options[root_point].append(fast_and(*and_terms))
     for p in self.__lattice.points:
       instance_id = self.__lattice.point_to_index(p)
@@ -224,7 +308,7 @@ class ShapeConstrainer:
     sum_terms = []
     for p in self.__shape_type_grid:
       sum_terms.append((self.__shape_type_grid[p] == shape_index, 1))
-    self.__solver.add(PbEq(sum_terms, len(shape)))
+    self.__solver.add(PbEq(sum_terms, len(shape.offsets_with_payloads)))
 
   @property
   def solver(self) -&gt; Solver:
@@ -249,6 +333,14 @@ class ShapeConstrainer:
     instance of the shape, or -1 if no shape is placed within that cell.
     &#34;&#34;&#34;
     return self.__shape_instance_grid
+
+  @property
+  def shape_payload_grid(self) -&gt; Optional[Dict[Point, Payload]]:
+    &#34;&#34;&#34;z3 constants of the shape offset payloads initially provided.
+
+    None if no payloads were provided during construction.
+    &#34;&#34;&#34;
+    return self.__shape_payload_grid
 
   def print_shape_types(self):
     &#34;&#34;&#34;Prints the shape type assigned to each cell.
@@ -302,57 +394,213 @@ class ShapeConstrainer:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="grilops.shapes.canonicalize_shape"><code class="name flex">
-<span>def <span class="ident">canonicalize_shape</span></span>(<span>shape: List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]) ‑> List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]</span>
+<dt id="grilops.shapes.Shape"><code class="flex name class">
+<span>class <span class="ident">Shape</span></span>
+<span>(</span><span>offsets: List[Union[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, Tuple[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, Union[~Payload, NoneType]]]])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A shape defined by a list of <code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code> offsets.</p>
+<p>Each offset may optionally have an associated payload value.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>offsets</code></strong> :&ensp;<code>List[Offset]</code></dt>
+<dd>A list of offsets that define the shape. An offset
+may be a <code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code>; or, to optionally associate a payload
+value with the offset, it may be a
+<code>Tuple[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, Payload]</code>. A payload may be any z3
+expression.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Shape(Generic[Payload]):
+  &#34;&#34;&#34;A shape defined by a list of `grilops.geometry.Vector` offsets.
+
+  Each offset may optionally have an associated payload value.
+
+  Args:
+    offsets (List[Offset]): A list of offsets that define the shape. An offset
+      may be a `grilops.geometry.Vector`; or, to optionally associate a payload
+      value with the offset, it may be a
+      `Tuple[grilops.geometry.Vector, Payload]`. A payload may be any z3
+      expression.
+  &#34;&#34;&#34;
+  def __init__(self, offsets: List[Offset]):
+    self.__offset_tuples: List[Tuple[Vector, Optional[Payload]]] = []
+    for offset in offsets:
+      if isinstance(offset, Vector):
+        self.__offset_tuples.append((offset, None))
+      elif isinstance(offset, tuple) and len(offset) == 2:
+        self.__offset_tuples.append(offset)
+      else:
+        raise Exception(f&#34;Invalid shape offset: {offset}&#34;)
+
+  @property
+  def offset_vectors(self) -&gt; List[Vector]:
+    &#34;&#34;&#34;The offset vectors that define this shape.&#34;&#34;&#34;
+    return [t[0] for t in self.__offset_tuples]
+
+  @property
+  def offsets_with_payloads(self) -&gt; List[Tuple[Vector, Optional[Payload]]]:
+    &#34;&#34;&#34;The offset vector and payload value tuples for this shape.&#34;&#34;&#34;
+    return self.__offset_tuples
+
+  def transform(self, f: Callable[[Vector], Vector]) -&gt; &#34;Shape&#34;:
+    &#34;&#34;&#34;Returns a new shape with each offset transformed by `f`.&#34;&#34;&#34;
+    return Shape([(f(v), p) for v, p in self.__offset_tuples])
+
+  def canonicalize(self) -&gt; &#34;Shape&#34;:
+    &#34;&#34;&#34;Returns a new shape that&#39;s canonicalized.
+
+    A canonicalized shape is in sorted order and its first offset is
+    `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
+    equivalent shapes will be canonicalized identically.
+
+    Returns:
+      A `Shape` of offsets defining the canonicalized version of the shape,
+        i.e., in sorted order and with first offset equal to
+        `grilops.geometry.Vector`(0, 0).
+    &#34;&#34;&#34;
+    offset_tuples = sorted(self.__offset_tuples, key=lambda t: t[0])
+    first_negated = offset_tuples[0][0].negate()
+    return Shape([(v.translate(first_negated), p) for v, p in offset_tuples])
+
+  def equivalent(self, shape: &#34;Shape&#34;) -&gt; bool:
+    &#34;&#34;&#34;Returns true iff the given shape is equivalent to this shape.&#34;&#34;&#34;
+    if len(self.offsets_with_payloads) != len(shape.offsets_with_payloads):
+      return False
+    for (v1, p1), (v2, p2) in zip(
+        self.offsets_with_payloads,  # type: ignore[arg-type]
+        shape.offsets_with_payloads  # type: ignore[arg-type]
+    ):
+      if v1 != v2:
+        return False
+      if isinstance(p1, ExprRef) and isinstance(p2, ExprRef):
+        if not eq(p1, p2):
+          return False
+      elif p1 != p2:
+        return False
+    return True</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.shapes.Shape.offset_vectors"><code class="name">var <span class="ident">offset_vectors</span> : List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]</code></dt>
+<dd>
+<div class="desc"><p>The offset vectors that define this shape.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def offset_vectors(self) -&gt; List[Vector]:
+  &#34;&#34;&#34;The offset vectors that define this shape.&#34;&#34;&#34;
+  return [t[0] for t in self.__offset_tuples]</code></pre>
+</details>
+</dd>
+<dt id="grilops.shapes.Shape.offsets_with_payloads"><code class="name">var <span class="ident">offsets_with_payloads</span> : List[Tuple[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>, Union[~Payload, NoneType]]]</code></dt>
+<dd>
+<div class="desc"><p>The offset vector and payload value tuples for this shape.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def offsets_with_payloads(self) -&gt; List[Tuple[Vector, Optional[Payload]]]:
+  &#34;&#34;&#34;The offset vector and payload value tuples for this shape.&#34;&#34;&#34;
+  return self.__offset_tuples</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.shapes.Shape.canonicalize"><code class="name flex">
+<span>def <span class="ident">canonicalize</span></span>(<span>self) ‑> <a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a new shape that's canonicalized.</p>
 <p>A canonicalized shape is in sorted order and its first offset is
 <code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code>(0, 0). This helps with deduplication, since
 equivalent shapes will be canonicalized identically.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>shape</code></strong> :&ensp;<code>List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]</code></dt>
-<dd>A list of offsets defining a shape.</dd>
-</dl>
 <h2 id="returns">Returns</h2>
-<p>A <code>List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]</code> of offsets defining the canonicalized
-version of the shape, i.e., in sorted order and with first offset equal
-to <code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code>(0, 0).</p></div>
+<p>A <code><a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a></code> of offsets defining the canonicalized version of the shape,
+i.e., in sorted order and with first offset equal to
+<code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a></code>(0, 0).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def canonicalize_shape(shape: List[Vector]) -&gt; List[Vector]:
+<pre><code class="python">def canonicalize(self) -&gt; &#34;Shape&#34;:
   &#34;&#34;&#34;Returns a new shape that&#39;s canonicalized.
 
   A canonicalized shape is in sorted order and its first offset is
   `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
   equivalent shapes will be canonicalized identically.
 
-  Args:
-    shape (List[grilops.geometry.Vector]): A list of offsets defining a shape.
-
   Returns:
-    A `List[grilops.geometry.Vector]` of offsets defining the canonicalized
-      version of the shape, i.e., in sorted order and with first offset equal
-      to `grilops.geometry.Vector`(0, 0).
+    A `Shape` of offsets defining the canonicalized version of the shape,
+      i.e., in sorted order and with first offset equal to
+      `grilops.geometry.Vector`(0, 0).
   &#34;&#34;&#34;
-  shape = sorted(shape)
-  first_negated = shape[0].negate()
-  return [v.translate(first_negated) for v in shape]</code></pre>
+  offset_tuples = sorted(self.__offset_tuples, key=lambda t: t[0])
+  first_negated = offset_tuples[0][0].negate()
+  return Shape([(v.translate(first_negated), p) for v, p in offset_tuples])</code></pre>
+</details>
+</dd>
+<dt id="grilops.shapes.Shape.equivalent"><code class="name flex">
+<span>def <span class="ident">equivalent</span></span>(<span>self, shape: <a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true iff the given shape is equivalent to this shape.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def equivalent(self, shape: &#34;Shape&#34;) -&gt; bool:
+  &#34;&#34;&#34;Returns true iff the given shape is equivalent to this shape.&#34;&#34;&#34;
+  if len(self.offsets_with_payloads) != len(shape.offsets_with_payloads):
+    return False
+  for (v1, p1), (v2, p2) in zip(
+      self.offsets_with_payloads,  # type: ignore[arg-type]
+      shape.offsets_with_payloads  # type: ignore[arg-type]
+  ):
+    if v1 != v2:
+      return False
+    if isinstance(p1, ExprRef) and isinstance(p2, ExprRef):
+      if not eq(p1, p2):
+        return False
+    elif p1 != p2:
+      return False
+  return True</code></pre>
+</details>
+</dd>
+<dt id="grilops.shapes.Shape.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, f: Callable[[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>], <a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]) ‑> <a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a new shape with each offset transformed by <code>f</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, f: Callable[[Vector], Vector]) -&gt; &#34;Shape&#34;:
+  &#34;&#34;&#34;Returns a new shape with each offset transformed by `f`.&#34;&#34;&#34;
+  return Shape([(f(v), p) for v, p in self.__offset_tuples])</code></pre>
 </details>
 </dd>
 </dl>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
+</dd>
 <dt id="grilops.shapes.ShapeConstrainer"><code class="flex name class">
 <span>class <span class="ident">ShapeConstrainer</span></span>
-<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, shapes: List[List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]], solver: Union[z3.z3.Solver, NoneType] = None, complete: bool = False, allow_rotations: bool = False, allow_reflections: bool = False, allow_copies: bool = False)</span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>, shapes: List[<a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a>], solver: Union[z3.z3.Solver, NoneType] = None, complete: bool = False, allow_rotations: bool = False, allow_reflections: bool = False, allow_copies: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates constraints for placing fixed shape regions into the grid.</p>
@@ -360,12 +608,10 @@ to <code><a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry
 <dl>
 <dt><strong><code>lattice</code></strong> :&ensp;<code><a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
 <dd>The structure of the grid.</dd>
-<dt><strong><code>shapes</code></strong> :&ensp;<code>List[List[<a title="grilops.geometry.Vector" href="geometry.html#grilops.geometry.Vector">Vector</a>]]</code></dt>
-<dd>A list of region shape
-definitions. Each region shape definition should be a list of offsets.
-The same region shape definition may be included multiple times to
-indicate the number of times that shape may appear (if allow_copies is
-false).</dd>
+<dt><strong><code>shapes</code></strong> :&ensp;<code>List[<a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a>]</code></dt>
+<dd>A list of region shape definitions. The same
+region shape definition may be included multiple times to indicate the
+number of times that shape may appear (if allow_copies is false).</dd>
 <dt><strong><code>solver</code></strong> :&ensp;<code>Optional[z3.Solver]</code></dt>
 <dd>A <code>Solver</code> object. If None, a <code>Solver</code> will
 be constructed.</dd>
@@ -391,11 +637,9 @@ be placed in the grid. Defaults to false.</dd>
 
   Args:
     lattice (grilops.geometry.Lattice): The structure of the grid.
-    shapes (List[List[grilops.geometry.Vector]]): A list of region shape
-      definitions. Each region shape definition should be a list of offsets.
-      The same region shape definition may be included multiple times to
-      indicate the number of times that shape may appear (if allow_copies is
-      false).
+    shapes (List[Shape]): A list of region shape definitions. The same
+      region shape definition may be included multiple times to indicate the
+      number of times that shape may appear (if allow_copies is false).
     solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
       be constructed.
     complete (bool): If true, every cell must be part of a shape region.
@@ -406,13 +650,14 @@ be placed in the grid. Defaults to false.</dd>
       placed in the grid. Defaults to false.
     allow_copies (bool): If true, allow any number of copies of the shapes to
       be placed in the grid. Defaults to false.
+
   &#34;&#34;&#34;
   _instance_index = 0
 
   def __init__(  # pylint: disable=R0913
       self,
       lattice: Lattice,
-      shapes: List[List[Vector]],
+      shapes: List[Shape],
       solver: Optional[Solver] = None,
       complete: bool = False,
       allow_rotations: bool = False,
@@ -438,16 +683,14 @@ be placed in the grid. Defaults to false.</dd>
   def __make_variants(self, allow_rotations, allow_reflections):
     fs = self.__lattice.transformation_functions(
         allow_rotations, allow_reflections)
-    self.__variants = [
-        [
-            list(shape_tuple)
-            for shape_tuple in {
-                tuple(canonicalize_shape([f(v) for v in s]))
-                for f in fs
-            }
-        ]
-        for s in self.__shapes
-    ]
+    self.__variants = []
+    for shape in self.__shapes:
+      shape_variants = []
+      for f in fs:
+        variant = shape.transform(f).canonicalize()
+        if not any(variant.equivalent(v) for v in shape_variants):
+          shape_variants.append(variant)
+      self.__variants.append(shape_variants)
 
   def __create_grids(self):
     &#34;&#34;&#34;Create the grids used to model shape region constraints.&#34;&#34;&#34;
@@ -470,6 +713,21 @@ be placed in the grid. Defaults to false.</dd>
         self.__solver.add(v &gt;= -1)
       self.__solver.add(v &lt; len(self.__lattice.points))
       self.__shape_instance_grid[p] = v
+
+    sample_payload = self.__shapes[0].offsets_with_payloads[0][1]
+    if sample_payload is None:
+      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = None
+    else:
+      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = {}
+      if isinstance(sample_payload, ExprRef):
+        sort = sample_payload.sort()
+      elif isinstance(sample_payload, int):
+        sort = IntSort()
+      else:
+        raise Exception(f&#34;Could not determine z3 sort for {sample_payload}&#34;)
+      for p in self.__lattice.points:
+        v = Const(f&#34;scsp-{ShapeConstrainer._instance_index}-{p.y}-{p.x}&#34;, sort)
+        self.__shape_payload_grid[p] = v
 
   def __add_constraints(self):
     self.__add_grid_agreement_constraints()
@@ -516,20 +774,36 @@ be placed in the grid. Defaults to false.</dd>
       for variant in variants:
         for root_point in self.__lattice.points:
           instance_id = self.__lattice.point_to_index(root_point)
-          offset_points = set()
-          for offset_vector in variant:
+          point_payload_tuples = []
+          for offset_vector, payload in variant.offsets_with_payloads:
             point = root_point.translate(offset_vector)
             if point not in self.__shape_instance_grid:
-              offset_points = None
+              point_payload_tuples = None
               break
-            offset_points.add(point)
-          if offset_points:
+            point_payload_tuples.append((point, payload))
+          if point_payload_tuples:
             and_terms = []
-            for p in offset_points:
-              and_terms.append(quadtree.get_point_expr((HAS_INSTANCE_ID, instance_id), p))
-              and_terms.append(quadtree.get_point_expr((HAS_SHAPE_TYPE, shape_index), p))
-            and_terms.append(quadtree.get_other_points_expr(
-                (NOT_HAS_INSTANCE_ID, instance_id), offset_points))
+            for point, payload in point_payload_tuples:
+              and_terms.append(
+                  quadtree.get_point_expr(
+                      (HAS_INSTANCE_ID, instance_id),
+                      point
+                  )
+              )
+              and_terms.append(
+                  quadtree.get_point_expr(
+                      (HAS_SHAPE_TYPE, shape_index),
+                      point
+                  )
+              )
+              if self.__shape_payload_grid:
+                and_terms.append(self.__shape_payload_grid[point] == payload)
+            and_terms.append(
+                quadtree.get_other_points_expr(
+                    (NOT_HAS_INSTANCE_ID, instance_id),
+                    [t[0] for t in point_payload_tuples]
+                )
+            )
             root_options[root_point].append(fast_and(*and_terms))
     for p in self.__lattice.points:
       instance_id = self.__lattice.point_to_index(p)
@@ -546,7 +820,7 @@ be placed in the grid. Defaults to false.</dd>
     sum_terms = []
     for p in self.__shape_type_grid:
       sum_terms.append((self.__shape_type_grid[p] == shape_index, 1))
-    self.__solver.add(PbEq(sum_terms, len(shape)))
+    self.__solver.add(PbEq(sum_terms, len(shape.offsets_with_payloads)))
 
   @property
   def solver(self) -&gt; Solver:
@@ -571,6 +845,14 @@ be placed in the grid. Defaults to false.</dd>
     instance of the shape, or -1 if no shape is placed within that cell.
     &#34;&#34;&#34;
     return self.__shape_instance_grid
+
+  @property
+  def shape_payload_grid(self) -&gt; Optional[Dict[Point, Payload]]:
+    &#34;&#34;&#34;z3 constants of the shape offset payloads initially provided.
+
+    None if no payloads were provided during construction.
+    &#34;&#34;&#34;
+    return self.__shape_payload_grid
 
   def print_shape_types(self):
     &#34;&#34;&#34;Prints the shape type assigned to each cell.
@@ -637,6 +919,23 @@ def shape_instance_grid(self) -&gt; Dict[Point, ArithRef]:
   instance of the shape, or -1 if no shape is placed within that cell.
   &#34;&#34;&#34;
   return self.__shape_instance_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.shapes.ShapeConstrainer.shape_payload_grid"><code class="name">var <span class="ident">shape_payload_grid</span> : Union[Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, ~Payload], NoneType]</code></dt>
+<dd>
+<div class="desc"><p>z3 constants of the shape offset payloads initially provided.</p>
+<p>None if no payloads were provided during construction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def shape_payload_grid(self) -&gt; Optional[Dict[Point, Payload]]:
+  &#34;&#34;&#34;z3 constants of the shape offset payloads initially provided.
+
+  None if no payloads were provided during construction.
+  &#34;&#34;&#34;
+  return self.__shape_payload_grid</code></pre>
 </details>
 </dd>
 <dt id="grilops.shapes.ShapeConstrainer.shape_type_grid"><code class="name">var <span class="ident">shape_type_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
@@ -760,19 +1059,25 @@ def solver(self) -&gt; Solver:
 <li><code><a title="grilops" href="index.html">grilops</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="grilops.shapes.canonicalize_shape" href="#grilops.shapes.canonicalize_shape">canonicalize_shape</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="grilops.shapes.Shape" href="#grilops.shapes.Shape">Shape</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.shapes.Shape.canonicalize" href="#grilops.shapes.Shape.canonicalize">canonicalize</a></code></li>
+<li><code><a title="grilops.shapes.Shape.equivalent" href="#grilops.shapes.Shape.equivalent">equivalent</a></code></li>
+<li><code><a title="grilops.shapes.Shape.offset_vectors" href="#grilops.shapes.Shape.offset_vectors">offset_vectors</a></code></li>
+<li><code><a title="grilops.shapes.Shape.offsets_with_payloads" href="#grilops.shapes.Shape.offsets_with_payloads">offsets_with_payloads</a></code></li>
+<li><code><a title="grilops.shapes.Shape.transform" href="#grilops.shapes.Shape.transform">transform</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="grilops.shapes.ShapeConstrainer" href="#grilops.shapes.ShapeConstrainer">ShapeConstrainer</a></code></h4>
 <ul class="">
 <li><code><a title="grilops.shapes.ShapeConstrainer.print_shape_instances" href="#grilops.shapes.ShapeConstrainer.print_shape_instances">print_shape_instances</a></code></li>
 <li><code><a title="grilops.shapes.ShapeConstrainer.print_shape_types" href="#grilops.shapes.ShapeConstrainer.print_shape_types">print_shape_types</a></code></li>
 <li><code><a title="grilops.shapes.ShapeConstrainer.shape_instance_grid" href="#grilops.shapes.ShapeConstrainer.shape_instance_grid">shape_instance_grid</a></code></li>
+<li><code><a title="grilops.shapes.ShapeConstrainer.shape_payload_grid" href="#grilops.shapes.ShapeConstrainer.shape_payload_grid">shape_payload_grid</a></code></li>
 <li><code><a title="grilops.shapes.ShapeConstrainer.shape_type_grid" href="#grilops.shapes.ShapeConstrainer.shape_type_grid">shape_type_grid</a></code></li>
 <li><code><a title="grilops.shapes.ShapeConstrainer.solver" href="#grilops.shapes.ShapeConstrainer.solver">solver</a></code></li>
 </ul>
@@ -783,7 +1088,7 @@ def solver(self) -&gt; Solver:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
