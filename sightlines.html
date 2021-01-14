@@ -48,7 +48,8 @@ grid. If it is desired that a sightline continues through such holes, the
 holes should be treated as part of the grid, e.g., as black cells.
 &#34;&#34;&#34;
 
-from typing import cast, Callable, TypeVar
+from inspect import signature
+from typing import cast, Callable, TypeVar, Union
 from z3 import ArithRef, BoolRef, BoolVal, ExprRef, If, IntVal
 
 from .geometry import Point, Direction
@@ -94,14 +95,23 @@ def count_cells(
 
 Accumulator = TypeVar(&#34;Accumulator&#34;, bound=ExprRef)
 
+AccumulateCallback = Union[
+    Callable[[Accumulator, ArithRef], Accumulator],
+    Callable[[Accumulator, ArithRef, Point], Accumulator]
+]
+
+StopCallback = Union[
+    Callable[[Accumulator, ArithRef], BoolRef],
+    Callable[[Accumulator, ArithRef, Point], BoolRef]
+]
 
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Point,
     direction: Direction,
     initializer: Accumulator,
-    accumulate: Callable[[Accumulator, ArithRef], Accumulator],
-    stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
+    accumulate: AccumulateCallback,
+    stop: StopCallback = lambda a, c: BoolVal(False)
 ) -&gt; Accumulator:
   &#34;&#34;&#34;Returns a computation of a sightline through a grid.
 
@@ -112,28 +122,45 @@ def reduce_cells(  # pylint: disable=R0913
     direction (grilops.geometry.Direction): The direction to advance to reach
       the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
-    accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
-      that accepts an accumulated value and a symbol as arguments, and returns
-      a new accumulated value. This function is used to determine a new
-      accumulated value for each cell along the sightline, based on the
-      accumulated value from the previously encountered cells as well as the
-      symbol in the current cell.
-    stop (Callable[[Accumulator, ArithRef], BoolRef]): A function that accepts
-      an accumulated value and a symbol as arguments, and returns True if we
-      should stop following the sightline when this symbol is encountered. By
-      default, the sightline will continue to the edge of the grid.
+    accumulate (AccumulateCallback): A function that accepts an accumulated
+      value, a symbol, and (optionally) a point as arguments, and returns a new
+      accumulated value. This function is used to determine a new accumulated
+      value for each cell along the sightline, based on the accumulated value
+      from the previously encountered cells as well as the point and/or symbol
+      of the current cell.
+    stop (StopCallback): A function that accepts an accumulated value, a
+      symbol, and (optionally) a point as arguments, and returns True if we
+      should stop following the sightline when this symbol or point is
+      encountered. By default, the sightline will continue to the edge of the
+      grid.
 
   Returns:
     The accumulated value.
+
+  Raises:
+    ValueError: If the accumulate or stop callback doesn&#39;t accept the correct
+      number of arguments.
   &#34;&#34;&#34;
+  num_accumulate_args = len(signature(accumulate).parameters)
+  num_stop_args = len(signature(stop).parameters)
   stop_terms = []
   acc_terms = [initializer]
   p = start
   while p in symbol_grid.grid:
     cell = symbol_grid.grid[p]
-    acc_term = accumulate(acc_terms[-1], cell)
+    if num_accumulate_args == 3:
+      acc_term = accumulate(acc_terms[-1], cell, p)  # type: ignore[call-arg]
+    elif num_accumulate_args == 2:
+      acc_term = accumulate(acc_terms[-1], cell)  # type: ignore[call-arg]
+    else:
+      raise ValueError(&#34;wrong number of accumulate callback args&#34;)
     acc_terms.append(acc_term)
-    stop_terms.append(stop(acc_term, cell))
+    if num_stop_args == 3:
+      stop_terms.append(stop(acc_term, cell, p))  # type: ignore[call-arg]
+    elif num_stop_args == 2:
+      stop_terms.append(stop(acc_term, cell))  # type: ignore[call-arg]
+    else:
+      raise ValueError(&#34;wrong number of stop callback args&#34;)
     p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
@@ -218,7 +245,7 @@ continue to the edge of the grid.</dd>
 </details>
 </dd>
 <dt id="grilops.sightlines.reduce_cells"><code class="name flex">
-<span>def <span class="ident">reduce_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, initializer: ~Accumulator, accumulate: Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], stop: Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef] = &lt;function &lt;lambda&gt;&gt;) ‑> ~Accumulator</span>
+<span>def <span class="ident">reduce_cells</span></span>(<span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, start: <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, direction: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, initializer: ~Accumulator, accumulate: Union[Callable[[~Accumulator, z3.z3.ArithRef], ~Accumulator], Callable[[~Accumulator, z3.z3.ArithRef, <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>], ~Accumulator]], stop: Union[Callable[[~Accumulator, z3.z3.ArithRef], z3.z3.BoolRef], Callable[[~Accumulator, z3.z3.ArithRef, <a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>], z3.z3.BoolRef]] = &lt;function &lt;lambda&gt;&gt;) ‑> ~Accumulator</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a computation of a sightline through a grid.</p>
@@ -234,21 +261,28 @@ sightline should begin. This is the first cell checked.</dd>
 the next cell in the sightline.</dd>
 <dt><strong><code>initializer</code></strong> :&ensp;<code>Accumulator</code></dt>
 <dd>The initial value for the accumulator.</dd>
-<dt><strong><code>accumulate</code></strong> :&ensp;<code>Callable[[Accumulator, ArithRef], Accumulator]</code></dt>
-<dd>A function
-that accepts an accumulated value and a symbol as arguments, and returns
-a new accumulated value. This function is used to determine a new
-accumulated value for each cell along the sightline, based on the
-accumulated value from the previously encountered cells as well as the
-symbol in the current cell.</dd>
-<dt><strong><code>stop</code></strong> :&ensp;<code>Callable[[Accumulator, ArithRef], BoolRef]</code></dt>
-<dd>A function that accepts
-an accumulated value and a symbol as arguments, and returns True if we
-should stop following the sightline when this symbol is encountered. By
-default, the sightline will continue to the edge of the grid.</dd>
+<dt><strong><code>accumulate</code></strong> :&ensp;<code>AccumulateCallback</code></dt>
+<dd>A function that accepts an accumulated
+value, a symbol, and (optionally) a point as arguments, and returns a new
+accumulated value. This function is used to determine a new accumulated
+value for each cell along the sightline, based on the accumulated value
+from the previously encountered cells as well as the point and/or symbol
+of the current cell.</dd>
+<dt><strong><code>stop</code></strong> :&ensp;<code>StopCallback</code></dt>
+<dd>A function that accepts an accumulated value, a
+symbol, and (optionally) a point as arguments, and returns True if we
+should stop following the sightline when this symbol or point is
+encountered. By default, the sightline will continue to the edge of the
+grid.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>The accumulated value.</p></div>
+<p>The accumulated value.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the accumulate or stop callback doesn't accept the correct
+number of arguments.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -258,8 +292,8 @@ default, the sightline will continue to the edge of the grid.</dd>
     start: Point,
     direction: Direction,
     initializer: Accumulator,
-    accumulate: Callable[[Accumulator, ArithRef], Accumulator],
-    stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
+    accumulate: AccumulateCallback,
+    stop: StopCallback = lambda a, c: BoolVal(False)
 ) -&gt; Accumulator:
   &#34;&#34;&#34;Returns a computation of a sightline through a grid.
 
@@ -270,28 +304,45 @@ default, the sightline will continue to the edge of the grid.</dd>
     direction (grilops.geometry.Direction): The direction to advance to reach
       the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
-    accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
-      that accepts an accumulated value and a symbol as arguments, and returns
-      a new accumulated value. This function is used to determine a new
-      accumulated value for each cell along the sightline, based on the
-      accumulated value from the previously encountered cells as well as the
-      symbol in the current cell.
-    stop (Callable[[Accumulator, ArithRef], BoolRef]): A function that accepts
-      an accumulated value and a symbol as arguments, and returns True if we
-      should stop following the sightline when this symbol is encountered. By
-      default, the sightline will continue to the edge of the grid.
+    accumulate (AccumulateCallback): A function that accepts an accumulated
+      value, a symbol, and (optionally) a point as arguments, and returns a new
+      accumulated value. This function is used to determine a new accumulated
+      value for each cell along the sightline, based on the accumulated value
+      from the previously encountered cells as well as the point and/or symbol
+      of the current cell.
+    stop (StopCallback): A function that accepts an accumulated value, a
+      symbol, and (optionally) a point as arguments, and returns True if we
+      should stop following the sightline when this symbol or point is
+      encountered. By default, the sightline will continue to the edge of the
+      grid.
 
   Returns:
     The accumulated value.
+
+  Raises:
+    ValueError: If the accumulate or stop callback doesn&#39;t accept the correct
+      number of arguments.
   &#34;&#34;&#34;
+  num_accumulate_args = len(signature(accumulate).parameters)
+  num_stop_args = len(signature(stop).parameters)
   stop_terms = []
   acc_terms = [initializer]
   p = start
   while p in symbol_grid.grid:
     cell = symbol_grid.grid[p]
-    acc_term = accumulate(acc_terms[-1], cell)
+    if num_accumulate_args == 3:
+      acc_term = accumulate(acc_terms[-1], cell, p)  # type: ignore[call-arg]
+    elif num_accumulate_args == 2:
+      acc_term = accumulate(acc_terms[-1], cell)  # type: ignore[call-arg]
+    else:
+      raise ValueError(&#34;wrong number of accumulate callback args&#34;)
     acc_terms.append(acc_term)
-    stop_terms.append(stop(acc_term, cell))
+    if num_stop_args == 3:
+      stop_terms.append(stop(acc_term, cell, p))  # type: ignore[call-arg]
+    elif num_stop_args == 2:
+      stop_terms.append(stop(acc_term, cell))  # type: ignore[call-arg]
+    else:
+      raise ValueError(&#34;wrong number of stop callback args&#34;)
     p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
