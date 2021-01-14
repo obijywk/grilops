@@ -11,7 +11,8 @@ grid. If it is desired that a sightline continues through such holes, the
 holes should be treated as part of the grid, e.g., as black cells.
 """
 
-from typing import cast, Callable, TypeVar
+from inspect import signature
+from typing import cast, Callable, TypeVar, Union
 from z3 import ArithRef, BoolRef, BoolVal, ExprRef, If, IntVal
 
 from .geometry import Point, Direction
@@ -57,14 +58,23 @@ def count_cells(
 
 Accumulator = TypeVar("Accumulator", bound=ExprRef)
 
+AccumulateCallback = Union[
+    Callable[[Accumulator, ArithRef], Accumulator],
+    Callable[[Accumulator, ArithRef, Point], Accumulator]
+]
+
+StopCallback = Union[
+    Callable[[Accumulator, ArithRef], BoolRef],
+    Callable[[Accumulator, ArithRef, Point], BoolRef]
+]
 
 def reduce_cells(  # pylint: disable=R0913
     symbol_grid: SymbolGrid,
     start: Point,
     direction: Direction,
     initializer: Accumulator,
-    accumulate: Callable[[Accumulator, ArithRef], Accumulator],
-    stop: Callable[[Accumulator, ArithRef], BoolRef] = lambda a, c: BoolVal(False)
+    accumulate: AccumulateCallback,
+    stop: StopCallback = lambda a, c: BoolVal(False)
 ) -> Accumulator:
   """Returns a computation of a sightline through a grid.
 
@@ -75,28 +85,45 @@ def reduce_cells(  # pylint: disable=R0913
     direction (grilops.geometry.Direction): The direction to advance to reach
       the next cell in the sightline.
     initializer (Accumulator): The initial value for the accumulator.
-    accumulate (Callable[[Accumulator, ArithRef], Accumulator]): A function
-      that accepts an accumulated value and a symbol as arguments, and returns
-      a new accumulated value. This function is used to determine a new
-      accumulated value for each cell along the sightline, based on the
-      accumulated value from the previously encountered cells as well as the
-      symbol in the current cell.
-    stop (Callable[[Accumulator, ArithRef], BoolRef]): A function that accepts
-      an accumulated value and a symbol as arguments, and returns True if we
-      should stop following the sightline when this symbol is encountered. By
-      default, the sightline will continue to the edge of the grid.
+    accumulate (AccumulateCallback): A function that accepts an accumulated
+      value, a symbol, and (optionally) a point as arguments, and returns a new
+      accumulated value. This function is used to determine a new accumulated
+      value for each cell along the sightline, based on the accumulated value
+      from the previously encountered cells as well as the point and/or symbol
+      of the current cell.
+    stop (StopCallback): A function that accepts an accumulated value, a
+      symbol, and (optionally) a point as arguments, and returns True if we
+      should stop following the sightline when this symbol or point is
+      encountered. By default, the sightline will continue to the edge of the
+      grid.
 
   Returns:
     The accumulated value.
+
+  Raises:
+    ValueError: If the accumulate or stop callback doesn't accept the correct
+      number of arguments.
   """
+  num_accumulate_args = len(signature(accumulate).parameters)
+  num_stop_args = len(signature(stop).parameters)
   stop_terms = []
   acc_terms = [initializer]
   p = start
   while p in symbol_grid.grid:
     cell = symbol_grid.grid[p]
-    acc_term = accumulate(acc_terms[-1], cell)
+    if num_accumulate_args == 3:
+      acc_term = accumulate(acc_terms[-1], cell, p)  # type: ignore[call-arg]
+    elif num_accumulate_args == 2:
+      acc_term = accumulate(acc_terms[-1], cell)  # type: ignore[call-arg]
+    else:
+      raise ValueError("wrong number of accumulate callback args")
     acc_terms.append(acc_term)
-    stop_terms.append(stop(acc_term, cell))
+    if num_stop_args == 3:
+      stop_terms.append(stop(acc_term, cell, p))  # type: ignore[call-arg]
+    elif num_stop_args == 2:
+      stop_terms.append(stop(acc_term, cell))  # type: ignore[call-arg]
+    else:
+      raise ValueError("wrong number of stop callback args")
     p = p.translate(direction.vector)
   expr = acc_terms.pop()
   for stop_term, acc_term in zip(reversed(stop_terms), reversed(acc_terms)):
