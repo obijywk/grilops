@@ -59,10 +59,10 @@ def main():
 
     if expected_count is not None and direction is not None:
       # Count and constrain the number of loop segments in the given direction.
-      segment_symbols = DIRECTION_SEGMENT_SYMBOLS[direction]
+      seg_syms = DIRECTION_SEGMENT_SYMBOLS[direction]
       actual_count = grilops.sightlines.count_cells(
           sg, p, direction,
-          lambda c: If(Or(*[c == s for s in segment_symbols]), 1, 0)
+          lambda c, ss=seg_syms: If(Or(*[c == s for s in ss]), 1, 0)
       )
       sg.solver.add(actual_count == expected_count)
 

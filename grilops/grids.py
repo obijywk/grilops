@@ -139,7 +139,7 @@ class SymbolGrid:
     successfully.
     """
     model = self.__solver.model()
-    return {p: model.eval(self.__grid[p]).as_long() for p in self.__grid}
+    return {p: model.eval(v).as_long() for p, v in self.__grid.items()}
 
   def print(self, hook_function: Callable[[Point, int], str] = None):
     """Prints the solved grid using symbol labels.

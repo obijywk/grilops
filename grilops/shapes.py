@@ -196,15 +196,15 @@ class ShapeConstrainer:
         self.__add_single_copy_constraints(shape_index, shape)
 
   def __add_grid_agreement_constraints(self):
-    for p in self.__shape_type_grid:
+    for p, shape_type in self.__shape_type_grid.items():
       self.__solver.add(
           Or(
               fast_and(
-                  self.__shape_type_grid[p] == -1,
+                  shape_type == -1,
                   self.__shape_instance_grid[p] == -1
               ),
               fast_and(
-                  self.__shape_type_grid[p] != -1,
+                  shape_type != -1,
                   self.__shape_instance_grid[p] != -1
               )
           )
@@ -277,8 +277,8 @@ class ShapeConstrainer:
 
   def __add_single_copy_constraints(self, shape_index, shape):
     sum_terms = []
-    for p in self.__shape_type_grid:
-      sum_terms.append((self.__shape_type_grid[p] == shape_index, 1))
+    for shape_type in self.__shape_type_grid.values():
+      sum_terms.append((shape_type == shape_index, 1))
     self.__solver.add(PbEq(sum_terms, len(shape.offsets_with_payloads)))
 
   @property
