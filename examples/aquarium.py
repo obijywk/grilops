@@ -1,22 +1,21 @@
 """Aquarium solver example."""
 
-from z3 import PbEq
+from z3 import Implies, PbEq
 
 import grilops
 
 HEIGHT, WIDTH = 6, 6
 
 REGIONS = [
-  "ABBBCC",
-  "AADDCC",
-  "AEFFFC",
-  "EEEECC",
-  "EEEECC",
-  "ECCCCC",
+  "ABBCCD",
+  "ABBEED",
+  "FFGGHI",
+  "JKLLMI",
+  "NKOPMQ",
+  "NNOPRR",
 ]
-
-COL_CLUES = [3, 3, 4, 4, 4, 3]
-ROW_CLUES = [4, 4, 4, 2, 2, 5]
+COL_CLUES = [3, 2, 4, 5, 4, 4]
+ROW_CLUES = [3, 5, 2, 5, 3, 4]
 
 def main():
   """Aquarium solver example."""
@@ -43,9 +42,21 @@ def main():
   # The water level in each aquarium is the same across its full width.
   for y in range(HEIGHT):
     for al in set(REGIONS[y]):
+      # If any aquarium cell is filled within a row, then all cells of that
+      # aquarium within that row must be filled.
       cells = [sg.grid[(y, x)] for x in range(WIDTH) if REGIONS[y][x] == al]
       for cell in cells[1:]:
         sg.solver.add(cell == cells[0])
+
+      # If an aquarium is filled within a row, and that aquarium also has
+      # cells in the row below that row, then that same aquarium's cells below
+      # must be filled as well.
+      if y < HEIGHT - 1:
+        cells_below = [
+          sg.grid[(y + 1, x)] for x in range(WIDTH) if REGIONS[y + 1][x] == al
+        ]
+        if cells_below:
+          sg.solver.add(Implies(cells[0] == sym.B, cells_below[0] == sym.B))
 
   if sg.solve():
     sg.print()
