@@ -32,13 +32,13 @@ def main():
   lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
   sg = grilops.SymbolGrid(lattice, sym)
 
-  # There must be exactly two stars per column.
+  # There must be exactly two stars per row.
   for y in range(HEIGHT):
     sg.solver.add(Sum(
         *[If(sg.cell_is(Point(y, x), sym.STAR), 1, 0) for x in range(WIDTH)]
     ) == 2)
 
-  # There must be exactly two stars per row.
+  # There must be exactly two stars per column.
   for x in range(WIDTH):
     sg.solver.add(Sum(
         *[If(sg.cell_is(Point(y, x), sym.STAR), 1, 0) for y in range(HEIGHT)]
