@@ -197,6 +197,20 @@ class Lattice:
     """
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
+  def label_for_direction(self, d: Direction) -> str:
+    """Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there's no character defined for the direction.
+    """
+    raise NotImplementedError()
+
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
 
@@ -383,6 +397,28 @@ class RectangularLattice(Lattice):
         Direction("SW", Vector(1, -1)),
     ]
 
+  def label_for_direction(self, d: Direction) -> str:
+    """Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there's no character defined for the direction.
+    """
+    if d.name == "N":
+      return chr(0x2575)
+    if d.name == "E":
+      return chr(0x2576)
+    if d.name == "S":
+      return chr(0x2577)
+    if d.name == "W":
+      return chr(0x2574)
+    raise ValueError("No single-character symbol for direction")
+
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
 
@@ -532,6 +568,17 @@ class _HexagonalLattice(Lattice):
       that share a vertex.
     """
     return self.edge_sharing_directions()
+
+  def label_for_direction(self, d: Direction) -> str:
+    """Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Raises:
+      ValueError: If there's no character defined for the direction.
+    """
+    raise ValueError("No single-character symbol for direction")
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
