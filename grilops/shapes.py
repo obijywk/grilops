@@ -41,7 +41,7 @@ class Shape(Generic[Payload]):
       elif isinstance(offset, tuple) and len(offset) == 2:
         self.__offset_tuples.append(offset)
       else:
-        raise Exception(f"Invalid shape offset: {offset}")
+        raise RuntimeError(f"Invalid shape offset: {offset}")
 
   @property
   def offset_vectors(self) -> List[Vector]:
@@ -183,7 +183,7 @@ class ShapeConstrainer:
       elif isinstance(sample_payload, int):
         sort = IntSort()
       else:
-        raise Exception(f"Could not determine z3 sort for {sample_payload}")
+        raise RuntimeError(f"Could not determine z3 sort for {sample_payload}")
       for p in self.__lattice.points:
         v = Const(f"scsp-{ShapeConstrainer._instance_index}-{p.y}-{p.x}", sort)
         self.__shape_payload_grid[p] = v

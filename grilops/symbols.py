@@ -73,17 +73,17 @@ class SymbolSet:
         if len(spec) == 3:
           name, label, i = cast(Tuple[str, str, int], spec)
           if i in self.__index_to_symbol:
-            raise Exception(
+            raise RuntimeError(
                 f"Index of {spec} already used by {self.__index_to_symbol[i]}")
         elif len(spec) == 2:
           name, label = cast(Tuple[str, str], spec)
           i = self.__next_unused_index()
         else:
-          raise Exception(f"Invalid symbol spec: {spec}")
+          raise RuntimeError(f"Invalid symbol spec: {spec}")
         symbol = Symbol(i, name=name, label=label)
         self.__index_to_symbol[i] = symbol
       else:
-        raise Exception(f"Invalid symbol spec: {spec}")
+        raise RuntimeError(f"Invalid symbol spec: {spec}")
 
     for symbol in self.__index_to_symbol.values():
       setattr(self, symbol.name, symbol.index)

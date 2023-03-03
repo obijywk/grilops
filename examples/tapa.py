@@ -12,22 +12,22 @@ from grilops.geometry import Point
 
 HEIGHT, WIDTH = 10, 10
 GIVENS = {
-    (0, 3): [1, 1],
-    (1, 0): [1],
-    (1, 6): [2, 2],
-    (1, 9): [2],
-    (3, 3): [1],
-    (4, 2): [1, 1],
-    (4, 5): [2],
-    (4, 7): [2, 2],
-    (5, 2): [4],
-    (5, 4): [4],
-    (5, 7): [3],
-    (6, 6): [3],
-    (8, 0): [4],
-    (8, 3): [4],
-    (8, 9): [3],
-    (9, 6): [3],
+    Point(0, 3): [1, 1],
+    Point(1, 0): [1],
+    Point(1, 6): [2, 2],
+    Point(1, 9): [2],
+    Point(3, 3): [1],
+    Point(4, 2): [1, 1],
+    Point(4, 5): [2],
+    Point(4, 7): [2, 2],
+    Point(5, 2): [4],
+    Point(5, 4): [4],
+    Point(5, 7): [3],
+    Point(6, 6): [3],
+    Point(8, 0): [4],
+    Point(8, 3): [4],
+    Point(8, 9): [3],
+    Point(9, 6): [3],
 }
 SYM = grilops.SymbolSet([("B", chr(0x2588)), ("W", " ")])
 
@@ -152,8 +152,8 @@ def main():
       sg.solver.add(Not(And(*[cell == SYM.B for cell in pool_cells])))
 
   # Add constraints for the given clues.
-  for y, x in GIVENS.keys():
-    add_neighbor_constraints(sg, y, x)
+  for p in GIVENS.keys():
+    add_neighbor_constraints(sg, p.y, p.x)
 
   def show_cell(p, _):
     given = GIVENS.get((p.y, p.x))

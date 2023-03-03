@@ -70,7 +70,7 @@ def main():
     for i, (gy, gx) in enumerate(GIVENS):
       if int(math.floor(gy)) == rp.y and int(math.floor(gx)) == rp.x:
         return chr(65 + i)
-    raise Exception("unexpected region id")
+    raise RuntimeError("unexpected region id")
 
   if sg.solve():
     sg.print(show_cell)
