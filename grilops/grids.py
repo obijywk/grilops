@@ -141,7 +141,7 @@ class SymbolGrid:
     model = self.__solver.model()
     return {p: model.eval(v).as_long() for p, v in self.__grid.items()}
 
-  def print(self, hook_function: Callable[[Point, int], str] = None):
+  def print(self, hook_function: Optional[Callable[[Point, int], str]] = None):
     """Prints the solved grid using symbol labels.
 
     Should be called only after `SymbolGrid.solve` has already completed

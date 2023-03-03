@@ -43,7 +43,7 @@ class RegionConstrainer:  # pylint: disable=R0902
   def __init__(  # pylint: disable=R0913
       self,
       lattice: Lattice,
-      solver: Solver = None,
+      solver: Optional[Solver] = None,
       complete: bool = True,
       rectangular: bool = False,
       min_region_size: Optional[int] = None,

@@ -1,6 +1,6 @@
 # pylint: skip-file
 
-from typing import Sequence, Tuple, TypeVar
+from typing import Optional, Sequence, Tuple, TypeVar
 
 class Z3PPObject:
   pass
@@ -17,7 +17,7 @@ class Context:
 def main_ctx() -> Context: ...
 
 class AstRef(Z3PPObject):
-  def __init__(self, ast: Z3_ast, ctx: Context = None): ...
+  def __init__(self, ast: Z3_ast, ctx: Optional[Context] = None): ...
   def as_ast(self) -> Z3_ast: ...
 
 def eq(a: AstRef, b: AstRef) -> bool: ...
