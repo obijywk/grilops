@@ -7,7 +7,7 @@ import sys
 from z3 import Implies, Or
 
 import grilops
-import grilops.loops
+import grilops.paths
 from grilops.geometry import Vector
 
 
@@ -33,14 +33,15 @@ def main():
     print()
 
   lattice = grilops.get_rectangle_lattice(len(givens), len(givens[0]))
-  sym = grilops.loops.LoopSymbolSet(lattice)
+  sym = grilops.paths.PathSymbolSet(lattice)
   sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(lattice, sym)
-  lc = grilops.loops.LoopConstrainer(sg, single_loop=True)
+  pc = grilops.paths.PathConstrainer(sg, allow_terminated_paths=False)
+  sg.solver.add(pc.num_paths == 1)
 
   # Choose a non-empty cell to have loop order zero, to speed up solving.
   p = min(p for p in lattice.points if givens[p.y][p.x] != e)
-  sg.solver.add(lc.loop_order_grid[p] == 0)
+  sg.solver.add(pc.path_order_grid[p] == 0)
 
   straights = [sym.NS, sym.EW]
   turns = [sym.NE, sym.SE, sym.SW, sym.NW]

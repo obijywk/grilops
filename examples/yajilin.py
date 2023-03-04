@@ -8,7 +8,7 @@ import sys
 from z3 import And, Implies, Not, PbEq
 
 import grilops
-import grilops.loops
+import grilops.paths
 from grilops.geometry import Point
 
 
@@ -55,12 +55,13 @@ def main():
   print()
 
   lattice = grilops.get_rectangle_lattice(HEIGHT, WIDTH)
-  sym = grilops.loops.LoopSymbolSet(lattice)
+  sym = grilops.paths.PathSymbolSet(lattice)
   sym.append("BLACK", chr(0x25AE))
   sym.append("GRAY", chr(0x25AF))
   sym.append("INDICATIVE", " ")
   sg = grilops.SymbolGrid(lattice, sym)
-  grilops.loops.LoopConstrainer(sg, single_loop=True)
+  pc = grilops.paths.PathConstrainer(sg, allow_terminated_paths=False)
+  sg.solver.add(pc.num_paths == 1)
 
   for y in range(HEIGHT):
     for x in range(WIDTH):

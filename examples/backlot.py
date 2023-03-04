@@ -5,10 +5,10 @@ This puzzle was part of the 2020 MIT Mystery Hunt.
 
 import sys
 from typing import Dict, List, Tuple
-from z3 import And, Distinct, If, Implies, Int, Or, PbEq, PbGe
+from z3 import And, Distinct, If, Implies, Int, Not, Or, PbEq, PbGe
 
 import grilops
-import grilops.loops
+import grilops.paths
 from grilops.geometry import Point, Vector
 
 
@@ -61,7 +61,7 @@ EXIT_DIRECTION_TO_EXTRACTS = {
 
 
 # Define the symbol set to use in the puzzle grid.
-SYM = grilops.loops.LoopSymbolSet(LATTICE)
+SYM = grilops.paths.PathSymbolSet(LATTICE)
 SYM.append("EMPTY", " ")
 DIRECTION_TO_SYMBOLS = {
     N: [SYM.NE, SYM.NS, SYM.NW],
@@ -82,6 +82,7 @@ def constrain_symbols(sg, start, end):
   """All symbols must fully connect to form a path (except at gates)."""
   for p in LATTICE.points:
     cell = sg.grid[p]
+    sg.solver.add(Not(SYM.is_terminal(cell)))
     for direction in [N, E, S, W]:
       np = p.translate(direction)
       ncell = sg.grid.get(np, None)
@@ -119,7 +120,7 @@ def constrain_path_order(sg, path_order_grid):
   for p in LATTICE.points:
     cell = sg.grid[p]
     po = path_order_grid[p]
-    sg.solver.add(If(SYM.is_loop(cell), po >= 0, po < 0))
+    sg.solver.add(If(SYM.is_path(cell), po >= 0, po < 0))
 
     npo = path_order_grid.get(p.translate(N), None)
     epo = path_order_grid.get(p.translate(E), None)

@@ -578,6 +578,19 @@ class _HexagonalLattice(Lattice):
     Raises:
       ValueError: If there's no character defined for the direction.
     """
+    labels = {
+      "N": chr(0x2595) + " \n  ",
+      "NE": " " + chr(0x2571) + "\n  ",
+      "E": " " + chr(0x2581) + "\n  ",
+      "SE": "  \n " + chr(0x2572),
+      "S": "  \n" + chr(0x2595) + " ",
+      "SW": "  \n" + chr(0x2571) + " ",
+      "W": chr(0x2581) + " \n  ",
+      "NW": chr(0x2572) + " \n  ",
+    }
+    label = labels.get(d.name, None)
+    if label is not None:
+      return label
     raise ValueError("No single-character symbol for direction")
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:

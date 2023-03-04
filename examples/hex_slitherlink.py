@@ -8,7 +8,6 @@ import sys
 from z3 import Int, PbEq
 
 import grilops
-import grilops.loops
 import grilops.regions
 from grilops.geometry import FlatToppedHexagonalLattice, Point
 

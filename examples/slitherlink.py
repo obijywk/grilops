@@ -6,7 +6,7 @@ Example puzzle can be found at https://en.wikipedia.org/wiki/Slitherlink.
 from z3 import And, If, Implies, Int, Or, PbEq
 
 import grilops
-import grilops.loops
+import grilops.paths
 import grilops.regions
 from grilops.geometry import Point
 
@@ -28,20 +28,21 @@ GIVENS = {
 }
 
 
-def loop_solve():
-  """Slitherlink solver example using loops."""
+def path_solve():
+  """Slitherlink solver example using paths."""
   # We'll place symbols at the intersections of the grid lines, rather than in
   # the spaces between the grid lines where the givens are written. This
   # requires increasing each dimension by one.
   lattice = grilops.get_rectangle_lattice(HEIGHT + 1, WIDTH + 1)
-  sym = grilops.loops.LoopSymbolSet(lattice)
+  sym = grilops.paths.PathSymbolSet(lattice)
   sym.append("EMPTY", " ")
   sg = grilops.SymbolGrid(lattice, sym)
-  grilops.loops.LoopConstrainer(sg, single_loop=True)
+  pc = grilops.paths.PathConstrainer(sg, allow_terminated_paths=False)
+  sg.solver.add(pc.num_paths == 1)
 
   for (y, x), c in GIVENS.items():
-    # For each side of this given location, add one if there's a loop edge
-    # along that side. We'll determine this by checking the kinds of loop
+    # For each side of this given location, add one if there's a path edge
+    # along that side. We'll determine this by checking the kinds of path
     # symbols in the north-west and south-east corners of this given location.
     terms = [
         # Check for east edge of north-west corner (given's north edge).
@@ -153,6 +154,6 @@ def region_solve():
 
 
 if __name__ == "__main__":
-  loop_solve()
+  path_solve()
   print()
   region_solve()

@@ -6,7 +6,7 @@ Example puzzle can be found at https://www.gmpuzzles.com/blog/2015/02/hex-masyu-
 from z3 import Implies, Or
 
 import grilops
-import grilops.loops
+import grilops.paths
 from grilops.geometry import Point, PointyToppedHexagonalLattice
 
 E, W, B = " ", chr(0x25e6), chr(0x2022)
@@ -50,6 +50,7 @@ def givens_row_col_to_point(r, c):
   x = 2 * c + 1 - num_givens
   return Point(y, x)
 
+# pylint: disable=R0914
 def main():
   """Masyu solver example."""
   lattice = PointyToppedHexagonalLattice([
@@ -58,10 +59,11 @@ def main():
       for c in range(len(GIVENS[r]))
   ])
   directions = {d.name: d for d in lattice.edge_sharing_directions()}
-  sym = grilops.loops.LoopSymbolSet(lattice)
+  sym = grilops.paths.PathSymbolSet(lattice)
   sym.append("EMPTY", ". \n  ")
   sg = grilops.SymbolGrid(lattice, sym)
-  grilops.loops.LoopConstrainer(sg, single_loop=True)
+  pc = grilops.paths.PathConstrainer(sg, allow_terminated_paths=False)
+  sg.solver.add(pc.num_paths == 1)
 
   turns = [sym.NESE, sym.ESW, sym.WSE, sym.NWSW, sym.WNE, sym.ENW]
 

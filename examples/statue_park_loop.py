@@ -8,7 +8,7 @@ import sys
 from z3 import And, Implies
 
 import grilops
-import grilops.loops
+import grilops.paths
 from grilops.geometry import Point, RectangularLattice, Vector
 from grilops.shapes import Shape, ShapeConstrainer
 
@@ -48,11 +48,12 @@ def main():
         points.append(Point(y, x))
   lattice = RectangularLattice(points)
 
-  sym = grilops.loops.LoopSymbolSet(lattice)
+  sym = grilops.paths.PathSymbolSet(lattice)
   sym.append("EMPTY", " ")
 
   sg = grilops.SymbolGrid(lattice, sym)
-  grilops.loops.LoopConstrainer(sg, single_loop=True)
+  pc = grilops.paths.PathConstrainer(sg, allow_terminated_paths=False)
+  sg.solver.add(pc.num_paths == 1)
   sc = ShapeConstrainer(
       lattice,
       [Shape([Vector(y, x) for y, x in shape]) for shape in SHAPES],
@@ -65,14 +66,14 @@ def main():
   for p in points:
     if GIVENS[p.y][p.x] == W:
       # White circles must be part of the loop.
-      sg.solver.add(sym.is_loop(sg.grid[p]))
+      sg.solver.add(sym.is_path(sg.grid[p]))
     elif GIVENS[p.y][p.x] == B:
       # Black circles must be part of a shape.
       sg.solver.add(sc.shape_type_grid[p] != -1)
 
     # A cell is part of the loop if and only if it is not part of
     # any shape.
-    sg.solver.add(sym.is_loop(sg.grid[p]) == (sc.shape_type_grid[p] == -1))
+    sg.solver.add(sym.is_path(sg.grid[p]) == (sc.shape_type_grid[p] == -1))
 
     # Orthogonally-adjacent cells must be part of the same shape.
     for n in sg.edge_sharing_neighbors(p):
