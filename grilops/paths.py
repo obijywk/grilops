@@ -2,9 +2,9 @@
 
 import itertools
 from collections import defaultdict
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 from z3 import (
-    And, ArithRef, BoolRef, Implies, Int, Not, Or
+    And, ArithRef, BoolRef, If, Implies, Int, Not, Or, Sum
 )
 
 
@@ -149,6 +149,7 @@ class PathConstrainer:
     self.__complete = complete
     self.__allow_terminated_paths = allow_terminated_paths
     self.__allow_loops = allow_loops
+    self.__num_paths: Optional[ArithRef] = None
 
     self.__path_instance_grid: Dict[Point, ArithRef] = {
       p: Int(f"pcpi-{PathConstrainer._instance_index}-{p.y}-{p.x}")
@@ -282,6 +283,16 @@ class PathConstrainer:
       for cell in self.__symbol_grid.grid.values():
         self.__symbol_grid.solver.add(
           Not(self.__symbol_grid.symbol_set.is_terminal(cell)))
+
+  @property
+  def num_paths(self) -> ArithRef:
+    """A constant representing the number of distinct paths found."""
+    if self.__num_paths is None:
+      self.__num_paths = Sum(*[
+        If(self.__path_order_grid[p] == 0, 1, 0)
+        for p in self.__symbol_grid.lattice.points
+      ])
+    return self.__num_paths
 
   @property
   def path_instance_grid(self) -> Dict[Point, ArithRef]:
