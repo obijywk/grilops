@@ -4,7 +4,7 @@ import itertools
 from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 from z3 import (
-    And, ArithRef, BoolRef, Implies, Int, Or
+    And, ArithRef, BoolRef, Implies, Int, Not, Or
 )
 
 
@@ -130,6 +130,9 @@ class PathConstrainer:
     symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
     complete (bool): If true, every cell must be part of a path.
       Defaults to false.
+    allow_terminated_paths (bool): If true, finds paths that are terminated
+      (not loops). Defaults to true.
+    allow_loops (bool): If true, finds paths that are loops. Defaults to true.
   """
   _instance_index = 0
 
@@ -137,11 +140,15 @@ class PathConstrainer:
       self,
       symbol_grid: SymbolGrid,
       complete: bool = False,
+      allow_terminated_paths: bool = True,
+      allow_loops: bool = True,
   ):
     PathConstrainer._instance_index += 1
 
     self.__symbol_grid = symbol_grid
     self.__complete = complete
+    self.__allow_terminated_paths = allow_terminated_paths
+    self.__allow_loops = allow_loops
 
     self.__path_instance_grid: Dict[Point, ArithRef] = {
       p: Int(f"pcpi-{PathConstrainer._instance_index}-{p.y}-{p.x}")
@@ -155,6 +162,7 @@ class PathConstrainer:
     self.__add_path_edge_constraints()
     self.__add_path_instance_grid_constraints()
     self.__add_path_order_grid_constraints()
+    self.__add_allow_terminated_paths_constraints()
 
   def __add_path_edge_constraints(self):
     solver = self.__symbol_grid.solver
@@ -256,18 +264,24 @@ class PathConstrainer:
                 self.__path_order_grid[pi] == po - 1,
                 Or(
                   self.__path_order_grid[pj] == po + 1,
-                  self.__path_order_grid[pj] == 0
+                  self.__path_order_grid[pj] == 0 if self.__allow_loops else False
                 )
               ),
               And(
                 Or(
                   self.__path_order_grid[pi] == po + 1,
-                  self.__path_order_grid[pi] == 0
+                  self.__path_order_grid[pi] == 0 if self.__allow_loops else False
                 ),
                 self.__path_order_grid[pj] == po - 1
               ),
             )
           ))
+
+  def __add_allow_terminated_paths_constraints(self):
+    if not self.__allow_terminated_paths:
+      for cell in self.__symbol_grid.grid.values():
+        self.__symbol_grid.solver.add(
+          Not(self.__symbol_grid.symbol_set.is_terminal(cell)))
 
   @property
   def path_instance_grid(self) -> Dict[Point, ArithRef]:
