@@ -1,4 +1,10 @@
-"""This module supports puzzles where closed loops are filled into a grid."""
+"""This module supports puzzles where closed loops are filled into a grid.
+
+Prefer to use the `grilops.paths` module instead of this module in new
+code. The paths module implements a more general approach to path modeling
+which supports both closed loops and open ("terminated") paths.
+
+"""
 
 import itertools
 from collections import defaultdict

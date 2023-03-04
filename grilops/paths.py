@@ -1,4 +1,7 @@
-"""This module supports puzzles where paths are filled into the grid."""
+"""This module supports puzzles where paths are filled into the grid.
+
+These paths may be either closed (loops) or open ("terminated" paths).
+"""
 
 import itertools
 from collections import defaultdict
@@ -50,7 +53,7 @@ class PathSymbolSet(SymbolSet):
       self.__max_path_terminal_symbol_index = idx
 
   def is_path(self, symbol: ArithRef) -> BoolRef:
-    """Returns true if #symbol represents part of a path.
+    """Returns true if the given symbol represents part of a path.
 
     Args:
       symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -61,7 +64,7 @@ class PathSymbolSet(SymbolSet):
     return symbol < self.__max_path_terminal_symbol_index + 1
 
   def is_path_segment(self, symbol: ArithRef) -> BoolRef:
-    """Returns true if #symbol represents a non-terminal path segment.
+    """Returns true if the given symbol represents a non-terminal path segment.
 
     Args:
       symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -72,7 +75,7 @@ class PathSymbolSet(SymbolSet):
     return symbol < self.__max_path_segment_symbol_index + 1
 
   def is_terminal(self, symbol: ArithRef) -> BoolRef:
-    """Returns true if #symbol represents a path terminal.
+    """Returns true if the given symbol represents a path terminal.
 
     Args:
       symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -307,8 +310,8 @@ class PathConstrainer:
   def path_order_grid(self) -> Dict[Point, ArithRef]:
     """Constants of path traversal orders.
 
-    Each segment of a path will have a distinct order number. The order number
-    is -1 if the cell does not contain a path segment or terminal.
+    Each segment or terminal of a path will have a distinct order number. The
+    order number is -1 if the cell does not contain a path segment or terminal.
     """
     return self.__path_order_grid
 

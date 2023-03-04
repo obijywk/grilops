@@ -65,27 +65,25 @@ be used when adding puzzle-specific constraints. In addition, grilops provides
 several modules to help automate and abstract away the introduction of common
 kinds of constraints.
 
-### Loops
+### Paths
 
-The `grilops.loops` module is helpful for adding constraints that ensure symbols
-connect to form closed loops. Some examples of puzzle types for which this is
-useful are [Masyu](https://en.wikipedia.org/wiki/Masyu) and
-[Slitherlink](https://en.wikipedia.org/wiki/Slitherlink).
+The `grilops.paths` module is helpful for adding constraints that ensure
+symbols connect to form paths through the grid. These paths may be either
+closed (loops) or open ("terminated" paths). Some examples of puzzle types for
+which this is useful are [Numberlink](https://en.wikipedia.org/wiki/Numberlink)
+and [Slitherlink](https://en.wikipedia.org/wiki/Slitherlink).
 
 ~~~~
-$ python3 examples/masyu.py             $ python3 examples/slitherlink.py 
- ┌───┐┌──┐                              ┌──┐                              
-┌┘ ┌─┘└─┐│                              │┌┐│ ┌┐                           
-└─┐│┌──┐││                              └┘│└┐││                           
-  │││┌─┘││                                │ └┘│                           
-┌─┘└┘│ ┌┘│                                └┐  │                           
-│┌──┐│ │┌┘                              ┌──┘┌┐│                           
-││┌─┘└─┘└┐                              └───┘└┘                           
-│││ ┌───┐│                                                                
-└┘│ │┌──┘│                              Unique solution
-  └─┘└───┘
+$ python3 examples/numberlink.py        $ python3 examples/slitherlink.py
+┌─┐4──┐                                 ┌──┐
+│3└─25│                                 │┌┐│ ┌┐
+│└─31││                                 └┘│└┐││
+│┌─5│││                                   │ └┘│
+││┌─┘││                                   └┐  │
+││1┌─┘│                                 ┌──┘┌┐│
+2└─┘4─┘                                 └───┘└┘
 
-Unique solution
+Unique solution                         Unique solution
 ~~~~
 
 ### Regions
