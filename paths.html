@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>grilops.paths API documentation</title>
+<meta name="description" content="This module supports puzzles where paths are filled into the grid …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>grilops.paths</code></h1>
+</header>
+<section id="section-intro">
+<p>This module supports puzzles where paths are filled into the grid.</p>
+<p>These paths may be either closed (loops) or open ("terminated" paths).</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module supports puzzles where paths are filled into the grid.
+
+These paths may be either closed (loops) or open (&#34;terminated&#34; paths).
+&#34;&#34;&#34;
+
+import itertools
+from collections import defaultdict
+from typing import Dict, Iterable, List, Optional, Tuple
+from z3 import (
+    And, ArithRef, BoolRef, If, Implies, Int, Not, Or, Sum
+)
+
+
+from .geometry import Direction, Lattice, Point
+from .grids import SymbolGrid
+from .symbols import SymbolSet
+
+
+class PathSymbolSet(SymbolSet):
+  &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form paths.
+
+  Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
+  space) may be added to this `grilops.symbols.SymbolSet` by calling
+  `grilops.symbols.SymbolSet.append` after it&#39;s constructed.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+  &#34;&#34;&#34;
+
+  def __init__(self, lattice: Lattice):
+    super().__init__([])
+
+    self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
+    self.__terminal_for_direction: Dict[Direction, int] = {}
+
+    dirs = lattice.edge_sharing_directions()
+
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
+      lbl = lattice.label_for_direction_pair(di, dj)
+      self.append(di.name + dj.name, lbl)
+      self.__symbols_for_direction[di].append(idx)
+      self.__symbols_for_direction[dj].append(idx)
+      self.__symbol_for_direction_pair[(di, dj)] = idx
+      self.__symbol_for_direction_pair[(dj, di)] = idx
+      self.__max_path_segment_symbol_index = idx
+
+    for d in dirs:
+      self.append(d.name, lattice.label_for_direction(d))
+      idx = self.max_index()
+      self.__symbols_for_direction[d].append(idx)
+      self.__terminal_for_direction[d] = idx
+      self.__max_path_terminal_symbol_index = idx
+
+  def is_path(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents part of a path.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents part of a path.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_path_terminal_symbol_index + 1
+
+  def is_path_segment(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents a non-terminal path segment.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents a non-terminal path segment.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_path_segment_symbol_index + 1
+
+  def is_terminal(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents a path terminal.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents a path terminal
+    &#34;&#34;&#34;
+    return And(
+      symbol &gt; self.__max_path_segment_symbol_index,
+      symbol &lt; self.__max_path_terminal_symbol_index + 1
+    )
+
+  def symbols_for_direction(self, d: Direction) -&gt; List[int]:
+    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+    Args:
+      d (grilops.geometry.Direction): The given direction.
+
+    Returns:
+      A `List[int]` of symbol indices corresponding to symbols with one arm
+      going in the given direction.
+    &#34;&#34;&#34;
+    return self.__symbols_for_direction[d]
+
+  def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+    Args:
+      d1 (grilops.geometry.Direction): The first given direction.
+      d2 (grilops.geometry.Direction): The second given direction.
+
+    Returns:
+      The symbol index for the symbol with one arm going in each of the two
+      given directions.
+    &#34;&#34;&#34;
+    return self.__symbol_for_direction_pair[(d1, d2)]
+
+  def terminal_for_direction(self, d: Direction) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol that terminates the path from the given direction.
+
+    Args:
+      d (grilops.geometry.Direction): The given direction.
+
+    Returns:
+      The symbol index for the symbol that terminates the path from the given
+      direction.
+    &#34;&#34;&#34;
+    return self.__terminal_for_direction[d]
+
+
+class PathConstrainer:
+  &#34;&#34;&#34;Creates constraints for ensuring symbols form connected paths.
+
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
+    complete (bool): If true, every cell must be part of a path.
+      Defaults to false.
+    allow_terminated_paths (bool): If true, finds paths that are terminated
+      (not loops). Defaults to true.
+    allow_loops (bool): If true, finds paths that are loops. Defaults to true.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      symbol_grid: SymbolGrid,
+      complete: bool = False,
+      allow_terminated_paths: bool = True,
+      allow_loops: bool = True,
+  ):
+    PathConstrainer._instance_index += 1
+
+    self.__symbol_grid = symbol_grid
+    self.__complete = complete
+    self.__allow_terminated_paths = allow_terminated_paths
+    self.__allow_loops = allow_loops
+    self.__num_paths: Optional[ArithRef] = None
+
+    self.__path_instance_grid: Dict[Point, ArithRef] = {
+      p: Int(f&#34;pcpi-{PathConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      for p in self.__symbol_grid.grid.keys()
+    }
+    self.__path_order_grid: Dict[Point, ArithRef] = {
+      p: Int(f&#34;pcpo-{PathConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      for p in self.__symbol_grid.grid.keys()
+    }
+
+    self.__add_path_edge_constraints()
+    self.__add_path_instance_grid_constraints()
+    self.__add_path_order_grid_constraints()
+    self.__add_allow_terminated_paths_constraints()
+
+  def __add_path_edge_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, cell in self.__symbol_grid.grid.items():
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        np = p.translate(d.vector)
+        dir_syms = sym.symbols_for_direction(d)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          opposite_syms = sym.symbols_for_direction(
+            self.__symbol_grid.lattice.opposite_direction(d))
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
+          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
+        else:
+          for s in dir_syms:
+            solver.add(cell != s)
+
+  def __add_path_instance_grid_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, pi in self.__path_instance_grid.items():
+      if self.__complete:
+        solver.add(pi &gt;= 0)
+      else:
+        solver.add(pi &gt;= -1)
+      solver.add(pi &lt; len(self.__symbol_grid.grid))
+
+      cell = self.__symbol_grid.grid[p]
+      solver.add(sym.is_path(cell) == (pi != -1))
+      solver.add(
+        (self.__path_order_grid[p] == 0) ==
+        (pi == self.__symbol_grid.lattice.point_to_index(p))
+      )
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        dir_syms = sym.symbols_for_direction(d)
+        np = p.translate(d.vector)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          solver.add(
+            Implies(
+              cell_points_dir,
+              pi == self.__path_instance_grid[np]
+            )
+          )
+
+  def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Direction, Direction]]:
+    dirs = self.__symbol_grid.lattice.edge_sharing_directions()
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
+      yield (idx, di, dj)
+
+  def __add_path_order_grid_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, po in self.__path_order_grid.items():
+      if self.__complete:
+        solver.add(po &gt;= 0)
+      else:
+        solver.add(po &gt;= -1)
+
+      cell = self.__symbol_grid.grid[p]
+      solver.add(sym.is_path(cell) == (po != -1))
+
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        s = sym.terminal_for_direction(d)
+        np = p.translate(d.vector)
+        if np in self.__path_order_grid:
+          solver.add(Implies(
+            cell == s,
+            Or(
+              And(
+                self.__path_order_grid[p] == 0,
+                self.__path_order_grid[np] == 1
+              ),
+              And(
+                self.__path_order_grid[p] &gt; 0,
+                self.__path_order_grid[np] == self.__path_order_grid[p] - 1
+              )
+            )
+          ))
+
+      for idx, d1, d2 in self.__all_direction_pairs():
+        pi = p.translate(d1.vector)
+        pj = p.translate(d2.vector)
+        if pi in self.__path_order_grid and pj in self.__path_order_grid:
+          solver.add(Implies(
+            cell == idx,
+            self.__path_order_grid[pi] != self.__path_order_grid[pj]
+          ))
+          solver.add(Implies(
+            And(cell == idx, po &gt; 0),
+            Or(
+              And(
+                self.__path_order_grid[pi] == po - 1,
+                Or(
+                  self.__path_order_grid[pj] == po + 1,
+                  self.__path_order_grid[pj] == 0 if self.__allow_loops else False
+                )
+              ),
+              And(
+                Or(
+                  self.__path_order_grid[pi] == po + 1,
+                  self.__path_order_grid[pi] == 0 if self.__allow_loops else False
+                ),
+                self.__path_order_grid[pj] == po - 1
+              ),
+            )
+          ))
+
+  def __add_allow_terminated_paths_constraints(self):
+    if not self.__allow_terminated_paths:
+      for cell in self.__symbol_grid.grid.values():
+        self.__symbol_grid.solver.add(
+          Not(self.__symbol_grid.symbol_set.is_terminal(cell)))
+
+  @property
+  def num_paths(self) -&gt; ArithRef:
+    &#34;&#34;&#34;A constant representing the number of distinct paths found.&#34;&#34;&#34;
+    if self.__num_paths is None:
+      self.__num_paths = Sum(*[
+        If(self.__path_order_grid[p] == 0, 1, 0)
+        for p in self.__symbol_grid.lattice.points
+      ])
+    return self.__num_paths
+
+  @property
+  def path_instance_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of path instance identification.
+
+    Each separate path will have a distinct instance number. The instance number
+    is -1 if the cell does not contain a path segment or terminal.
+    &#34;&#34;&#34;
+    return self.__path_instance_grid
+
+  @property
+  def path_order_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of path traversal orders.
+
+    Each segment or terminal of a path will have a distinct order number. The
+    order number is -1 if the cell does not contain a path segment or terminal.
+    &#34;&#34;&#34;
+    return self.__path_order_grid
+
+  def print_path_numbering(self):
+    &#34;&#34;&#34;Prints the path instance and order for each path cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__symbol_grid.solver.model()
+    def print_function(p):
+      pi = model.eval(self.__path_instance_grid[p]).as_long()
+      po = model.eval(self.__path_order_grid[p]).as_long()
+      if pi == -1:
+        return &#34;    &#34;
+      return f&#34;{chr(pi+65)}{po:02} &#34;
+
+    self.__symbol_grid.lattice.print(print_function, &#34;    &#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="grilops.paths.PathConstrainer"><code class="flex name class">
+<span>class <span class="ident">PathConstrainer</span></span>
+<span>(</span><span>symbol_grid: <a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a>, complete: bool = False, allow_terminated_paths: bool = True, allow_loops: bool = True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates constraints for ensuring symbols form connected paths.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol_grid</code></strong> :&ensp;<code><a title="grilops.grids.SymbolGrid" href="grids.html#grilops.grids.SymbolGrid">SymbolGrid</a></code></dt>
+<dd>The grid to constrain.</dd>
+<dt><strong><code>complete</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, every cell must be part of a path.
+Defaults to false.</dd>
+<dt><strong><code>allow_terminated_paths</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, finds paths that are terminated
+(not loops). Defaults to true.</dd>
+<dt><strong><code>allow_loops</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, finds paths that are loops. Defaults to true.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PathConstrainer:
+  &#34;&#34;&#34;Creates constraints for ensuring symbols form connected paths.
+
+  Args:
+    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
+    complete (bool): If true, every cell must be part of a path.
+      Defaults to false.
+    allow_terminated_paths (bool): If true, finds paths that are terminated
+      (not loops). Defaults to true.
+    allow_loops (bool): If true, finds paths that are loops. Defaults to true.
+  &#34;&#34;&#34;
+  _instance_index = 0
+
+  def __init__(
+      self,
+      symbol_grid: SymbolGrid,
+      complete: bool = False,
+      allow_terminated_paths: bool = True,
+      allow_loops: bool = True,
+  ):
+    PathConstrainer._instance_index += 1
+
+    self.__symbol_grid = symbol_grid
+    self.__complete = complete
+    self.__allow_terminated_paths = allow_terminated_paths
+    self.__allow_loops = allow_loops
+    self.__num_paths: Optional[ArithRef] = None
+
+    self.__path_instance_grid: Dict[Point, ArithRef] = {
+      p: Int(f&#34;pcpi-{PathConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      for p in self.__symbol_grid.grid.keys()
+    }
+    self.__path_order_grid: Dict[Point, ArithRef] = {
+      p: Int(f&#34;pcpo-{PathConstrainer._instance_index}-{p.y}-{p.x}&#34;)
+      for p in self.__symbol_grid.grid.keys()
+    }
+
+    self.__add_path_edge_constraints()
+    self.__add_path_instance_grid_constraints()
+    self.__add_path_order_grid_constraints()
+    self.__add_allow_terminated_paths_constraints()
+
+  def __add_path_edge_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, cell in self.__symbol_grid.grid.items():
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        np = p.translate(d.vector)
+        dir_syms = sym.symbols_for_direction(d)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          opposite_syms = sym.symbols_for_direction(
+            self.__symbol_grid.lattice.opposite_direction(d))
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
+          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
+        else:
+          for s in dir_syms:
+            solver.add(cell != s)
+
+  def __add_path_instance_grid_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, pi in self.__path_instance_grid.items():
+      if self.__complete:
+        solver.add(pi &gt;= 0)
+      else:
+        solver.add(pi &gt;= -1)
+      solver.add(pi &lt; len(self.__symbol_grid.grid))
+
+      cell = self.__symbol_grid.grid[p]
+      solver.add(sym.is_path(cell) == (pi != -1))
+      solver.add(
+        (self.__path_order_grid[p] == 0) ==
+        (pi == self.__symbol_grid.lattice.point_to_index(p))
+      )
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        dir_syms = sym.symbols_for_direction(d)
+        np = p.translate(d.vector)
+        ncell = self.__symbol_grid.grid.get(np, None)
+        if ncell is not None:
+          cell_points_dir = Or(*[cell == s for s in dir_syms])
+          solver.add(
+            Implies(
+              cell_points_dir,
+              pi == self.__path_instance_grid[np]
+            )
+          )
+
+  def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Direction, Direction]]:
+    dirs = self.__symbol_grid.lattice.edge_sharing_directions()
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
+      yield (idx, di, dj)
+
+  def __add_path_order_grid_constraints(self):
+    solver = self.__symbol_grid.solver
+    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+
+    for p, po in self.__path_order_grid.items():
+      if self.__complete:
+        solver.add(po &gt;= 0)
+      else:
+        solver.add(po &gt;= -1)
+
+      cell = self.__symbol_grid.grid[p]
+      solver.add(sym.is_path(cell) == (po != -1))
+
+      for d in self.__symbol_grid.lattice.edge_sharing_directions():
+        s = sym.terminal_for_direction(d)
+        np = p.translate(d.vector)
+        if np in self.__path_order_grid:
+          solver.add(Implies(
+            cell == s,
+            Or(
+              And(
+                self.__path_order_grid[p] == 0,
+                self.__path_order_grid[np] == 1
+              ),
+              And(
+                self.__path_order_grid[p] &gt; 0,
+                self.__path_order_grid[np] == self.__path_order_grid[p] - 1
+              )
+            )
+          ))
+
+      for idx, d1, d2 in self.__all_direction_pairs():
+        pi = p.translate(d1.vector)
+        pj = p.translate(d2.vector)
+        if pi in self.__path_order_grid and pj in self.__path_order_grid:
+          solver.add(Implies(
+            cell == idx,
+            self.__path_order_grid[pi] != self.__path_order_grid[pj]
+          ))
+          solver.add(Implies(
+            And(cell == idx, po &gt; 0),
+            Or(
+              And(
+                self.__path_order_grid[pi] == po - 1,
+                Or(
+                  self.__path_order_grid[pj] == po + 1,
+                  self.__path_order_grid[pj] == 0 if self.__allow_loops else False
+                )
+              ),
+              And(
+                Or(
+                  self.__path_order_grid[pi] == po + 1,
+                  self.__path_order_grid[pi] == 0 if self.__allow_loops else False
+                ),
+                self.__path_order_grid[pj] == po - 1
+              ),
+            )
+          ))
+
+  def __add_allow_terminated_paths_constraints(self):
+    if not self.__allow_terminated_paths:
+      for cell in self.__symbol_grid.grid.values():
+        self.__symbol_grid.solver.add(
+          Not(self.__symbol_grid.symbol_set.is_terminal(cell)))
+
+  @property
+  def num_paths(self) -&gt; ArithRef:
+    &#34;&#34;&#34;A constant representing the number of distinct paths found.&#34;&#34;&#34;
+    if self.__num_paths is None:
+      self.__num_paths = Sum(*[
+        If(self.__path_order_grid[p] == 0, 1, 0)
+        for p in self.__symbol_grid.lattice.points
+      ])
+    return self.__num_paths
+
+  @property
+  def path_instance_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of path instance identification.
+
+    Each separate path will have a distinct instance number. The instance number
+    is -1 if the cell does not contain a path segment or terminal.
+    &#34;&#34;&#34;
+    return self.__path_instance_grid
+
+  @property
+  def path_order_grid(self) -&gt; Dict[Point, ArithRef]:
+    &#34;&#34;&#34;Constants of path traversal orders.
+
+    Each segment or terminal of a path will have a distinct order number. The
+    order number is -1 if the cell does not contain a path segment or terminal.
+    &#34;&#34;&#34;
+    return self.__path_order_grid
+
+  def print_path_numbering(self):
+    &#34;&#34;&#34;Prints the path instance and order for each path cell.
+
+    Should be called only after the solver has been checked.
+    &#34;&#34;&#34;
+    model = self.__symbol_grid.solver.model()
+    def print_function(p):
+      pi = model.eval(self.__path_instance_grid[p]).as_long()
+      po = model.eval(self.__path_order_grid[p]).as_long()
+      if pi == -1:
+        return &#34;    &#34;
+      return f&#34;{chr(pi+65)}{po:02} &#34;
+
+    self.__symbol_grid.lattice.print(print_function, &#34;    &#34;)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="grilops.paths.PathConstrainer.num_paths"><code class="name">var <span class="ident">num_paths</span> : z3.z3.ArithRef</code></dt>
+<dd>
+<div class="desc"><p>A constant representing the number of distinct paths found.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def num_paths(self) -&gt; ArithRef:
+  &#34;&#34;&#34;A constant representing the number of distinct paths found.&#34;&#34;&#34;
+  if self.__num_paths is None:
+    self.__num_paths = Sum(*[
+      If(self.__path_order_grid[p] == 0, 1, 0)
+      for p in self.__symbol_grid.lattice.points
+    ])
+  return self.__num_paths</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathConstrainer.path_instance_grid"><code class="name">var <span class="ident">path_instance_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>Constants of path instance identification.</p>
+<p>Each separate path will have a distinct instance number. The instance number
+is -1 if the cell does not contain a path segment or terminal.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def path_instance_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;Constants of path instance identification.
+
+  Each separate path will have a distinct instance number. The instance number
+  is -1 if the cell does not contain a path segment or terminal.
+  &#34;&#34;&#34;
+  return self.__path_instance_grid</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathConstrainer.path_order_grid"><code class="name">var <span class="ident">path_order_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
+<dd>
+<div class="desc"><p>Constants of path traversal orders.</p>
+<p>Each segment or terminal of a path will have a distinct order number. The
+order number is -1 if the cell does not contain a path segment or terminal.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def path_order_grid(self) -&gt; Dict[Point, ArithRef]:
+  &#34;&#34;&#34;Constants of path traversal orders.
+
+  Each segment or terminal of a path will have a distinct order number. The
+  order number is -1 if the cell does not contain a path segment or terminal.
+  &#34;&#34;&#34;
+  return self.__path_order_grid</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.paths.PathConstrainer.print_path_numbering"><code class="name flex">
+<span>def <span class="ident">print_path_numbering</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the path instance and order for each path cell.</p>
+<p>Should be called only after the solver has been checked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_path_numbering(self):
+  &#34;&#34;&#34;Prints the path instance and order for each path cell.
+
+  Should be called only after the solver has been checked.
+  &#34;&#34;&#34;
+  model = self.__symbol_grid.solver.model()
+  def print_function(p):
+    pi = model.eval(self.__path_instance_grid[p]).as_long()
+    po = model.eval(self.__path_order_grid[p]).as_long()
+    if pi == -1:
+      return &#34;    &#34;
+    return f&#34;{chr(pi+65)}{po:02} &#34;
+
+  self.__symbol_grid.lattice.print(print_function, &#34;    &#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="grilops.paths.PathSymbolSet"><code class="flex name class">
+<span>class <span class="ident">PathSymbolSet</span></span>
+<span>(</span><span>lattice: <a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A <code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code> consisting of symbols that may form paths.</p>
+<p>Additional symbols (e.g. a <code><a title="grilops.symbols.Symbol" href="symbols.html#grilops.symbols.Symbol">Symbol</a></code> representing an empty
+space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></code> by calling
+<code><a title="grilops.symbols.SymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">SymbolSet.append()</a></code> after it's constructed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lattice</code></strong> :&ensp;<code><a title="grilops.geometry.Lattice" href="geometry.html#grilops.geometry.Lattice">Lattice</a></code></dt>
+<dd>The structure of the grid.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PathSymbolSet(SymbolSet):
+  &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form paths.
+
+  Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
+  space) may be added to this `grilops.symbols.SymbolSet` by calling
+  `grilops.symbols.SymbolSet.append` after it&#39;s constructed.
+
+  Args:
+    lattice (grilops.geometry.Lattice): The structure of the grid.
+  &#34;&#34;&#34;
+
+  def __init__(self, lattice: Lattice):
+    super().__init__([])
+
+    self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
+    self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
+    self.__terminal_for_direction: Dict[Direction, int] = {}
+
+    dirs = lattice.edge_sharing_directions()
+
+    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
+      lbl = lattice.label_for_direction_pair(di, dj)
+      self.append(di.name + dj.name, lbl)
+      self.__symbols_for_direction[di].append(idx)
+      self.__symbols_for_direction[dj].append(idx)
+      self.__symbol_for_direction_pair[(di, dj)] = idx
+      self.__symbol_for_direction_pair[(dj, di)] = idx
+      self.__max_path_segment_symbol_index = idx
+
+    for d in dirs:
+      self.append(d.name, lattice.label_for_direction(d))
+      idx = self.max_index()
+      self.__symbols_for_direction[d].append(idx)
+      self.__terminal_for_direction[d] = idx
+      self.__max_path_terminal_symbol_index = idx
+
+  def is_path(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents part of a path.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents part of a path.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_path_terminal_symbol_index + 1
+
+  def is_path_segment(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents a non-terminal path segment.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents a non-terminal path segment.
+    &#34;&#34;&#34;
+    return symbol &lt; self.__max_path_segment_symbol_index + 1
+
+  def is_terminal(self, symbol: ArithRef) -&gt; BoolRef:
+    &#34;&#34;&#34;Returns true if the given symbol represents a path terminal.
+
+    Args:
+      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+    Returns:
+      A true `BoolRef` if the symbol represents a path terminal
+    &#34;&#34;&#34;
+    return And(
+      symbol &gt; self.__max_path_segment_symbol_index,
+      symbol &lt; self.__max_path_terminal_symbol_index + 1
+    )
+
+  def symbols_for_direction(self, d: Direction) -&gt; List[int]:
+    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+    Args:
+      d (grilops.geometry.Direction): The given direction.
+
+    Returns:
+      A `List[int]` of symbol indices corresponding to symbols with one arm
+      going in the given direction.
+    &#34;&#34;&#34;
+    return self.__symbols_for_direction[d]
+
+  def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+    Args:
+      d1 (grilops.geometry.Direction): The first given direction.
+      d2 (grilops.geometry.Direction): The second given direction.
+
+    Returns:
+      The symbol index for the symbol with one arm going in each of the two
+      given directions.
+    &#34;&#34;&#34;
+    return self.__symbol_for_direction_pair[(d1, d2)]
+
+  def terminal_for_direction(self, d: Direction) -&gt; int:
+    &#34;&#34;&#34;Returns the symbol that terminates the path from the given direction.
+
+    Args:
+      d (grilops.geometry.Direction): The given direction.
+
+    Returns:
+      The symbol index for the symbol that terminates the path from the given
+      direction.
+    &#34;&#34;&#34;
+    return self.__terminal_for_direction[d]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="grilops.paths.PathSymbolSet.is_path"><code class="name flex">
+<span>def <span class="ident">is_path</span></span>(<span>self, symbol: z3.z3.ArithRef) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if the given symbol represents part of a path.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>ArithRef</code></dt>
+<dd>An <code>ArithRef</code> expression representing a symbol.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A true <code>BoolRef</code> if the symbol represents part of a path.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_path(self, symbol: ArithRef) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns true if the given symbol represents part of a path.
+
+  Args:
+    symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+  Returns:
+    A true `BoolRef` if the symbol represents part of a path.
+  &#34;&#34;&#34;
+  return symbol &lt; self.__max_path_terminal_symbol_index + 1</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathSymbolSet.is_path_segment"><code class="name flex">
+<span>def <span class="ident">is_path_segment</span></span>(<span>self, symbol: z3.z3.ArithRef) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if the given symbol represents a non-terminal path segment.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>ArithRef</code></dt>
+<dd>An <code>ArithRef</code> expression representing a symbol.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A true <code>BoolRef</code> if the symbol represents a non-terminal path segment.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_path_segment(self, symbol: ArithRef) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns true if the given symbol represents a non-terminal path segment.
+
+  Args:
+    symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+  Returns:
+    A true `BoolRef` if the symbol represents a non-terminal path segment.
+  &#34;&#34;&#34;
+  return symbol &lt; self.__max_path_segment_symbol_index + 1</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathSymbolSet.is_terminal"><code class="name flex">
+<span>def <span class="ident">is_terminal</span></span>(<span>self, symbol: z3.z3.ArithRef) ‑> z3.z3.BoolRef</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns true if the given symbol represents a path terminal.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>ArithRef</code></dt>
+<dd>An <code>ArithRef</code> expression representing a symbol.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A true <code>BoolRef</code> if the symbol represents a path terminal</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_terminal(self, symbol: ArithRef) -&gt; BoolRef:
+  &#34;&#34;&#34;Returns true if the given symbol represents a path terminal.
+
+  Args:
+    symbol (ArithRef): An `ArithRef` expression representing a symbol.
+
+  Returns:
+    A true `BoolRef` if the symbol represents a path terminal
+  &#34;&#34;&#34;
+  return And(
+    symbol &gt; self.__max_path_segment_symbol_index,
+    symbol &lt; self.__max_path_terminal_symbol_index + 1
+  )</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathSymbolSet.symbol_for_direction_pair"><code class="name flex">
+<span>def <span class="ident">symbol_for_direction_pair</span></span>(<span>self, d1: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, d2: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the symbol with arms going in the two given directions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d1</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The first given direction.</dd>
+<dt><strong><code>d2</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The second given direction.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The symbol index for the symbol with one arm going in each of the two
+given directions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
+  &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
+
+  Args:
+    d1 (grilops.geometry.Direction): The first given direction.
+    d2 (grilops.geometry.Direction): The second given direction.
+
+  Returns:
+    The symbol index for the symbol with one arm going in each of the two
+    given directions.
+  &#34;&#34;&#34;
+  return self.__symbol_for_direction_pair[(d1, d2)]</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathSymbolSet.symbols_for_direction"><code class="name flex">
+<span>def <span class="ident">symbols_for_direction</span></span>(<span>self, d: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> List[int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the symbols with one arm going in the given direction.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The given direction.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A <code>List[int]</code> of symbol indices corresponding to symbols with one arm
+going in the given direction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def symbols_for_direction(self, d: Direction) -&gt; List[int]:
+  &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
+
+  Args:
+    d (grilops.geometry.Direction): The given direction.
+
+  Returns:
+    A `List[int]` of symbol indices corresponding to symbols with one arm
+    going in the given direction.
+  &#34;&#34;&#34;
+  return self.__symbols_for_direction[d]</code></pre>
+</details>
+</dd>
+<dt id="grilops.paths.PathSymbolSet.terminal_for_direction"><code class="name flex">
+<span>def <span class="ident">terminal_for_direction</span></span>(<span>self, d: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the symbol that terminates the path from the given direction.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The given direction.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The symbol index for the symbol that terminates the path from the given
+direction.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def terminal_for_direction(self, d: Direction) -&gt; int:
+  &#34;&#34;&#34;Returns the symbol that terminates the path from the given direction.
+
+  Args:
+    d (grilops.geometry.Direction): The given direction.
+
+  Returns:
+    The symbol index for the symbol that terminates the path from the given
+    direction.
+  &#34;&#34;&#34;
+  return self.__terminal_for_direction[d]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></b></code>:
+<ul class="hlist">
+<li><code><a title="grilops.symbols.SymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">append</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.max_index" href="symbols.html#grilops.symbols.SymbolSet.max_index">max_index</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.min_index" href="symbols.html#grilops.symbols.SymbolSet.min_index">min_index</a></code></li>
+<li><code><a title="grilops.symbols.SymbolSet.symbols" href="symbols.html#grilops.symbols.SymbolSet.symbols">symbols</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="grilops" href="index.html">grilops</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="grilops.paths.PathConstrainer" href="#grilops.paths.PathConstrainer">PathConstrainer</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.paths.PathConstrainer.num_paths" href="#grilops.paths.PathConstrainer.num_paths">num_paths</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.path_instance_grid" href="#grilops.paths.PathConstrainer.path_instance_grid">path_instance_grid</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.path_order_grid" href="#grilops.paths.PathConstrainer.path_order_grid">path_order_grid</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.print_path_numbering" href="#grilops.paths.PathConstrainer.print_path_numbering">print_path_numbering</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="grilops.paths.PathSymbolSet" href="#grilops.paths.PathSymbolSet">PathSymbolSet</a></code></h4>
+<ul class="">
+<li><code><a title="grilops.paths.PathSymbolSet.is_path" href="#grilops.paths.PathSymbolSet.is_path">is_path</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.is_path_segment" href="#grilops.paths.PathSymbolSet.is_path_segment">is_path_segment</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.is_terminal" href="#grilops.paths.PathSymbolSet.is_terminal">is_terminal</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.symbol_for_direction_pair" href="#grilops.paths.PathSymbolSet.symbol_for_direction_pair">symbol_for_direction_pair</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.symbols_for_direction" href="#grilops.paths.PathSymbolSet.symbols_for_direction">symbols_for_direction</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.terminal_for_direction" href="#grilops.paths.PathSymbolSet.terminal_for_direction">terminal_for_direction</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

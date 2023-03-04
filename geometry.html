@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>grilops.geometry API documentation</title>
 <meta name="description" content="This module supports geometric objects useful in modeling grids of cells." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -226,6 +226,20 @@ class Lattice:
     &#34;&#34;&#34;
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
+  def label_for_direction(self, d: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there&#39;s no character defined for the direction.
+    &#34;&#34;&#34;
+    raise NotImplementedError()
+
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
     &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
@@ -412,6 +426,28 @@ class RectangularLattice(Lattice):
         Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
 
+  def label_for_direction(self, d: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there&#39;s no character defined for the direction.
+    &#34;&#34;&#34;
+    if d.name == &#34;N&#34;:
+      return chr(0x2575)
+    if d.name == &#34;E&#34;:
+      return chr(0x2576)
+    if d.name == &#34;S&#34;:
+      return chr(0x2577)
+    if d.name == &#34;W&#34;:
+      return chr(0x2574)
+    raise ValueError(&#34;No single-character symbol for direction&#34;)
+
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
     &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
 
@@ -561,6 +597,30 @@ class _HexagonalLattice(Lattice):
       that share a vertex.
     &#34;&#34;&#34;
     return self.edge_sharing_directions()
+
+  def label_for_direction(self, d: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Raises:
+      ValueError: If there&#39;s no character defined for the direction.
+    &#34;&#34;&#34;
+    labels = {
+      &#34;N&#34;: chr(0x2595) + &#34; \n  &#34;,
+      &#34;NE&#34;: &#34; &#34; + chr(0x2571) + &#34;\n  &#34;,
+      &#34;E&#34;: &#34; &#34; + chr(0x2581) + &#34;\n  &#34;,
+      &#34;SE&#34;: &#34;  \n &#34; + chr(0x2572),
+      &#34;S&#34;: &#34;  \n&#34; + chr(0x2595) + &#34; &#34;,
+      &#34;SW&#34;: &#34;  \n&#34; + chr(0x2571) + &#34; &#34;,
+      &#34;W&#34;: chr(0x2581) + &#34; \n  &#34;,
+      &#34;NW&#34;: chr(0x2572) + &#34; \n  &#34;,
+    }
+    label = labels.get(d.name, None)
+    if label is not None:
+      return label
+    raise ValueError(&#34;No single-character symbol for direction&#34;)
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
     &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
@@ -1111,6 +1171,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_directions" href="#grilops.geometry.Lattice.edge_sharing_directions">edge_sharing_directions</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.label_for_direction" href="#grilops.geometry.Lattice.label_for_direction">label_for_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
@@ -1267,6 +1328,20 @@ count.</p></div>
       the given cell.
     &#34;&#34;&#34;
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
+
+  def label_for_direction(self, d: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there&#39;s no character defined for the direction.
+    &#34;&#34;&#34;
+    raise NotImplementedError()
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
     &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
@@ -1545,6 +1620,42 @@ count.</p></div>
   raise NotImplementedError()</code></pre>
 </details>
 </dd>
+<dt id="grilops.geometry.Lattice.label_for_direction"><code class="name flex">
+<span>def <span class="ident">label_for_direction</span></span>(<span>self, d: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the label for a direction.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a></code></dt>
+<dd>The direction to label.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A label representing the direction.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If there's no character defined for the direction.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def label_for_direction(self, d: Direction) -&gt; str:
+  &#34;&#34;&#34;Returns the label for a direction.
+
+  Args:
+    d (Direction): The direction to label.
+
+  Returns:
+    A label representing the direction.
+
+  Raises:
+    ValueError: If there&#39;s no character defined for the direction.
+  &#34;&#34;&#34;
+  raise NotImplementedError()</code></pre>
+</details>
+</dd>
 <dt id="grilops.geometry.Lattice.label_for_direction_pair"><code class="name flex">
 <span>def <span class="ident">label_for_direction_pair</span></span>(<span>self, d1: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>, d2: <a title="grilops.geometry.Direction" href="#grilops.geometry.Direction">Direction</a>) ‑> str</span>
 </code></dt>
@@ -1613,7 +1724,7 @@ count.</p></div>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.point_to_index"><code class="name flex">
-<span>def <span class="ident">point_to_index</span></span>(<span>self, point: <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>) ‑> Union[int, NoneType]</span>
+<span>def <span class="ident">point_to_index</span></span>(<span>self, point: <a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>) ‑> Optional[int]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns the index of a point in the lattice's ordered list.</p>
@@ -1643,7 +1754,7 @@ in the list.</p></div>
 </details>
 </dd>
 <dt id="grilops.geometry.Lattice.print"><code class="name flex">
-<span>def <span class="ident">print</span></span>(<span>self, hook_function: Callable[[<a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>], Union[str, NoneType]], blank: str = ' ', stream: IO[str] = sys.stdout)</span>
+<span>def <span class="ident">print</span></span>(<span>self, hook_function: Callable[[<a title="grilops.geometry.Point" href="#grilops.geometry.Point">Point</a>], Optional[str]], blank: str = ' ', stream: IO[str] = sys.stdout)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prints something for each space in the lattice.</p>
@@ -2123,6 +2234,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_directions" href="#grilops.geometry.Lattice.edge_sharing_directions">edge_sharing_directions</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.label_for_direction" href="#grilops.geometry.Lattice.label_for_direction">label_for_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
@@ -2207,6 +2319,28 @@ count.</p></div>
         Direction(&#34;SE&#34;, Vector(1, 1)),
         Direction(&#34;SW&#34;, Vector(1, -1)),
     ]
+
+  def label_for_direction(self, d: Direction) -&gt; str:
+    &#34;&#34;&#34;Returns the label for a direction.
+
+    Args:
+      d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
+
+    Raises:
+      ValueError: If there&#39;s no character defined for the direction.
+    &#34;&#34;&#34;
+    if d.name == &#34;N&#34;:
+      return chr(0x2575)
+    if d.name == &#34;E&#34;:
+      return chr(0x2576)
+    if d.name == &#34;S&#34;:
+      return chr(0x2577)
+    if d.name == &#34;W&#34;:
+      return chr(0x2574)
+    raise ValueError(&#34;No single-character symbol for direction&#34;)
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; str:
     &#34;&#34;&#34;Returns the label for a pair of edge-sharing directions.
@@ -2314,6 +2448,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.get_inside_outside_check_directions" href="#grilops.geometry.Lattice.get_inside_outside_check_directions">get_inside_outside_check_directions</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.label_for_direction" href="#grilops.geometry.Lattice.label_for_direction">label_for_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
@@ -2443,6 +2578,7 @@ count.</p></div>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_neighbors" href="#grilops.geometry.Lattice.edge_sharing_neighbors">edge_sharing_neighbors</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.edge_sharing_points" href="#grilops.geometry.Lattice.edge_sharing_points">edge_sharing_points</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.get_inside_outside_check_directions" href="#grilops.geometry.Lattice.get_inside_outside_check_directions">get_inside_outside_check_directions</a></code></li>
+<li><code><a title="grilops.geometry.Lattice.label_for_direction" href="#grilops.geometry.Lattice.label_for_direction">label_for_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.label_for_direction_pair" href="#grilops.geometry.Lattice.label_for_direction_pair">label_for_direction_pair</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.opposite_direction" href="#grilops.geometry.Lattice.opposite_direction">opposite_direction</a></code></li>
 <li><code><a title="grilops.geometry.Lattice.point_to_index" href="#grilops.geometry.Lattice.point_to_index">point_to_index</a></code></li>
@@ -2494,7 +2630,7 @@ count.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
