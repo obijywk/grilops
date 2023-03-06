@@ -7,7 +7,7 @@ import itertools
 from collections import defaultdict
 from typing import Dict, Iterable, List, Optional, Tuple
 from z3 import (
-    And, ArithRef, BoolRef, If, Implies, Int, Not, Or, Sum
+    And, ArithRef, BoolRef, BoolVal, If, Implies, Int, Not, Or, Sum
 )
 
 
@@ -25,10 +25,13 @@ class PathSymbolSet(SymbolSet):
 
   Args:
     lattice (grilops.geometry.Lattice): The structure of the grid.
+    include_terminals (bool): If True, create symbols for path terminals.
+      Defaults to True.
   """
 
-  def __init__(self, lattice: Lattice):
+  def __init__(self, lattice: Lattice, include_terminals: bool = True):
     super().__init__([])
+    self.__include_terminals = include_terminals
 
     self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
     self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
@@ -45,12 +48,13 @@ class PathSymbolSet(SymbolSet):
       self.__symbol_for_direction_pair[(dj, di)] = idx
       self.__max_path_segment_symbol_index = idx
 
-    for d in dirs:
-      self.append(d.name, lattice.label_for_direction(d))
-      idx = self.max_index()
-      self.__symbols_for_direction[d].append(idx)
-      self.__terminal_for_direction[d] = idx
-      self.__max_path_terminal_symbol_index = idx
+    if include_terminals:
+      for d in dirs:
+        self.append(d.name, lattice.label_for_direction(d))
+        idx = self.max_index()
+        self.__symbols_for_direction[d].append(idx)
+        self.__terminal_for_direction[d] = idx
+        self.__max_path_terminal_symbol_index = idx
 
   def is_path(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents part of a path.
@@ -61,7 +65,9 @@ class PathSymbolSet(SymbolSet):
     Returns:
       A true `BoolRef` if the symbol represents part of a path.
     """
-    return symbol < self.__max_path_terminal_symbol_index + 1
+    if self.__include_terminals:
+      return symbol < self.__max_path_terminal_symbol_index + 1
+    return symbol < self.__max_path_segment_symbol_index + 1
 
   def is_path_segment(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents a non-terminal path segment.
@@ -83,6 +89,8 @@ class PathSymbolSet(SymbolSet):
     Returns:
       A true `BoolRef` if the symbol represents a path terminal
     """
+    if not self.__include_terminals:
+      return BoolVal(False)
     return And(
       symbol > self.__max_path_segment_symbol_index,
       symbol < self.__max_path_terminal_symbol_index + 1
@@ -131,11 +139,11 @@ class PathConstrainer:
 
   Args:
     symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
-    complete (bool): If true, every cell must be part of a path.
-      Defaults to false.
-    allow_terminated_paths (bool): If true, finds paths that are terminated
-      (not loops). Defaults to true.
-    allow_loops (bool): If true, finds paths that are loops. Defaults to true.
+    complete (bool): If True, every cell must be part of a path.
+      Defaults to False.
+    allow_terminated_paths (bool): If True, finds paths that are terminated
+      (not loops). Defaults to True.
+    allow_loops (bool): If True, finds paths that are loops. Defaults to True.
   """
   _instance_index = 0
 
@@ -236,7 +244,10 @@ class PathConstrainer:
       solver.add(sym.is_path(cell) == (po != -1))
 
       for d in self.__symbol_grid.lattice.edge_sharing_directions():
-        s = sym.terminal_for_direction(d)
+        try:
+          s = sym.terminal_for_direction(d)
+        except KeyError:
+          continue
         np = p.translate(d.vector)
         if np in self.__path_order_grid:
           solver.add(Implies(
