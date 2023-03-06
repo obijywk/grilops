@@ -35,19 +35,15 @@ which supports both closed loops and open ("terminated") paths.</p>
 Prefer to use the `grilops.paths` module instead of this module in new
 code. The paths module implements a more general approach to path modeling
 which supports both closed loops and open (&#34;terminated&#34;) paths.
-
 &#34;&#34;&#34;
 
 import itertools
-from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Tuple
-from z3 import (
-    And, ArithRef, BoolRef, Distinct, If, Implies, Int, Or, Xor
-)
+from typing import Any, Dict, Iterable, Tuple
+from z3 import ArithRef, BoolRef, If, Or, Xor
 
 from .geometry import Direction, Lattice, Point
 from .grids import SymbolGrid
-from .symbols import SymbolSet
+from .paths import PathConstrainer, PathSymbolSet
 from .sightlines import reduce_cells
 
 
@@ -64,7 +60,7 @@ O: int = 2
   cell is outside of a loop.&#34;&#34;&#34;
 
 
-class LoopSymbolSet(SymbolSet):
+class LoopSymbolSet(PathSymbolSet):
   &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form loops.
 
   Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
@@ -76,23 +72,10 @@ class LoopSymbolSet(SymbolSet):
   &#34;&#34;&#34;
 
   def __init__(self, lattice: Lattice):
-    super().__init__([])
-
-    self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
-    self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
-
-    dirs = lattice.edge_sharing_directions()
-    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
-      lbl = lattice.label_for_direction_pair(di, dj)
-      self.append(di.name + dj.name, lbl)
-      self.__symbols_for_direction[di].append(idx)
-      self.__symbols_for_direction[dj].append(idx)
-      self.__symbol_for_direction_pair[(di, dj)] = idx
-      self.__symbol_for_direction_pair[(dj, di)] = idx
-      self.__max_loop_symbol_index = idx
+    super().__init__(lattice, include_terminals=False)
 
   def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
-    &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+    &#34;&#34;&#34;Returns true if the given symbol represents part of the loop.
 
     Args:
       symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -100,112 +83,33 @@ class LoopSymbolSet(SymbolSet):
     Returns:
       A true `BoolRef` if the symbol represents part of the loop.
     &#34;&#34;&#34;
-    return symbol &lt; self.__max_loop_symbol_index + 1
-
-  def symbols_for_direction(self, d: Direction) -&gt; List[int]:
-    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
-
-    Args:
-      d (grilops.geometry.Direction): The given direction.
-
-    Returns:
-      A `List[int]` of symbol indices corresponding to symbols with one arm
-      going in the given direction.
-    &#34;&#34;&#34;
-    return self.__symbols_for_direction[d]
-
-  def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
-    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
-
-    Args:
-      d1 (grilops.geometry.Direction): The first given direction.
-      d2 (grilops.geometry.Direction): The second given direction.
-
-    Returns:
-      The symbol index for the symbol with one arm going in each of the two
-      given directions.
-    &#34;&#34;&#34;
-    return self.__symbol_for_direction_pair[(d1, d2)]
+    return self.is_path_segment(symbol)
 
 
-class LoopConstrainer:
+class LoopConstrainer(PathConstrainer):
   &#34;&#34;&#34;Creates constraints for ensuring symbols form closed loops.
 
   Args:
     symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
     single_loop (bool): If true, constrain the grid to contain only a single loop.
   &#34;&#34;&#34;
-  _instance_index = 0
-
   def __init__(
       self,
       symbol_grid: SymbolGrid,
       single_loop: bool = False,
   ):
-    LoopConstrainer._instance_index += 1
-
+    super().__init__(symbol_grid, allow_terminated_paths=False)
     self.__symbol_grid = symbol_grid
-    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
-    self.__loop_order_grid: Dict[Point, ArithRef] = {}
 
-    self.__add_loop_edge_constraints()
     if single_loop:
-      self.__add_single_loop_constraints()
+      symbol_grid.solver.add(self.num_paths == 1)
 
-  def __add_loop_edge_constraints(self):
-    solver = self.__symbol_grid.solver
-    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
-
-    for p, cell in self.__symbol_grid.grid.items():
-      for d in self.__symbol_grid.lattice.edge_sharing_directions():
-        np = p.translate(d.vector)
-        dir_syms = sym.symbols_for_direction(d)
-        ncell = self.__symbol_grid.grid.get(np, None)
-        if ncell is not None:
-          opposite_syms = sym.symbols_for_direction(
-              self.__symbol_grid.lattice.opposite_direction(d))
-          cell_points_dir = Or(*[cell == s for s in dir_syms])
-          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
-          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
-        else:
-          for s in dir_syms:
-            solver.add(cell != s)
+    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
 
   def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Direction, Direction]]:
     dirs = self.__symbol_grid.lattice.edge_sharing_directions()
     for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
       yield (idx, di, dj)
-
-  def __add_single_loop_constraints(self):
-    solver = self.__symbol_grid.solver
-    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
-
-    cell_count = len(self.__symbol_grid.grid)
-
-    for p in self.__symbol_grid.grid:
-      v = Int(f&#34;log-{LoopConstrainer._instance_index}-{p.y}-{p.x}&#34;)
-      solver.add(v &gt;= -cell_count)
-      solver.add(v &lt; cell_count)
-      self.__loop_order_grid[p] = v
-
-    solver.add(Distinct(*self.__loop_order_grid.values()))
-
-    for p, cell in self.__symbol_grid.grid.items():
-      li = self.__loop_order_grid[p]
-
-      solver.add(If(sym.is_loop(cell), li &gt;= 0, li &lt; 0))
-
-      for idx, d1, d2 in self.__all_direction_pairs():
-        pi = p.translate(d1.vector)
-        pj = p.translate(d2.vector)
-        if pi in self.__loop_order_grid and pj in self.__loop_order_grid:
-          solver.add(Implies(
-              And(cell == idx, li &gt; 0),
-              Or(
-                  self.__loop_order_grid[pi] == li - 1,
-                  self.__loop_order_grid[pj] == li - 1
-              )
-          ))
 
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
@@ -238,7 +142,7 @@ class LoopConstrainer:
 
     Only populated if single_loop was true.
     &#34;&#34;&#34;
-    return self.__loop_order_grid
+    return self.path_order_grid
 
   @property
   def inside_outside_grid(self) -&gt; Dict[Point, ArithRef]:
@@ -311,84 +215,30 @@ cell is outside of a loop.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class LoopConstrainer:
+<pre><code class="python">class LoopConstrainer(PathConstrainer):
   &#34;&#34;&#34;Creates constraints for ensuring symbols form closed loops.
 
   Args:
     symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
     single_loop (bool): If true, constrain the grid to contain only a single loop.
   &#34;&#34;&#34;
-  _instance_index = 0
-
   def __init__(
       self,
       symbol_grid: SymbolGrid,
       single_loop: bool = False,
   ):
-    LoopConstrainer._instance_index += 1
-
+    super().__init__(symbol_grid, allow_terminated_paths=False)
     self.__symbol_grid = symbol_grid
-    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
-    self.__loop_order_grid: Dict[Point, ArithRef] = {}
 
-    self.__add_loop_edge_constraints()
     if single_loop:
-      self.__add_single_loop_constraints()
+      symbol_grid.solver.add(self.num_paths == 1)
 
-  def __add_loop_edge_constraints(self):
-    solver = self.__symbol_grid.solver
-    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
-
-    for p, cell in self.__symbol_grid.grid.items():
-      for d in self.__symbol_grid.lattice.edge_sharing_directions():
-        np = p.translate(d.vector)
-        dir_syms = sym.symbols_for_direction(d)
-        ncell = self.__symbol_grid.grid.get(np, None)
-        if ncell is not None:
-          opposite_syms = sym.symbols_for_direction(
-              self.__symbol_grid.lattice.opposite_direction(d))
-          cell_points_dir = Or(*[cell == s for s in dir_syms])
-          neighbor_points_opposite = Or(*[ncell == s for s in opposite_syms])
-          solver.add(Implies(cell_points_dir, neighbor_points_opposite))
-        else:
-          for s in dir_syms:
-            solver.add(cell != s)
+    self.__inside_outside_grid: Dict[Point, ArithRef] = {}
 
   def __all_direction_pairs(self) -&gt; Iterable[Tuple[int, Direction, Direction]]:
     dirs = self.__symbol_grid.lattice.edge_sharing_directions()
     for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
       yield (idx, di, dj)
-
-  def __add_single_loop_constraints(self):
-    solver = self.__symbol_grid.solver
-    sym: LoopSymbolSet = self.__symbol_grid.symbol_set
-
-    cell_count = len(self.__symbol_grid.grid)
-
-    for p in self.__symbol_grid.grid:
-      v = Int(f&#34;log-{LoopConstrainer._instance_index}-{p.y}-{p.x}&#34;)
-      solver.add(v &gt;= -cell_count)
-      solver.add(v &lt; cell_count)
-      self.__loop_order_grid[p] = v
-
-    solver.add(Distinct(*self.__loop_order_grid.values()))
-
-    for p, cell in self.__symbol_grid.grid.items():
-      li = self.__loop_order_grid[p]
-
-      solver.add(If(sym.is_loop(cell), li &gt;= 0, li &lt; 0))
-
-      for idx, d1, d2 in self.__all_direction_pairs():
-        pi = p.translate(d1.vector)
-        pj = p.translate(d2.vector)
-        if pi in self.__loop_order_grid and pj in self.__loop_order_grid:
-          solver.add(Implies(
-              And(cell == idx, li &gt; 0),
-              Or(
-                  self.__loop_order_grid[pi] == li - 1,
-                  self.__loop_order_grid[pj] == li - 1
-              )
-          ))
 
   def __make_inside_outside_grid(self):
     grid = self.__symbol_grid.grid
@@ -421,7 +271,7 @@ cell is outside of a loop.</p></div>
 
     Only populated if single_loop was true.
     &#34;&#34;&#34;
-    return self.__loop_order_grid
+    return self.path_order_grid
 
   @property
   def inside_outside_grid(self) -&gt; Dict[Point, ArithRef]:
@@ -449,6 +299,10 @@ cell is outside of a loop.</p></div>
 
     self.__symbol_grid.lattice.print(print_function)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="grilops.paths.PathConstrainer" href="paths.html#grilops.paths.PathConstrainer">PathConstrainer</a></li>
+</ul>
 <h3>Instance variables</h3>
 <dl>
 <dt id="grilops.loops.LoopConstrainer.inside_outside_grid"><code class="name">var <span class="ident">inside_outside_grid</span> : Dict[<a title="grilops.geometry.Point" href="geometry.html#grilops.geometry.Point">Point</a>, z3.z3.ArithRef]</code></dt>
@@ -486,7 +340,7 @@ def loop_order_grid(self) -&gt; Dict[Point, ArithRef]:
 
   Only populated if single_loop was true.
   &#34;&#34;&#34;
-  return self.__loop_order_grid</code></pre>
+  return self.path_order_grid</code></pre>
 </details>
 </dd>
 </dl>
@@ -518,6 +372,17 @@ def loop_order_grid(self) -&gt; Dict[Point, ArithRef]:
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="grilops.paths.PathConstrainer" href="paths.html#grilops.paths.PathConstrainer">PathConstrainer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="grilops.paths.PathConstrainer.num_paths" href="paths.html#grilops.paths.PathConstrainer.num_paths">num_paths</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.path_instance_grid" href="paths.html#grilops.paths.PathConstrainer.path_instance_grid">path_instance_grid</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.path_order_grid" href="paths.html#grilops.paths.PathConstrainer.path_order_grid">path_order_grid</a></code></li>
+<li><code><a title="grilops.paths.PathConstrainer.print_path_numbering" href="paths.html#grilops.paths.PathConstrainer.print_path_numbering">print_path_numbering</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="grilops.loops.LoopSymbolSet"><code class="flex name class">
 <span>class <span class="ident">LoopSymbolSet</span></span>
@@ -537,7 +402,7 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class LoopSymbolSet(SymbolSet):
+<pre><code class="python">class LoopSymbolSet(PathSymbolSet):
   &#34;&#34;&#34;A `grilops.symbols.SymbolSet` consisting of symbols that may form loops.
 
   Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
@@ -549,23 +414,10 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
   &#34;&#34;&#34;
 
   def __init__(self, lattice: Lattice):
-    super().__init__([])
-
-    self.__symbols_for_direction: Dict[Direction, List[int]] = defaultdict(list)
-    self.__symbol_for_direction_pair: Dict[Tuple[Direction, Direction], int] = {}
-
-    dirs = lattice.edge_sharing_directions()
-    for idx, (di, dj) in enumerate(itertools.combinations(dirs, 2)):
-      lbl = lattice.label_for_direction_pair(di, dj)
-      self.append(di.name + dj.name, lbl)
-      self.__symbols_for_direction[di].append(idx)
-      self.__symbols_for_direction[dj].append(idx)
-      self.__symbol_for_direction_pair[(di, dj)] = idx
-      self.__symbol_for_direction_pair[(dj, di)] = idx
-      self.__max_loop_symbol_index = idx
+    super().__init__(lattice, include_terminals=False)
 
   def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
-    &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+    &#34;&#34;&#34;Returns true if the given symbol represents part of the loop.
 
     Args:
       symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -573,35 +425,11 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
     Returns:
       A true `BoolRef` if the symbol represents part of the loop.
     &#34;&#34;&#34;
-    return symbol &lt; self.__max_loop_symbol_index + 1
-
-  def symbols_for_direction(self, d: Direction) -&gt; List[int]:
-    &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
-
-    Args:
-      d (grilops.geometry.Direction): The given direction.
-
-    Returns:
-      A `List[int]` of symbol indices corresponding to symbols with one arm
-      going in the given direction.
-    &#34;&#34;&#34;
-    return self.__symbols_for_direction[d]
-
-  def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
-    &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
-
-    Args:
-      d1 (grilops.geometry.Direction): The first given direction.
-      d2 (grilops.geometry.Direction): The second given direction.
-
-    Returns:
-      The symbol index for the symbol with one arm going in each of the two
-      given directions.
-    &#34;&#34;&#34;
-    return self.__symbol_for_direction_pair[(d1, d2)]</code></pre>
+    return self.is_path_segment(symbol)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="grilops.paths.PathSymbolSet" href="paths.html#grilops.paths.PathSymbolSet">PathSymbolSet</a></li>
 <li><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></li>
 </ul>
 <h3>Methods</h3>
@@ -610,7 +438,7 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
 <span>def <span class="ident">is_loop</span></span>(<span>self, symbol: z3.z3.ArithRef) ‑> z3.z3.BoolRef</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns true if #symbol represents part of the loop.</p>
+<div class="desc"><p>Returns true if the given symbol represents part of the loop.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>symbol</code></strong> :&ensp;<code>ArithRef</code></dt>
@@ -623,7 +451,7 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_loop(self, symbol: ArithRef) -&gt; BoolRef:
-  &#34;&#34;&#34;Returns true if #symbol represents part of the loop.
+  &#34;&#34;&#34;Returns true if the given symbol represents part of the loop.
 
   Args:
     symbol (ArithRef): An `ArithRef` expression representing a symbol.
@@ -631,81 +459,24 @@ space) may be added to this <code><a title="grilops.symbols.SymbolSet" href="sym
   Returns:
     A true `BoolRef` if the symbol represents part of the loop.
   &#34;&#34;&#34;
-  return symbol &lt; self.__max_loop_symbol_index + 1</code></pre>
-</details>
-</dd>
-<dt id="grilops.loops.LoopSymbolSet.symbol_for_direction_pair"><code class="name flex">
-<span>def <span class="ident">symbol_for_direction_pair</span></span>(<span>self, d1: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>, d2: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> int</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the symbol with arms going in the two given directions.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>d1</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
-<dd>The first given direction.</dd>
-<dt><strong><code>d2</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
-<dd>The second given direction.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>The symbol index for the symbol with one arm going in each of the two
-given directions.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -&gt; int:
-  &#34;&#34;&#34;Returns the symbol with arms going in the two given directions.
-
-  Args:
-    d1 (grilops.geometry.Direction): The first given direction.
-    d2 (grilops.geometry.Direction): The second given direction.
-
-  Returns:
-    The symbol index for the symbol with one arm going in each of the two
-    given directions.
-  &#34;&#34;&#34;
-  return self.__symbol_for_direction_pair[(d1, d2)]</code></pre>
-</details>
-</dd>
-<dt id="grilops.loops.LoopSymbolSet.symbols_for_direction"><code class="name flex">
-<span>def <span class="ident">symbols_for_direction</span></span>(<span>self, d: <a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a>) ‑> List[int]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the symbols with one arm going in the given direction.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>d</code></strong> :&ensp;<code><a title="grilops.geometry.Direction" href="geometry.html#grilops.geometry.Direction">Direction</a></code></dt>
-<dd>The given direction.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A <code>List[int]</code> of symbol indices corresponding to symbols with one arm
-going in the given direction.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def symbols_for_direction(self, d: Direction) -&gt; List[int]:
-  &#34;&#34;&#34;Returns the symbols with one arm going in the given direction.
-
-  Args:
-    d (grilops.geometry.Direction): The given direction.
-
-  Returns:
-    A `List[int]` of symbol indices corresponding to symbols with one arm
-    going in the given direction.
-  &#34;&#34;&#34;
-  return self.__symbols_for_direction[d]</code></pre>
+  return self.is_path_segment(symbol)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="grilops.symbols.SymbolSet" href="symbols.html#grilops.symbols.SymbolSet">SymbolSet</a></b></code>:
+<li><code><b><a title="grilops.paths.PathSymbolSet" href="paths.html#grilops.paths.PathSymbolSet">PathSymbolSet</a></b></code>:
 <ul class="hlist">
-<li><code><a title="grilops.symbols.SymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">append</a></code></li>
-<li><code><a title="grilops.symbols.SymbolSet.max_index" href="symbols.html#grilops.symbols.SymbolSet.max_index">max_index</a></code></li>
-<li><code><a title="grilops.symbols.SymbolSet.min_index" href="symbols.html#grilops.symbols.SymbolSet.min_index">min_index</a></code></li>
-<li><code><a title="grilops.symbols.SymbolSet.symbols" href="symbols.html#grilops.symbols.SymbolSet.symbols">symbols</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.append" href="symbols.html#grilops.symbols.SymbolSet.append">append</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.is_path" href="paths.html#grilops.paths.PathSymbolSet.is_path">is_path</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.is_path_segment" href="paths.html#grilops.paths.PathSymbolSet.is_path_segment">is_path_segment</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.is_terminal" href="paths.html#grilops.paths.PathSymbolSet.is_terminal">is_terminal</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.max_index" href="symbols.html#grilops.symbols.SymbolSet.max_index">max_index</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.min_index" href="symbols.html#grilops.symbols.SymbolSet.min_index">min_index</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.symbol_for_direction_pair" href="paths.html#grilops.paths.PathSymbolSet.symbol_for_direction_pair">symbol_for_direction_pair</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.symbols" href="symbols.html#grilops.symbols.SymbolSet.symbols">symbols</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.symbols_for_direction" href="paths.html#grilops.paths.PathSymbolSet.symbols_for_direction">symbols_for_direction</a></code></li>
+<li><code><a title="grilops.paths.PathSymbolSet.terminal_for_direction" href="paths.html#grilops.paths.PathSymbolSet.terminal_for_direction">terminal_for_direction</a></code></li>
 </ul>
 </li>
 </ul>
@@ -745,8 +516,6 @@ going in the given direction.</p></div>
 <h4><code><a title="grilops.loops.LoopSymbolSet" href="#grilops.loops.LoopSymbolSet">LoopSymbolSet</a></code></h4>
 <ul class="">
 <li><code><a title="grilops.loops.LoopSymbolSet.is_loop" href="#grilops.loops.LoopSymbolSet.is_loop">is_loop</a></code></li>
-<li><code><a title="grilops.loops.LoopSymbolSet.symbol_for_direction_pair" href="#grilops.loops.LoopSymbolSet.symbol_for_direction_pair">symbol_for_direction_pair</a></code></li>
-<li><code><a title="grilops.loops.LoopSymbolSet.symbols_for_direction" href="#grilops.loops.LoopSymbolSet.symbols_for_direction">symbols_for_direction</a></code></li>
 </ul>
 </li>
 </ul>
