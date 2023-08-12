@@ -5,27 +5,21 @@ This puzzle was part of the 2020 MIT Mystery Hunt.
 
 import sys
 from typing import Dict, List, Tuple
-from z3 import And, Distinct, If, Implies, Int, Not, Or, PbEq, PbGe
+from z3 import And, Not, Or, PbEq, PbGe
 
 import grilops
 import grilops.paths
 from grilops.geometry import Point, Vector
 
 
-# Define constants for cardinal directions.
-N, E, S, W = Vector(-1, 0), Vector(0, 1), Vector(1, 0), Vector(0, -1)
-DIRECTIONS = [N, E, S, W]
-OPPOSITE_DIRECTION = {
-    N: S,
-    E: W,
-    S: N,
-    W: E,
-}
-
-
 # Define constants containing data from the puzzle.
 SIZE = 9
 LATTICE = grilops.get_square_lattice(SIZE)
+DIRECTIONS = LATTICE.edge_sharing_directions()
+N = next(d for d in DIRECTIONS if d.name == "N")
+E = next(d for d in DIRECTIONS if d.name == "E")
+S = next(d for d in DIRECTIONS if d.name == "S")
+W = next(d for d in DIRECTIONS if d.name == "W")
 DOT = "DOT"
 CELL_PROPERTIES = [
     [[E,S], [E,W], [E,S,W], [S,W], [N,E,S], [E,S,W], [E,S,W], [E,W], [S,W]],
@@ -63,40 +57,29 @@ EXIT_DIRECTION_TO_EXTRACTS = {
 # Define the symbol set to use in the puzzle grid.
 SYM = grilops.paths.PathSymbolSet(LATTICE)
 SYM.append("EMPTY", " ")
-DIRECTION_TO_SYMBOLS = {
-    N: [SYM.NE, SYM.NS, SYM.NW],
-    E: [SYM.NE, SYM.SE, SYM.EW],
-    S: [SYM.SE, SYM.NS, SYM.SW],
-    W: [SYM.NW, SYM.EW, SYM.SW],
-}
 
 
 def constrain_gate(sg, gate_location):
-  """A gate must contain a symbol directed through the gate."""
+  """A gate must contain a terminal symbol not directed through the gate."""
   direction = GATE_LOCATION_TO_DIRECTION[gate_location]
-  symbols = DIRECTION_TO_SYMBOLS[direction]
-  sg.solver.add(Or(*[sg.cell_is_one_of(gate_location, symbols)]))
+  sg.solver.add(SYM.is_terminal(sg.grid[gate_location]))
+  sg.solver.add(Not(sg.cell_is(gate_location, SYM.terminal_for_direction(direction))))
 
 
-def constrain_symbols(sg, start, end):
+def constrain_path(sg, start, end) -> grilops.paths.PathConstrainer:
   """All symbols must fully connect to form a path (except at gates)."""
+  pc = grilops.paths.PathConstrainer(sg, allow_loops=False)
+  sg.solver.add(pc.num_paths == 1)
   for p in LATTICE.points:
-    cell = sg.grid[p]
-    sg.solver.add(Not(SYM.is_terminal(cell)))
-    for direction in [N, E, S, W]:
-      np = p.translate(direction)
-      ncell = sg.grid.get(np, None)
-      if ncell is not None:
-        sg.solver.add(Implies(
-            Or(*[cell == s for s in DIRECTION_TO_SYMBOLS[direction]]),
-            Or(*[
-                ncell == s
-                for s in DIRECTION_TO_SYMBOLS[OPPOSITE_DIRECTION[direction]]
-            ])
-        ))
-      elif p not in (start, end):
-        for s in DIRECTION_TO_SYMBOLS[direction]:
-          sg.solver.add(cell != s)
+    sg.solver.add(SYM.is_terminal(sg.grid[p]) == Or(p == start, p == end))
+
+  # Ensure the exit gate has the highest path order.
+  for p in LATTICE.points:
+    if p == end:
+      continue
+    sg.solver.add(pc.path_order_grid[end] > pc.path_order_grid[p])
+
+  return pc
 
 
 def constrain_visited_counts(sg):
@@ -113,36 +96,6 @@ def constrain_visited_counts(sg):
     col = [sg.grid[(y, x)] for y in range(SIZE)]
     terms = [(c != SYM.EMPTY, 1) for c in col]
     sg.solver.add(PbEq(terms, count))
-
-
-def constrain_path_order(sg, path_order_grid):
-  """The path order variables must contain the path traversal order."""
-  for p in LATTICE.points:
-    cell = sg.grid[p]
-    po = path_order_grid[p]
-    sg.solver.add(If(SYM.is_path(cell), po >= 0, po < 0))
-
-    npo = path_order_grid.get(p.translate(N), None)
-    epo = path_order_grid.get(p.translate(E), None)
-    spo = path_order_grid.get(p.translate(S), None)
-    wpo = path_order_grid.get(p.translate(W), None)
-
-    ncond, econd, scond, wcond = False, False, False, False
-    if npo is not None:
-      ncond = npo == po - 1
-    if epo is not None:
-      econd = epo == po - 1
-    if spo is not None:
-      scond = spo == po - 1
-    if wpo is not None:
-      wcond = wpo == po - 1
-
-    sg.solver.add(Implies(And(cell == SYM.NS, po > 0), Or(ncond, scond)))
-    sg.solver.add(Implies(And(cell == SYM.EW, po > 0), Or(econd, wcond)))
-    sg.solver.add(Implies(And(cell == SYM.NE, po > 0), Or(ncond, econd)))
-    sg.solver.add(Implies(And(cell == SYM.SE, po > 0), Or(scond, econd)))
-    sg.solver.add(Implies(And(cell == SYM.SW, po > 0), Or(scond, wcond)))
-    sg.solver.add(Implies(And(cell == SYM.NW, po > 0), Or(ncond, wcond)))
 
 
 def get_path_locations(sg, path_order_grid):
@@ -173,28 +126,8 @@ def solve(start, end, min_studios):
   sg = grilops.SymbolGrid(LATTICE, SYM)
   constrain_gate(sg, start)
   constrain_gate(sg, end)
-  constrain_symbols(sg, start, end)
+  pc = constrain_path(sg, start, end)
   constrain_visited_counts(sg)
-
-  path_order_grid = {}
-  for p in LATTICE.points:
-    po = Int(f"po-{p.y}-{p.x}")
-    path_order_grid[p] = po
-    if p == start:
-      sg.solver.add(po == 0)
-    else:
-      sg.solver.add(po >= -SIZE * SIZE)
-      sg.solver.add(po < SIZE * SIZE)
-    sg.solver.add((sg.grid[p] == SYM.EMPTY) == (po < 0))
-  sg.solver.add(Distinct(*path_order_grid.values()))
-
-  # Ensure the exit gate has the highest path order.
-  for p in LATTICE.points:
-    if p == end:
-      continue
-    sg.solver.add(path_order_grid[end] > path_order_grid[p])
-
-  constrain_path_order(sg, path_order_grid)
 
   # Apply the per-square property constraints from the puzzle.
   studios_terms = []
@@ -204,7 +137,7 @@ def solve(start, end, min_studios):
     for direction in DIRECTIONS:
       if direction not in properties:
         sg.solver.add(And(*[
-            cell != s for s in DIRECTION_TO_SYMBOLS[direction]
+            cell != s for s in SYM.symbols_for_direction(direction)
         ]))
     if DOT in properties:
       sg.solver.add(cell != SYM.EMPTY)
@@ -215,9 +148,9 @@ def solve(start, end, min_studios):
   # There may be multiple solutions. Find them all.
   paths = []
   if sg.solve():
-    paths.append(get_path_locations(sg, path_order_grid))
+    paths.append(get_path_locations(sg, pc.path_order_grid))
     while not sg.is_unique():
-      paths.append(get_path_locations(sg, path_order_grid))
+      paths.append(get_path_locations(sg, pc.path_order_grid))
 
   SOLVE_MEMO[memo_key] = paths
   return paths
@@ -225,7 +158,6 @@ def solve(start, end, min_studios):
 
 def check_path(path):
   """Returns whether this path is valid, and its studio directions."""
-  ok = True
   nexts = []
   for p in STUDIO_LOCATIONS:
     try:
@@ -234,8 +166,10 @@ def check_path(path):
       continue
     pbefore = path[pi - 1]
     pafter = path[pi + 1]
-    studio_start_direction = Vector(pbefore.y - p.y, pbefore.x - p.x)
-    studio_end_direction = Vector(pafter.y - p.y, pafter.x - p.x)
+    studio_start_direction = next(
+      d for d in DIRECTIONS if d.vector == Vector(pbefore.y - p.y, pbefore.x - p.x))
+    studio_end_direction = next(
+      d for d in DIRECTIONS if d.vector == Vector(pafter.y - p.y, pafter.x - p.x))
     # Check to see if this studio entrance/exit is valid before accepting
     # this path.
     if not solve(
@@ -243,10 +177,9 @@ def check_path(path):
         DIRECTION_TO_GATE_LOCATION[studio_end_direction],
         0
     ):
-      ok = False
-    else:
-      nexts.append((studio_start_direction, studio_end_direction))
-  return ok, nexts
+      return False, []
+    nexts.append((studio_start_direction, studio_end_direction))
+  return True, nexts
 
 
 def main():
