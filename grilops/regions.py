@@ -197,7 +197,8 @@ class RegionConstrainer:  # pylint: disable=R0902
               Implies(
                   And(
                       n1.symbol == self.__region_id_grid[p],
-                      n2.symbol == self.__region_id_grid[p]
+                      n2.symbol == self.__region_id_grid[p],
+                      self.__region_id_grid[p] != -1
                   ),
                   And(*[
                       self.__region_id_grid[cp] == self.__region_id_grid[p]
