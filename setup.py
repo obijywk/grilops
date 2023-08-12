@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="grilops",
-    version="0.10.2",
+    version="0.10.3",
     description="GRId LOgic Puzzle Solver",
     long_description=long_description,
     long_description_content_type="text/markdown",
