@@ -5,7 +5,7 @@ These paths may be either closed (loops) or open ("terminated" paths).
 
 import itertools
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, cast
 from z3 import (
     And, ArithRef, BoolRef, BoolVal, If, Implies, Int, Not, Or, Sum
 )
@@ -178,7 +178,7 @@ class PathConstrainer:
 
   def __add_path_edge_constraints(self):
     solver = self.__symbol_grid.solver
-    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+    sym: PathSymbolSet = cast(PathSymbolSet, self.__symbol_grid.symbol_set)
 
     for p, cell in self.__symbol_grid.grid.items():
       for d in self.__symbol_grid.lattice.edge_sharing_directions():
@@ -197,7 +197,7 @@ class PathConstrainer:
 
   def __add_path_instance_grid_constraints(self):
     solver = self.__symbol_grid.solver
-    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+    sym: PathSymbolSet = cast(PathSymbolSet, self.__symbol_grid.symbol_set)
 
     for p, pi in self.__path_instance_grid.items():
       if self.__complete:
@@ -208,9 +208,11 @@ class PathConstrainer:
 
       cell = self.__symbol_grid.grid[p]
       solver.add(sym.is_path(cell) == (pi != -1))
+      point_index = self.__symbol_grid.lattice.point_to_index(p)
+      assert point_index is not None
       solver.add(
         (self.__path_order_grid[p] == 0) ==
-        (pi == self.__symbol_grid.lattice.point_to_index(p))
+        (pi == point_index)
       )
       for d in self.__symbol_grid.lattice.edge_sharing_directions():
         dir_syms = sym.symbols_for_direction(d)
@@ -232,7 +234,7 @@ class PathConstrainer:
 
   def __add_path_order_grid_constraints(self):
     solver = self.__symbol_grid.solver
-    sym: PathSymbolSet = self.__symbol_grid.symbol_set
+    sym: PathSymbolSet = cast(PathSymbolSet, self.__symbol_grid.symbol_set)
 
     for p, po in self.__path_order_grid.items():
       if self.__complete:
@@ -279,13 +281,13 @@ class PathConstrainer:
                 self.__path_order_grid[pi] == po - 1,
                 Or(
                   self.__path_order_grid[pj] == po + 1,
-                  self.__path_order_grid[pj] == 0 if self.__allow_loops else False
+                  self.__path_order_grid[pj] == 0 if self.__allow_loops else BoolVal(False)
                 )
               ),
               And(
                 Or(
                   self.__path_order_grid[pi] == po + 1,
-                  self.__path_order_grid[pi] == 0 if self.__allow_loops else False
+                  self.__path_order_grid[pi] == 0 if self.__allow_loops else BoolVal(False)
                 ),
                 self.__path_order_grid[pj] == po - 1
               ),

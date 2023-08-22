@@ -7,7 +7,7 @@ which supports both closed loops and open ("terminated") paths.
 
 import itertools
 from typing import Any, Dict, Iterable, Tuple
-from z3 import ArithRef, BoolRef, If, Or, Xor
+from z3 import ArithRef, BoolRef, BoolVal, If, IntNumRef, IntVal, Or, Xor
 
 from .geometry import Direction, Lattice, Point
 from .grids import SymbolGrid
@@ -15,15 +15,15 @@ from .paths import PathConstrainer, PathSymbolSet
 from .sightlines import reduce_cells
 
 
-L: int = 0
+L: IntNumRef = IntVal(0)
 """The `LoopConstrainer.inside_outside_grid` value indicating that a
   cell contains part of a loop."""
 
-I: int = 1
+I: IntNumRef = IntVal(1)
 """The `LoopConstrainer.inside_outside_grid` value indicating that a
   cell is inside of a loop."""
 
-O: int = 2
+O: IntNumRef = IntVal(2)
 """The `LoopConstrainer.inside_outside_grid` value indicating that a
   cell is outside of a loop."""
 
@@ -100,7 +100,7 @@ class LoopConstrainer(PathConstrainer):
     for p, v in grid.items():
       a = reduce_cells(
           self.__symbol_grid, p, look_dir,
-          False, accumulate
+          BoolVal(False), accumulate
       )
       self.__inside_outside_grid[p] = If(sym.is_loop(v), L, If(a, I, O))
 
@@ -126,9 +126,9 @@ class LoopConstrainer(PathConstrainer):
   def print_inside_outside_grid(self):
     """Prints which cells are contained by loops."""
     labels = {
-        L: " ",
-        I: "I",
-        O: "O",
+        L.as_long(): " ",
+        I.as_long(): "I",
+        O.as_long(): "O",
     }
     model = self.__symbol_grid.solver.model()
 

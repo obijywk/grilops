@@ -38,10 +38,12 @@ def BoolSort() -> BoolSortRef: ...
 def IntSort() -> ArithSortRef: ...
 def BitVecSort(sz: int) -> BitVecSortRef: ...
 
-ExprRefOrLiteral = TypeVar("ExprRefOrLiteral", ExprRef, bool, int)
+ExprRefOrLiteral = TypeVar("ExprRefOrLiteral", ExprRef, bool, int, BoolRef, ArithRef)
 
 class ExprRef(AstRef):
   def __eq__(self, other: ExprRefOrLiteral) -> BoolRef: ...  # type: ignore
+  def __ne__(self, other: ExprRefOrLiteral) -> BoolRef: ...  # type: ignore
+  def sort(self) -> SortRef: ...
 
 BoolRefOrLiteral = TypeVar("BoolRefOrLiteral", BoolRef, bool)
 

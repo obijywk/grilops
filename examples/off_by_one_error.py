@@ -6,7 +6,7 @@ https://www.umdpuzzle.club/puzzle/off-by-one-error
 
 from collections import defaultdict
 from typing import Dict, List
-from z3 import And, Datatype, Distinct, If, Implies, Int, IntNumRef, IntSort, Or, Sum
+from z3 import And, ArithRef, Datatype, Distinct, If, Implies, Int, IntNumRef, IntSort, Or, Sum
 
 import grilops
 import grilops.regions
@@ -136,7 +136,7 @@ def killer_sudoku(cages: List[str], cage_sum_grid: List[List[int]]) -> str:
     sg.solver.add(Distinct(*cells))
 
   # Build a map from each cage label to the cells within that cage.
-  cage_cells = defaultdict(list)
+  cage_cells: Dict[str, List[ArithRef]] = defaultdict(list)
   for p in LATTICE.points:
     cage_cells[cages[p.y][p.x]].append(sg.grid[p])
 
@@ -144,7 +144,7 @@ def killer_sudoku(cages: List[str], cage_sum_grid: List[List[int]]) -> str:
   for cells_in_cage in cage_cells.values():
     sg.solver.add(Distinct(*cells_in_cage))
 
-  cage_sums = {}
+  cage_sums: Dict[str, IntNumRef] = {}
   for p in LATTICE.points:
     cage_sum = cage_sum_grid[p.y][p.x]
     if cage_sum > 0:

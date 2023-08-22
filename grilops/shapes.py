@@ -1,9 +1,10 @@
 """This module supports puzzles that place fixed shape regions into the grid."""
 
 from collections import defaultdict
+from functools import partial
 import sys
-from typing import Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
-from z3 import ArithRef, Const, ExprRef, Int, IntSort, IntVal, Or, Solver, PbEq, eq
+from typing import Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
+from z3 import ArithRef, BoolRef, Const, ExprRef, Int, IntSort, IntVal, Or, Solver, PbEq, eq
 
 from .fastz3 import fast_and, fast_eq, fast_ne
 from .geometry import Lattice, Point, Vector
@@ -73,7 +74,7 @@ class Shape(Generic[Payload]):
     first_negated = offset_tuples[0][0].negate()
     return Shape([(v.translate(first_negated), p) for v, p in offset_tuples])
 
-  def equivalent(self, shape: "Shape") -> bool:
+  def equivalent(self, shape: "Shape") -> bool:  # pylint: disable=R0911
     """Returns true iff the given shape is equivalent to this shape."""
     if len(self.offsets_with_payloads) != len(shape.offsets_with_payloads):
       return False
@@ -86,12 +87,18 @@ class Shape(Generic[Payload]):
       if isinstance(p1, ExprRef) and isinstance(p2, ExprRef):
         if not eq(p1, p2):
           return False
+      elif p1 is None:
+        if p2 is not None:
+          return False
+      elif p2 is None:
+        if p1 is not None:
+          return False
       elif p1 != p2:
         return False
     return True
 
 
-class ShapeConstrainer:
+class ShapeConstrainer(Generic[Payload]):
   """Creates constraints for placing fixed shape regions into the grid.
 
   Args:
@@ -144,7 +151,7 @@ class ShapeConstrainer:
         allow_rotations, allow_reflections)
     self.__variants = []
     for shape in self.__shapes:
-      shape_variants = []
+      shape_variants: List[Shape] = []
       for f in fs:
         variant = shape.transform(f).canonicalize()
         if not any(variant.equivalent(v) for v in shape_variants):
@@ -174,10 +181,9 @@ class ShapeConstrainer:
       self.__shape_instance_grid[p] = v
 
     sample_payload = self.__shapes[0].offsets_with_payloads[0][1]
-    if sample_payload is None:
-      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = None
-    else:
-      self.__shape_payload_grid: Optional[Dict[Point, Payload]] = {}
+    self.__shape_payload_grid: Optional[Dict[Point, Payload]] = None
+    if sample_payload is not None:
+      self.__shape_payload_grid = {}
       if isinstance(sample_payload, ExprRef):
         sort = sample_payload.sort()
       elif isinstance(sample_payload, int):
@@ -185,8 +191,8 @@ class ShapeConstrainer:
       else:
         raise RuntimeError(f"Could not determine z3 sort for {sample_payload}")
       for p in self.__lattice.points:
-        v = Const(f"scsp-{ShapeConstrainer._instance_index}-{p.y}-{p.x}", sort)
-        self.__shape_payload_grid[p] = v
+        pv = cast(Payload, Const(f"scsp-{ShapeConstrainer._instance_index}-{p.y}-{p.x}", sort))
+        self.__shape_payload_grid[p] = pv
 
   def __add_constraints(self):
     self.__add_grid_agreement_constraints()
@@ -217,29 +223,30 @@ class ShapeConstrainer:
 
     quadtree = ExpressionQuadTree(self.__lattice.points)
     for instance_id in [self.__lattice.point_to_index(p) for p in self.__lattice.points]:
+      assert instance_id is not None
       quadtree.add_expr(
           (HAS_INSTANCE_ID, instance_id),
-          lambda p, i=instance_id: fast_eq(self.__shape_instance_grid[p], int_vals[i]))
+          partial(lambda p, v: fast_eq(self.__shape_instance_grid[p], v), v=int_vals[instance_id]))
       quadtree.add_expr(
           (NOT_HAS_INSTANCE_ID, instance_id),
-          lambda p, i=instance_id: fast_ne(self.__shape_instance_grid[p], int_vals[i]))
+          partial(lambda p, v: fast_ne(self.__shape_instance_grid[p], v), v=int_vals[instance_id]))
     for shape_index in range(len(self.__variants)):
       quadtree.add_expr(
           (HAS_SHAPE_TYPE, shape_index),
-          lambda p, i=shape_index: fast_eq(self.__shape_type_grid[p], int_vals[i]))
+          partial(lambda p, v: fast_eq(self.__shape_type_grid[p], v), v=int_vals[shape_index]))
 
-    root_options = defaultdict(list)
+    root_options: Dict[Point, List[BoolRef]] = defaultdict(list)
     for shape_index, variants in enumerate(self.__variants):  # pylint: disable=R1702
       for variant in variants:
         for root_point in self.__lattice.points:
           instance_id = self.__lattice.point_to_index(root_point)
-          point_payload_tuples = []
+          point_payload_tuples: List[Tuple[Point, Payload]] = []
           for offset_vector, payload in variant.offsets_with_payloads:
             point = root_point.translate(offset_vector)
             if point not in self.__shape_instance_grid:
-              point_payload_tuples = None
+              point_payload_tuples = []
               break
-            point_payload_tuples.append((point, payload))
+            point_payload_tuples.append((point, cast(Payload, payload)))
           if point_payload_tuples:
             and_terms = []
             for point, payload in point_payload_tuples:

@@ -82,7 +82,7 @@ class Lattice:
 
     Returns:
       The index of the point in the ordered list, or None if the point is not
-        in the list.
+      in the list.
     """
     raise NotImplementedError()
 
@@ -574,6 +574,9 @@ class _HexagonalLattice(Lattice):
 
     Args:
       d (Direction): The direction to label.
+
+    Returns:
+      A label representing the direction.
 
     Raises:
       ValueError: If there's no character defined for the direction.

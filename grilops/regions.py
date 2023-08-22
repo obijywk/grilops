@@ -8,7 +8,7 @@ in its subtree are exposed by properties of the `RegionConstrainer`.
 import itertools
 
 from typing import Dict, Optional
-from z3 import And, ArithRef, If, Implies, Int, Or, Solver, Sum
+from z3 import And, ArithRef, If, Implies, Int, IntVal, Or, Solver, Sum
 
 from .geometry import Direction, Lattice, Point
 
@@ -76,7 +76,7 @@ class RegionConstrainer:  # pylint: disable=R0902
     Creates the mapping between edge-sharing directions and the parent
     indices corresponding to them.
     """
-    self.__edge_sharing_direction_to_index = {}
+    self.__edge_sharing_direction_to_index: Dict[Direction, int] = {}
     self.__parent_type_to_index = {"X": X, "R": R}
     self.__parent_types = ["X", "R"]
     for d in self.__lattice.edge_sharing_directions():
@@ -117,9 +117,11 @@ class RegionConstrainer:  # pylint: disable=R0902
       self.__solver.add(v < len(self.__lattice.points))
       parent = self.__parent_grid[p]
       self.__solver.add(Implies(parent == X, v == -1))
+      point_index = self.__lattice.point_to_index(p)
+      assert point_index is not None
       self.__solver.add(Implies(
           parent == R,
-          v == self.__lattice.point_to_index(p)
+          v == point_index
       ))
       self.__region_id_grid[p] = v
 
@@ -156,7 +158,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       return If(
           self.__parent_grid[sp] == sd,
           self.__subtree_size_grid[sp],
-          0
+          IntVal(0)
       )
 
     for p in self.__lattice.points:
@@ -166,7 +168,7 @@ class RegionConstrainer:  # pylint: disable=R0902
       for d in self.__lattice.edge_sharing_directions():
         sp = p.translate(d.vector)
         if sp in self.__parent_grid:
-          opposite_index = self.__edge_sharing_direction_to_index[
+          opposite_index: int = self.__edge_sharing_direction_to_index[
               self.__lattice.opposite_direction(d)]
           constrain_side(p, sp, opposite_index)
           subtree_size_terms.append(subtree_size_term(sp, opposite_index))
