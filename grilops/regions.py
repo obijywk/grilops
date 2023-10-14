@@ -23,21 +23,7 @@ R: int = 1
 
 
 class RegionConstrainer:  # pylint: disable=R0902
-  """Creates constraints for grouping cells into contiguous regions.
-
-  Args:
-    lattice (grilops.geometry.Lattice): The structure of the grid.
-    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will be
-      constructed.
-    complete (bool): If true, every cell must be part of a region. Defaults to
-      true.
-    rectangular (bool): If true, every region must be "rectangular"; for each
-      cell in a region, ensure that pairs of its neighbors that are part of
-      the same region each share an additional neighbor that's part of the
-      same region when possible.
-    min_region_size (Optional[int]): The minimum possible size of a region.
-    max_region_size (Optional[int]): The maximum possible size of a region.
-  """
+  """Creates constraints for grouping cells into contiguous regions."""
   _instance_index = 0
 
   def __init__(  # pylint: disable=R0913
@@ -49,6 +35,18 @@ class RegionConstrainer:  # pylint: disable=R0902
       min_region_size: Optional[int] = None,
       max_region_size: Optional[int] = None
   ):
+    """
+    :param lattice: The structure of the grid.
+    :param solver: A `Solver` object. If None, a `Solver` will be constructed.
+    :param complete: If true, every cell must be part of a region. Defaults to
+      true.
+    :param rectangular: If true, every region must be "rectangular"; for each
+      cell in a region, ensure that pairs of its neighbors that are part of
+      the same region each share an additional neighbor that's part of the
+      same region when possible.
+    :param min_region_size: The minimum possible size of a region.
+    :param max_region_size: The maximum possible size of a region.
+    """
     RegionConstrainer._instance_index += 1
     self.__lattice = lattice
     if solver:
@@ -214,12 +212,10 @@ class RegionConstrainer:  # pylint: disable=R0902
 
     For instance, if direction is (-1, 0), return the index for N.
 
-    Args:
-      direction (grilops.geometry.Direction): The direction to an edge-sharing cell.
+    :param direction: The direction to an edge-sharing cell.
 
-    Returns:
-      The `RegionConstrainer.parent_grid` value that means that the parent
-        in its region's subtree is the cell offset by that direction.
+    :return: The `RegionConstrainer.parent_grid` value that means that the
+      parent in its region's subtree is the cell offset by that direction.
     """
     return self.__edge_sharing_direction_to_index[direction]
 
@@ -229,11 +225,9 @@ class RegionConstrainer:  # pylint: disable=R0902
     The parent_type may be a direction name (like "N") or name of a special
     value like "R" or "X".
 
-    Args:
-      parent_type (str): The parent type.
+    :param parent_type: The parent type.
 
-    Returns:
-      The corresponding `RegionConstrainer.parent_grid` value.
+    :return: The corresponding `RegionConstrainer.parent_grid` value.
     """
     return self.__parent_type_to_index[parent_type]
 

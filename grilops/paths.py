@@ -22,14 +22,14 @@ class PathSymbolSet(SymbolSet):
   Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
   space) may be added to this `grilops.symbols.SymbolSet` by calling
   `grilops.symbols.SymbolSet.append` after it's constructed.
-
-  Args:
-    lattice (grilops.geometry.Lattice): The structure of the grid.
-    include_terminals (bool): If True, create symbols for path terminals.
-      Defaults to True.
   """
 
   def __init__(self, lattice: Lattice, include_terminals: bool = True):
+    """
+    :param lattice: The structure of the grid.
+    :param include_terminals: If True, create symbols for path terminals.
+      Defaults to True.
+    """
     super().__init__([])
     self.__include_terminals = include_terminals
 
@@ -59,11 +59,9 @@ class PathSymbolSet(SymbolSet):
   def is_path(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents part of a path.
 
-    Args:
-      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+    :param symbol: An `ArithRef` expression representing a symbol.
 
-    Returns:
-      A true `BoolRef` if the symbol represents part of a path.
+    :return: A true `BoolRef` if the symbol represents part of a path.
     """
     if self.__include_terminals:
       return symbol < self.__max_path_terminal_symbol_index + 1
@@ -72,22 +70,19 @@ class PathSymbolSet(SymbolSet):
   def is_path_segment(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents a non-terminal path segment.
 
-    Args:
-      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+    :param symbol: An `ArithRef` expression representing a symbol.
 
-    Returns:
-      A true `BoolRef` if the symbol represents a non-terminal path segment.
+    :return: A true `BoolRef` if the symbol represents a non-terminal path
+      segment.
     """
     return symbol < self.__max_path_segment_symbol_index + 1
 
   def is_terminal(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents a path terminal.
 
-    Args:
-      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+    :param symbol: An `ArithRef` expression representing a symbol.
 
-    Returns:
-      A true `BoolRef` if the symbol represents a path terminal
+    :return: A true `BoolRef` if the symbol represents a path terminal.
     """
     if not self.__include_terminals:
       return BoolVal(False)
@@ -99,52 +94,37 @@ class PathSymbolSet(SymbolSet):
   def symbols_for_direction(self, d: Direction) -> List[int]:
     """Returns the symbols with one arm going in the given direction.
 
-    Args:
-      d (grilops.geometry.Direction): The given direction.
+    :param d: The given direction.
 
-    Returns:
-      A `List[int]` of symbol indices corresponding to symbols with one arm
-      going in the given direction.
+    :return: A `List[int]` of symbol indices corresponding to symbols with one
+      arm going in the given direction.
     """
     return self.__symbols_for_direction[d]
 
   def symbol_for_direction_pair(self, d1: Direction, d2: Direction) -> int:
     """Returns the symbol with arms going in the two given directions.
 
-    Args:
-      d1 (grilops.geometry.Direction): The first given direction.
-      d2 (grilops.geometry.Direction): The second given direction.
+    :param d1: The first given direction.
+    :param d2: The second given direction.
 
-    Returns:
-      The symbol index for the symbol with one arm going in each of the two
-      given directions.
+    :return: The symbol index for the symbol with one arm going in each of the
+      two given directions.
     """
     return self.__symbol_for_direction_pair[(d1, d2)]
 
   def terminal_for_direction(self, d: Direction) -> int:
     """Returns the symbol that terminates the path from the given direction.
 
-    Args:
-      d (grilops.geometry.Direction): The given direction.
+    :param d: The given direction.
 
-    Returns:
-      The symbol index for the symbol that terminates the path from the given
-      direction.
+    :return: The symbol index for the symbol that terminates the path from the
+      given direction.
     """
     return self.__terminal_for_direction[d]
 
 
 class PathConstrainer:
-  """Creates constraints for ensuring symbols form connected paths.
-
-  Args:
-    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
-    complete (bool): If True, every cell must be part of a path.
-      Defaults to False.
-    allow_terminated_paths (bool): If True, finds paths that are terminated
-      (not loops). Defaults to True.
-    allow_loops (bool): If True, finds paths that are loops. Defaults to True.
-  """
+  """Creates constraints for ensuring symbols form connected paths."""
   _instance_index = 0
 
   def __init__(
@@ -154,6 +134,14 @@ class PathConstrainer:
       allow_terminated_paths: bool = True,
       allow_loops: bool = True,
   ):
+    """
+    :param symbol_grid: The grid to constrain.
+    :param complete: If True, every cell must be part of a path. Defaults to
+      False.
+    :param allow_terminated_paths: If True, finds paths that are terminated
+      (not loops). Defaults to True.
+    :param allow_loops: If True, finds paths that are loops. Defaults to True.
+    """
     PathConstrainer._instance_index += 1
 
     self.__symbol_grid = symbol_grid

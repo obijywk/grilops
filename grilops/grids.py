@@ -8,15 +8,7 @@ from .geometry import Lattice, Neighbor, Point
 
 
 class SymbolGrid:
-  """A grid of cells that can be solved to contain specific symbols.
-
-  Args:
-    lattice (grilops.geometry.Lattice): The structure of the grid.
-    symbol_set (grilops.symbols.SymbolSet): The set of symbols to be filled
-      into the grid.
-    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
-      be constructed.
-  """
+  """A grid of cells that can be solved to contain specific symbols."""
   _instance_index = 0
 
   def __init__(
@@ -25,6 +17,11 @@ class SymbolGrid:
       symbol_set: SymbolSet,
       solver: Optional[Solver] = None
   ):
+    """
+    :param lattice: The structure of the grid.
+    :param symbol_set: The set of symbols to be filled into the grid.
+    :param solver: A `Solver` object. If None, a `Solver` will be constructed.
+    """
     SymbolGrid._instance_index += 1
     if solver:
       self.__solver = solver
@@ -62,12 +59,10 @@ class SymbolGrid:
   def edge_sharing_neighbors(self, p: Point) -> List[Neighbor]:
     """Returns a list of cells that share an edge with the given cell.
 
-    Args:
-      p (grilops.geometry.Point): The location of the given cell.
+    :param p: The location of the given cell.
 
-    Returns:
-      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
-        edge with the given cell.
+    :return: A `List[grilops.geometry.Neighbor]` representing the cells sharing
+      an edge with the given cell.
     """
     return self.__lattice.edge_sharing_neighbors(self.__grid, p)
 
@@ -77,38 +72,32 @@ class SymbolGrid:
     In other words, returns a list of cells orthogonally and diagonally
     adjacent to the given cell.
 
-    Args:
-      p (grilops.geometry.Point): The location of the given cell.
+    :param p: The location of the given cell.
 
-    Returns:
-      A `List[grilops.geometry.Neighbor]` representing the cells sharing an
-        vertex with the given cell.
+    :return: A `List[grilops.geometry.Neighbor]` representing the cells sharing
+      a vertex with the given cell.
     """
     return self.__lattice.vertex_sharing_neighbors(self.__grid, p)
 
   def cell_is(self, p: Point, value: int) -> BoolRef:
     """Returns an expression for whether this cell contains this value.
 
-    Args:
-      p (grilops.geometry.Point): The location of the given cell.
-      value (int): The value to satisfy the expression.
+    :param p: The location of the given cell.
+    :param value: The value to satisfy the expression.
 
-    Returns:
-      An expression that's true if and only if the cell at p contains this
-        value.
+    :return: An expression that's true if and only if the cell at p contains
+      this value.
     """
     return self.__grid[p] == value
 
   def cell_is_one_of(self, p: Point, values: Iterable[int]) -> BoolRef:
     """Returns an expression for whether this cell contains one of these values.
 
-    Args:
-      p (grilops.geometry.Point): The location of the given cell.
-      values (Iterable[int]): The set of values to satisfy the expression.
+    :param p: The location of the given cell.
+    :param values: The set of values to satisfy the expression.
 
-    Returns:
-      An expression that's true if and only if the cell at p contains one of
-        these values.
+    :return: An expression that's true if and only if the cell at p contains
+      one of these values.
     """
     cell = self.__grid[p]
     return Or(*[cell == value for value in values])
@@ -147,13 +136,11 @@ class SymbolGrid:
     Should be called only after `SymbolGrid.solve` has already completed
     successfully.
 
-    Args:
-      hook_function (Optional[Callable[[grilops.geometry.Point, int], str]]): A
-        function implementing custom symbol display behavior, or None. If
-        this function is provided, it will be called for each cell in the grid,
-        with the arguments p (`grilops.geometry.Point`) and the symbol index
-        for that cell (`int`). It may return a string to print for that cell,
-        or None to keep the default behavior.
+    :param hook_function: A function implementing custom symbol display
+      behavior, or None. If this function is provided, it will be called for
+      each cell in the grid, with the arguments p (`grilops.geometry.Point`)
+      and the symbol index for that cell (`int`). It may return a string to
+      print for that cell, or None to keep the default behavior.
     """
     model = self.__solver.model()
     label_width = max(len(s.label) for s in self.__symbol_set.symbols.values())

@@ -28,23 +28,21 @@ def count_cells(
 ) -> ArithRef:
   """Returns a count of cells along a sightline through a grid.
 
-  Args:
-    symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
-    start (grilops.geometry.Point): The location of the cell where the
-      sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Direction): The direction to advance to reach
-      the next cell in the sightline.
-    count (Callable[[ArithRef], ArithRef]): A function that accepts
-      a symbol as an argument and returns the integer value to add to the count
-      when this symbol is encountered. By default, each symbol will count with
-      a value of one.
-    stop (Callable[[ArithRef], BoolRef]): A function that accepts a
-      symbol as an argument and returns True if we should stop following the
-      sightline when this symbol is encountered. By default, the sightline will
-      continue to the edge of the grid.
+  :param symbol_grid: The grid to check against.
+  :param start: The location of the cell where the sightline should begin.
+    This is the first cell checked.
+  :param direction: The direction to advance to reach the next cell in the
+    sightline.
+  :param count: A function that accepts a symbol as an argument and returns the
+    integer value to add to the count when this symbol is encountered. By
+    default, each symbol will count with a value of one.
+  :param stop: A function that accepts a symbol as an argument and returns True
+    if we should stop following the sightline when this symbol is
+    encountered. By default, the sightline will continue to the edge of the
+    grid.
 
-  Returns:
-    An `ArithRef` for the count of cells along the sightline through the grid.
+  :return: An `ArithRef` for the count of cells along the sightline through the
+    grid.
   """
   return reduce_cells(
       symbol_grid,
@@ -78,31 +76,27 @@ def reduce_cells(  # pylint: disable=R0913
 ) -> Accumulator:
   """Returns a computation of a sightline through a grid.
 
-  Args:
-    symbol_grid (grilops.grids.SymbolGrid): The grid to check against.
-    start (grilops.geometry.Point): The location of the cell where the
-      sightline should begin. This is the first cell checked.
-    direction (grilops.geometry.Direction): The direction to advance to reach
-      the next cell in the sightline.
-    initializer (Accumulator): The initial value for the accumulator.
-    accumulate (AccumulateCallback): A function that accepts an accumulated
-      value, a symbol, and (optionally) a point as arguments, and returns a new
-      accumulated value. This function is used to determine a new accumulated
-      value for each cell along the sightline, based on the accumulated value
-      from the previously encountered cells as well as the point and/or symbol
-      of the current cell.
-    stop (StopCallback): A function that accepts an accumulated value, a
-      symbol, and (optionally) a point as arguments, and returns True if we
-      should stop following the sightline when this symbol or point is
-      encountered. By default, the sightline will continue to the edge of the
-      grid.
+  :param symbol_grid: The grid to check against.
+  :param start: The location of the cell where the sightline should begin.
+    This is the first cell checked.
+  :param direction: The direction to advance to reach the next cell in the
+    sightline.
+  :param initializer: The initial value for the accumulator.
+  :param accumulate: A function that accepts an accumulated value, a symbol,
+    and (optionally) a point as arguments, and returns a new accumulated
+    value. This function is used to determine a new accumulated value for
+    each cell along the sightline, based on the accumulated value from the
+    previously encountered cells as well as the point and/or symbol of the
+    current cell.
+  :param stop: A function that accepts an accumulated value, a symbol, and
+    (optionally) a point as arguments, and returns True if we should stop
+    following the sightline when this symbol or point is encountered. By
+    default, the sightline will continue to the edge of the grid.
 
-  Returns:
-    The accumulated value.
+  :return: The accumulated value.
 
-  Raises:
-    ValueError: If the accumulate or stop callback doesn't accept the correct
-      number of arguments.
+  :raises ValueError: If the accumulate or stop callback doesn't accept the
+    correct number of arguments.
   """
   num_accumulate_args = len(signature(accumulate).parameters)
   num_stop_args = len(signature(stop).parameters)

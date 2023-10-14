@@ -77,20 +77,17 @@ class Lattice:
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    Args:
-      point (Point): The `Point` to get the index of.
+    :param point: The `Point` to get the index of.
 
-    Returns:
-      The index of the point in the ordered list, or None if the point is not
-      in the list.
+    :return: The index of the point in the ordered list, or None if the point
+      is not in the list.
     """
     raise NotImplementedError()
 
   def edge_sharing_directions(self) -> List[Direction]:
     """A list of edge-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of an edge-sharing
+    :return: A list of `Direction`s, each including the name of an edge-sharing
       direction and the vector representing that direction. Edge sharing (also
       known as orthogonal adjacency) is the relationship between grid cells
       that share an edge.
@@ -100,46 +97,39 @@ class Lattice:
   def vertex_sharing_directions(self) -> List[Direction]:
     """A list of vertex-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of a vertex-sharing
-      direction and the vector representing that direction. Vertex sharing
-      (also known as touching adjacency) is the relationship between grid cells
-      that share a vertex.
+    :return: A list of `Direction`s, each including the name of a
+      vertex-sharing direction and the vector representing that
+      direction. Vertex sharing (also known as touching adjacency) is the
+      relationship between grid cells that share a vertex.
     """
     raise NotImplementedError()
 
   def opposite_direction(self, d: Direction) -> Direction:
     """Given a direction, return the opposite direction.
 
-    Args:
-      d: The given `Direction`.
+    :param d: The given `Direction`.
 
-    Returns:
-      The `Direction` opposite the given direction.
+    :return: The `Direction` opposite the given direction.
     """
     return self.__vector_direction[d.vector.negate()]
 
   def edge_sharing_points(self, point: Point) -> List[Point]:
     """Returns a list of points that share an edge with the given cell.
 
-    Args:
-      point (Point): The point of the given cell.
+    :param point: The point of the given cell.
 
-    Returns:
-      A list of `Point`s in the lattice that correspond to cells that share an
-      edge with the given cell.
+    :return: A list of `Point`s in the lattice that correspond to cells that
+      share an edge with the given cell.
     """
     return [point.translate(d.vector) for d in self.edge_sharing_directions()]
 
   def vertex_sharing_points(self, point: Point) -> List[Point]:
     """Returns a list of points that share a vertex with the given cell.
 
-    Args:
-      point (Point): The point of the given cell.
+    :param point: The point of the given cell.
 
-    Returns:
-      A list of `Point`s in the lattice corresponding to cells that share a
-      vertex with the given cell.
+    :return: A list of `Point`s in the lattice corresponding to cells that
+      share a vertex with the given cell.
     """
     return [point.translate(d.vector) for d in self.vertex_sharing_directions()]
 
@@ -148,16 +138,12 @@ class Lattice:
                       directions: List[Direction]) -> List[Neighbor]:
     """Returns a list of neighbors in the given directions of the given cell.
 
-    Args:
-      cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
-        the lattice to z3 constants.
-      p (Point): Point of the given cell.
-      directions (List[Direction]): The given list of directions to
-        find neighbors with.
+    :param cell_map: A dictionary mapping points in the lattice to z3 constants.
+    :param p: Point of the given cell.
+    :param directions: The given list of directions to find neighbors with.
 
-    Returns:
-      A list of `Neighbor`s corresponding to the cells that are in the given
-      directions from the given cell.
+    :return: A list of `Neighbor`s corresponding to the cells that are in the
+      given directions from the given cell.
     """
     cells = []
     for d in directions:
@@ -171,14 +157,11 @@ class Lattice:
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
     """Returns a list of neighbors sharing an edge with the given cell.
 
-    Args:
-      cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
-        the lattice to z3 constants.
-      p (Point): Point of the given cell.
+    :param cell_map: A dictionary mapping points in the lattice to z3 constants.
+    :param p: Point of the given cell.
 
-    Returns:
-      A list of `Neighbor`s corresponding to the cells that share an edge with
-      the given cell.
+    :return: A list of `Neighbor`s corresponding to the cells that share an
+      edge with the given cell.
     """
     return self.__get_neighbors(cell_map, p, self.edge_sharing_directions())
 
@@ -186,43 +169,34 @@ class Lattice:
       self, cell_map: Dict[Point, ArithRef], p: Point) -> List[Neighbor]:
     """Returns a list of neighbors sharing a vertex with the given cell.
 
-    Args:
-      cell_map (Dict[Point, ArithRef]): A dictionary mapping points in
-        the lattice to z3 constants.
-      p (Point): Point of the given cell.
+    :param cell_map: A dictionary mapping points in the lattice to z3 constants.
+    :param p: Point of the given cell.
 
-    Returns:
-      A list of `Neighbor`s corresponding to the cells that share a vertex with
-      the given cell.
+    :return: A list of `Neighbor`s corresponding to the cells that share a
+      vertex with the given cell.
     """
     return self.__get_neighbors(cell_map, p, self.vertex_sharing_directions())
 
   def label_for_direction(self, d: Direction) -> str:
     """Returns the label for a direction.
 
-    Args:
-      d (Direction): The direction to label.
+    :param d: The direction to label.
 
-    Returns:
-      A label representing the direction.
+    :return: A label representing the direction.
 
-    Raises:
-      ValueError: If there's no character defined for the direction.
+    :raises ValueError: If there's no character defined for the direction.
     """
     raise NotImplementedError()
 
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
 
-    Args:
-      d1 (Direction): The first direction.
-      d2 (Direction): The second direction.
+    :param d1: The first direction.
+    :param d2: The second direction.
 
-    Returns:
-      A label representing both directions.
+    :return: A label representing both directions.
 
-    Raises:
-      ValueError: If there's no character defined for the direction pair.
+    :raises ValueError: If there's no character defined for the direction pair.
     """
     raise NotImplementedError()
 
@@ -238,13 +212,10 @@ class Lattice:
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    Args:
-      allow_rotations (bool): Whether rotation is an allowed transformation.
-      allow_reflections (bool): Whether reflection is an allowed
-        transformation.
+    :param allow_rotations: Whether rotation is an allowed transformation.
+    :param allow_reflections: Whether reflection is an allowed transformation.
 
-    Returns:
-      A list of `Vector` transformation functions.
+    :return: A list of `Vector` transformation functions.
     """
     raise NotImplementedError()
 
@@ -259,10 +230,9 @@ class Lattice:
     west-going lines you cross, you can tell from its parity if you're inside
     or outside the loop.
 
-    Returns:
-      A tuple, the first component of which indicates the direction to look,
-      and the second component of which indicates what types of crossings to
-      count.
+    :return: A tuple, the first component of which indicates the direction to
+      look, and the second component of which indicates what types of crossings
+      to count.
     """
     raise NotImplementedError()
 
@@ -274,20 +244,17 @@ class Lattice:
       stream: IO[str] = sys.stdout):
     """Prints something for each of the given points.
 
-    Args:
-      hook_function (Callable[[Point], Optional[str]]): A function implementing
-        per-location display behavior. It will be called for each
-        `Point` in the lattice. If the returned string has embedded
-        newlines, it will be treated as a multi-line element.
-        For best results, all elements should have the same number
-        of lines as each other and as blank (below).
-      ps (Iterable[Point]): The `Point`s to print something for.
-      blank (str): What to print for `Point`s not in the lattice, or for
-        when the hook function returns None. Defaults to one space.
-        If it has embedded newlines, it will be treated as a
-        multi-line element.
-      stream (IO[str]): The stream to which to print the output. Defaults
-        to standard output.
+    :param hook_function: A function implementing per-location display
+      behavior. It will be called for each `Point` in the lattice. If the
+      returned string has embedded newlines, it will be treated as a multi-line
+      element.  For best results, all elements should have the same number of
+      lines as each other and as blank (below).
+    :param ps: The `Point`s to print something for.
+    :param blank: What to print for `Point`s not in the lattice, or for when
+      the hook function returns None. Defaults to one space.  If it has
+      embedded newlines, it will be treated as a multi-line element.
+    :param stream: The stream to which to print the output. Defaults to
+      standard output.
     """
     columns = []
     for p in ps:
@@ -309,19 +276,16 @@ class Lattice:
 
     Printing is done from top to bottom and left to right.
 
-    Args:
-      hook_function (Callable[[Point], Optional[str]]): A function implementing
-        per-location display behavior. It will be called for each
-        `Point` in the lattice. If the returned string has embedded
-        newlines, it will be treated as a multi-line element.
-        For best results, all elements should have the same number
-        of lines as each other and as blank (below).
-      blank (str): What to print for `Point`s not in the lattice, or for
-        when the hook function returns None. Defaults to one space.
-        If it has embedded newlines, it will be treated as a
-        multi-line element.
-      stream (IO[str]): The stream to which to print the output. Defaults
-        to standard output.
+    :param hook_function: A function implementing per-location display
+      behavior. It will be called for each `Point` in the lattice. If the
+      returned string has embedded newlines, it will be treated as a multi-line
+      element.  For best results, all elements should have the same number of
+      lines as each other and as blank (below).
+    :param blank: What to print for `Point`s not in the lattice, or for when
+      the hook function returns None. Defaults to one space.  If it has
+      embedded newlines, it will be treated as a multi-line element.
+    :param stream: The stream to which to print the output. Defaults to
+      standard output.
     """
     ps = self.points
     min_y = ps[0].y
@@ -356,20 +320,17 @@ class RectangularLattice(Lattice):
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    Args:
-      point (Point): The `Point` to get the index of.
+    :param point: The `Point` to get the index of.
 
-    Returns:
-      The index of the point in the ordered list, or None if the point is not
-        in the list.
+    :return: The index of the point in the ordered list, or None if the point
+      is not in the list.
     """
     return self.__point_indices.get(point)
 
   def edge_sharing_directions(self) -> List[Direction]:
     """A list of edge-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of an edge-sharing
+    :return: A list of `Direction`s, each including the name of an edge-sharing
       direction and the vector representing that direction. Edge sharing (also
       known as orthogonal adjacency) is the relationship between grid cells
       that share an edge.
@@ -384,11 +345,10 @@ class RectangularLattice(Lattice):
   def vertex_sharing_directions(self) -> List[Direction]:
     """A list of vertex-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of a vertex-sharing
-      direction and the vector representing that direction. Vertex sharing
-      (also known as touching adjacency) is the relationship between grid cells
-      that share a vertex.
+    :returns: A list of `Direction`s, each including the name of a
+      vertex-sharing direction and the vector representing that
+      direction. Vertex sharing (also known as touching adjacency) is the
+      relationship between grid cells that share a vertex.
     """
     return self.edge_sharing_directions() + [
         Direction("NE", Vector(-1, 1)),
@@ -400,14 +360,11 @@ class RectangularLattice(Lattice):
   def label_for_direction(self, d: Direction) -> str:
     """Returns the label for a direction.
 
-    Args:
-      d (Direction): The direction to label.
+    :param d: The direction to label.
 
-    Returns:
-      A label representing the direction.
+    :return: A label representing the direction.
 
-    Raises:
-      ValueError: If there's no character defined for the direction.
+    :raises ValueError: If there's no character defined for the direction.
     """
     if d.name == "N":
       return chr(0x2575)
@@ -422,15 +379,12 @@ class RectangularLattice(Lattice):
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
 
-    Args:
-      d1 (Direction): The first direction.
-      d2 (Direction): The second direction.
+    :param d1: The first direction.
+    :param d2: The second direction.
 
-    Returns:
-      A label representing both directions.
+    :return: A label representing both directions.
 
-    Raises:
-      ValueError: If there's no character defined for the direction pair.
+    :raises ValueError: If there's no character defined for the direction pair.
     """
     if {d1.name, d2.name} == {"N", "S"}:
       return chr(0x2502)
@@ -458,13 +412,10 @@ class RectangularLattice(Lattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    Args:
-      allow_rotations (bool): Whether rotation is an allowed transformation.
-      allow_reflections (bool): Whether reflection is an allowed
-        transformation.
+    :param allow_rotations: Whether rotation is an allowed transformation.
+    :param allow_reflections: Whether reflection is an allowed transformation.
 
-    Returns:
-      A list of `Vector` transformation functions.
+    :return: A list of `Vector` transformation functions.
     """
     if allow_rotations:
       if allow_reflections:
@@ -505,10 +456,9 @@ class RectangularLattice(Lattice):
     west-going lines you cross, you can tell from its parity if you're inside
     or outside the loop.
 
-    Returns:
-      A tuple, the first component of which indicates the direction to look,
-      and the second component of which indicates what types of crossings to
-      count.
+    :return: A tuple, the first component of which indicates the direction to
+      look, and the second component of which indicates what types of crossings
+      to count.
     """
     ds = {d.name: d for d in self.edge_sharing_directions()}
     return (ds["N"], [ds["W"]])
@@ -542,12 +492,10 @@ class _HexagonalLattice(Lattice):
   def point_to_index(self, point: Point) -> Optional[int]:
     """Returns the index of a point in the lattice's ordered list.
 
-    Args:
-      point (Point): The `Point` to get the index of.
+    :param point: The `Point` to get the index of.
 
-    Returns:
-      The index of the point in the ordered list, or None if the point is not
-        in the list.
+    :return: The index of the point in the ordered list, or None if the point
+      is not in the list.
     """
     return self.__point_indices.get(point)
 
@@ -561,25 +509,21 @@ class _HexagonalLattice(Lattice):
     Since this is a hexagonal grid, the vertex-sharing directions are
     the same as the edge-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of a vertex-sharing
-      direction and the vector representing that direction. Vertex sharing
-      (also known as touching adjacency) is the relationship between grid cells
-      that share a vertex.
+    :return: A list of `Direction`s, each including the name of a
+      vertex-sharing direction and the vector representing that
+      direction. Vertex sharing (also known as touching adjacency) is the
+      relationship between grid cells that share a vertex.
     """
     return self.edge_sharing_directions()
 
   def label_for_direction(self, d: Direction) -> str:
     """Returns the label for a direction.
 
-    Args:
-      d (Direction): The direction to label.
+    :param d: The direction to label.
 
-    Returns:
-      A label representing the direction.
+    :return: A label representing the direction.
 
-    Raises:
-      ValueError: If there's no character defined for the direction.
+    :raises ValueError: If there's no character defined for the direction.
     """
     labels = {
       "N": chr(0x2595) + " \n  ",
@@ -599,15 +543,12 @@ class _HexagonalLattice(Lattice):
   def label_for_direction_pair(self, d1: Direction, d2: Direction) -> str:
     """Returns the label for a pair of edge-sharing directions.
 
-    Args:
-      d1 (Direction): The first direction.
-      d2 (Direction): The second direction.
+    :param d1: The first direction.
+    :param d2: The second direction.
 
-    Returns:
-      A label representing both directions.
+    :return: A label representing both directions.
 
-    Raises:
-      ValueError: If there's no character defined for the direction pair.
+    :raises ValueError: If there's no character defined for the direction pair.
     """
     ds = {d1.name, d2.name}
 
@@ -637,8 +578,7 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
   def edge_sharing_directions(self) -> List[Direction]:
     """A list of edge-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of an edge-sharing
+    :return: A list of `Direction`s, each including the name of an edge-sharing
       direction and the vector representing that direction. Edge sharing (also
       known as orthogonal adjacency) is the relationship between grid cells
       that share an edge.
@@ -664,13 +604,10 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    Args:
-      allow_rotations (bool): Whether rotation is an allowed transformation.
-      allow_reflections (bool): Whether reflection is an allowed
-        transformation.
+    :param allow_rotations: Whether rotation is an allowed transformation.
+    :param allow_reflections: Whether reflection is an allowed transformation.
 
-    Returns:
-      A list of `Vector` transformation functions.
+    :return: A list of `Vector` transformation functions.
     """
     if allow_rotations:
       if allow_reflections:
@@ -722,10 +659,9 @@ class FlatToppedHexagonalLattice(_HexagonalLattice):
     lines you cross, you can tell from its parity if you're inside or
     outside the loop.
 
-    Returns:
-      A tuple, the first component of which indicates the direction to look,
-      and the second component of which indicates what types of crossings to
-      count.
+    :return: A tuple, the first component of which indicates the direction to
+      look, and the second component of which indicates what types of crossings
+      to count.
     """
     ds = {d.name: d for d in self.edge_sharing_directions()}
     return (ds["N"], [ds["NW"], ds["SW"]])
@@ -743,8 +679,7 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
   def edge_sharing_directions(self) -> List[Direction]:
     """A list of edge-sharing directions.
 
-    Returns:
-      A list of `Direction`s, each including the name of an edge-sharing
+    :return: A list of `Direction`s, each including the name of an edge-sharing
       direction and the vector representing that direction. Edge sharing (also
       known as orthogonal adjacency) is the relationship between grid cells
       that share an edge.
@@ -770,13 +705,10 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     one transformation: the identity function.  The transformations
     returned are all transformations satisfying the given constraints.
 
-    Args:
-      allow_rotations (bool): Whether rotation is an allowed transformation.
-      allow_reflections (bool): Whether reflection is an allowed
-        transformation.
+    :param allow_rotations: Whether rotation is an allowed transformation.
+    :param allow_reflections: Whether reflection is an allowed transformation.
 
-    Returns:
-      A list of `Vector` transformation functions.
+    :return: A list of `Vector` transformation functions.
     """
     if allow_rotations:
       if allow_reflections:
@@ -827,10 +759,9 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
     and/or northeast-going lines you cross, you can tell from
     its parity if you're inside or outside the loop.
 
-    Returns:
-      A tuple, the first component of which indicates the direction to look,
-      and the second component of which indicates what types of crossings to
-      count.
+    :return: A tuple, the first component of which indicates the direction to
+      look, and the second component of which indicates what types of crossings
+      to count.
     """
     ds = {d.name: d for d in self.edge_sharing_directions()}
     return (ds["E"], [ds["NW"], ds["NE"]])
@@ -839,12 +770,10 @@ class PointyToppedHexagonalLattice(_HexagonalLattice):
 def get_rectangle_lattice(height: int, width: int) -> RectangularLattice:
   """Returns a lattice of all points in a rectangle of the given dimensions.
 
-  Args:
-    height (int): Height of the lattice.
-    width (int): Width of the lattice.
+  :param height: Height of the lattice.
+  :param width: Width of the lattice.
 
-  Returns:
-    The lattice.
+  :return: The lattice.
   """
   points = [Point(y, x) for y in range(height) for x in range(width)]
   return RectangularLattice(points)
@@ -853,10 +782,8 @@ def get_rectangle_lattice(height: int, width: int) -> RectangularLattice:
 def get_square_lattice(height: int) -> RectangularLattice:
   """Returns a lattice of all points in a square of the given height.
 
-  Args:
-    height (int): Height of the lattice.
+  :param height: Height of the lattice.
 
-  Returns:
-    The lattice.
+  :return: The lattice.
   """
   return get_rectangle_lattice(height, height)

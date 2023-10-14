@@ -34,38 +34,35 @@ class LoopSymbolSet(PathSymbolSet):
   Additional symbols (e.g. a `grilops.symbols.Symbol` representing an empty
   space) may be added to this `grilops.symbols.SymbolSet` by calling
   `grilops.symbols.SymbolSet.append` after it's constructed.
-
-  Args:
-    lattice (grilops.geometry.Lattice): The structure of the grid.
   """
 
   def __init__(self, lattice: Lattice):
+    """
+    :param lattice: The structure of the grid.
+    """
     super().__init__(lattice, include_terminals=False)
 
   def is_loop(self, symbol: ArithRef) -> BoolRef:
     """Returns true if the given symbol represents part of the loop.
 
-    Args:
-      symbol (ArithRef): An `ArithRef` expression representing a symbol.
+    :param symbol: An `ArithRef` expression representing a symbol.
 
-    Returns:
-      A true `BoolRef` if the symbol represents part of the loop.
+    :return: A true `BoolRef` if the symbol represents part of the loop.
     """
     return self.is_path_segment(symbol)
 
 
 class LoopConstrainer(PathConstrainer):
-  """Creates constraints for ensuring symbols form closed loops.
-
-  Args:
-    symbol_grid (grilops.grids.SymbolGrid): The grid to constrain.
-    single_loop (bool): If true, constrain the grid to contain only a single loop.
-  """
+  """Creates constraints for ensuring symbols form closed loops."""
   def __init__(
       self,
       symbol_grid: SymbolGrid,
       single_loop: bool = False,
   ):
+    """
+    :param symbol_grid: The grid to constrain.
+    :param single_loop: If true, constrain the grid to contain only a single loop.
+    """
     super().__init__(symbol_grid, allow_terminated_paths=False)
     self.__symbol_grid = symbol_grid
 

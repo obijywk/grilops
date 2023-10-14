@@ -4,19 +4,18 @@ from typing import cast, Dict, List, Optional, Tuple, Union
 
 
 class Symbol:
-  """A marking that may be filled into a `grilops.grids.SymbolGrid` cell.
-
-  Args:
-    index (int): The index value assigned to the symbol.
-    name (Optional[str]): The Python-safe name of the symbol.
-    label (Optional[str]): The printable label of the symbol.
-  """
+  """A marking that may be filled into a `grilops.grids.SymbolGrid` cell."""
   def __init__(
       self,
       index: int,
       name: Optional[str] = None,
       label: Optional[str] = None
   ):
+    """
+    :param index: The index value assigned to the symbol.
+    :param name: The Python-safe name of the symbol.
+    :param label: The printable label of the symbol.
+    """
     self.__index = index
     self.__name = name
     self.__label = label
@@ -49,18 +48,16 @@ class Symbol:
 
 
 class SymbolSet:
-  """A set of markings that may be filled into a `grilops.grids.SymbolGrid`.
-
-  Args:
-    symbols (List[Union[str, Tuple[str, str], Tuple[str, str, int]]]): A list
-      of specifications for the symbols. Each specification may be a
-      Python-safe name, a (Python-safe name, printable label) tuple, or a
-      (Python-safe name, printable label, index value) tuple.
-  """
+  """A set of markings that may be filled into a `grilops.grids.SymbolGrid`."""
   def __init__(
       self,
       symbols: List[Union[str, Tuple[str, str], Tuple[str, str, int]]]
   ):
+    """
+    :param symbols: A list of specifications for the symbols. Each specification
+      may be a Python-safe name, a (Python-safe name, printable label) tuple, or
+      a (Python-safe name, printable label, index value) tuple.
+    """
     self.__index_to_symbol: Dict[int, Symbol] = {}
     self.__label_to_symbol_index: Dict[str, int] = {}
 
@@ -100,9 +97,8 @@ class SymbolSet:
   def append(self, name: Optional[str] = None, label: Optional[str] = None):
     """Appends an additional symbol to this symbol set.
 
-    Args:
-      name (Optional[str]): The Python-safe name of the symbol.
-      label (Optional[str]): The printable label of the symbol.
+    :param name: The Python-safe name of the symbol.
+    :param label: The printable label of the symbol.
     """
     index = self.__next_unused_index()
     symbol = Symbol(index, name, label)
@@ -136,12 +132,10 @@ def make_letter_range_symbol_set(
 ) -> SymbolSet:
   """Returns a `SymbolSet` consisting of consecutive letters.
 
-  Args:
-    min_letter (str): The lowest letter to include in the set.
-    max_letter (str): The highest letter to include in the set.
+  :param min_letter: The lowest letter to include in the set.
+  :param max_letter: The highest letter to include in the set.
 
-  Returns:
-    A `SymbolSet` consisting of consecutive letters.
+  :return: A `SymbolSet` consisting of consecutive letters.
   """
   return SymbolSet(
       [chr(v) for v in range(ord(min_letter), ord(max_letter) + 1)]
@@ -157,12 +151,10 @@ def make_number_range_symbol_set(
   The names of the symbols will be prefixed with S so that they may be
   referred to directly in Python code.
 
-  Args:
-    min_number (int): The lowest number to include in the set.
-    max_number (int): The highest number to include in the set.
+  :param min_number: The lowest number to include in the set.
+  :param max_number: The highest number to include in the set.
 
-  Returns:
-    A `SymbolSet` consisting of consecutive numbers.
+  :return: A `SymbolSet` consisting of consecutive numbers.
   """
   return SymbolSet(
       [(f"S{v}", str(v), v) for v in range(min_number, max_number + 1)]

@@ -26,15 +26,14 @@ class Shape(Generic[Payload]):
   """A shape defined by a list of `grilops.geometry.Vector` offsets.
 
   Each offset may optionally have an associated payload value.
-
-  Args:
-    offsets (List[Offset]): A list of offsets that define the shape. An offset
-      may be a `grilops.geometry.Vector`; or, to optionally associate a payload
-      value with the offset, it may be a
-      `Tuple[grilops.geometry.Vector, Payload]`. A payload may be any z3
-      expression.
   """
   def __init__(self, offsets: List[Offset]):
+    """
+    :param offsets: A list of offsets that define the shape. An offset may be a
+      `grilops.geometry.Vector`; or, to optionally associate a payload value
+       with the offset, it may be a `Tuple[grilops.geometry.Vector, Payload]`.
+       A payload may be any z3 expression.
+    """
     self.__offset_tuples: List[Tuple[Vector, Optional[Payload]]] = []
     for offset in offsets:
       if isinstance(offset, Vector):
@@ -65,10 +64,9 @@ class Shape(Generic[Payload]):
     `grilops.geometry.Vector`(0, 0). This helps with deduplication, since
     equivalent shapes will be canonicalized identically.
 
-    Returns:
-      A `Shape` of offsets defining the canonicalized version of the shape,
-        i.e., in sorted order and with first offset equal to
-        `grilops.geometry.Vector`(0, 0).
+    :return: A `Shape` of offsets defining the canonicalized version of the
+      shape, i.e., in sorted order and with first offset equal to
+      `grilops.geometry.Vector`(0, 0).
     """
     offset_tuples = sorted(self.__offset_tuples, key=lambda t: t[0])
     first_negated = offset_tuples[0][0].negate()
@@ -99,25 +97,7 @@ class Shape(Generic[Payload]):
 
 
 class ShapeConstrainer(Generic[Payload]):
-  """Creates constraints for placing fixed shape regions into the grid.
-
-  Args:
-    lattice (grilops.geometry.Lattice): The structure of the grid.
-    shapes (List[Shape]): A list of region shape definitions. The same
-      region shape definition may be included multiple times to indicate the
-      number of times that shape may appear (if allow_copies is false).
-    solver (Optional[z3.Solver]): A `Solver` object. If None, a `Solver` will
-      be constructed.
-    complete (bool): If true, every cell must be part of a shape region.
-      Defaults to false.
-    allow_rotations (bool): If true, allow rotations of the shapes to be placed
-      in the grid. Defaults to false.
-    allow_reflections (bool): If true, allow reflections of the shapes to be
-      placed in the grid. Defaults to false.
-    allow_copies (bool): If true, allow any number of copies of the shapes to
-      be placed in the grid. Defaults to false.
-
-  """
+  """Creates constraints for placing fixed shape regions into the grid."""
   _instance_index = 0
 
   def __init__(  # pylint: disable=R0913
@@ -130,6 +110,21 @@ class ShapeConstrainer(Generic[Payload]):
       allow_reflections: bool = False,
       allow_copies: bool = False
   ):
+    """
+    :param lattice: The structure of the grid.
+    :param shapes: A list of region shape definitions. The same region shape
+      definition may be included multiple times to indicate the number of times
+      that shape may appear (if allow_copies is false).
+    :param solver: A `Solver` object. If None, a `Solver` will be constructed.
+    :param complete: If true, every cell must be part of a shape region.
+      Defaults to false.
+    :param allow_rotations: If true, allow rotations of the shapes to be placed
+      in the grid. Defaults to false.
+    :param allow_reflections: If true, allow reflections of the shapes to be
+      placed in the grid. Defaults to false.
+    :param allow_copies: If true, allow any number of copies of the shapes to
+      be placed in the grid. Defaults to false.
+    """
     ShapeConstrainer._instance_index += 1
     if solver:
       self.__solver = solver
